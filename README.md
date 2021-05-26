@@ -10,13 +10,10 @@
     https://evm.acala.network/#/upload
 
 
-### Waffle
-    There are multiple tools you can use to develop and compile Solidity contracts.
-    We use 'Waffle'.
-    
-    Tutorials:
-    https://wiki.acala.network/build/development-guide/smart-contracts/get-started-evm/use-waffle
+## Build
+    yarn
+    yarn build
 
 ## Test
-    yarn install
+    yarn test
 
