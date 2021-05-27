@@ -1,6 +1,6 @@
 import { expect, use } from "chai";
-import { ethers, Contract, constants, providers, BigNumber } from "ethers";
-import { deployContract, solidity, MockProvider, loadFixture, createFixtureLoader } from "ethereum-waffle";
+import { Contract, constants, BigNumber } from "ethers";
+import { solidity, MockProvider, createFixtureLoader } from "ethereum-waffle";
 import { pairFixture } from './shared/fixtures'
 import { expandTo18Decimals } from './shared/utilities'
 
