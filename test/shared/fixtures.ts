@@ -7,6 +7,7 @@ import { expandTo18Decimals } from './utilities'
 import BasicToken from '../../build/BasicToken.json'
 import Factory from '../../build/Factory.json'
 import Pair from '../../build/Pair.json'
+import Router from '../../build/Router.json'
 
 interface FactoryFixture {
   factory: Contract
@@ -42,4 +43,24 @@ export async function pairFixture([wallet]: Wallet[], provider: providers.Web3Pr
   const token1 = tokenA.address === token0Address ? tokenB : tokenA
 
   return { factory, token0, token1, pair }
+}
+
+interface RouterFixture extends FactoryFixture {
+  token0: Contract
+  token1: Contract
+  token2: Contract
+  factory: Contract
+  router: Contract
+}
+
+export async function routerFixture([wallet]: Wallet[], provider: providers.Web3Provider): Promise<RouterFixture> {
+  const { factory } = await factoryFixture([wallet], provider)
+
+  const router = await deployContract(wallet, Router, [factory.address], overrides)
+
+  const token0 = await deployContract(wallet, BasicToken, ["TokenA", "TA", expandTo18Decimals(10000)], overrides)
+  const token1 = await deployContract(wallet, BasicToken, ["TokenB", "TB", expandTo18Decimals(10000)], overrides)
+  const token2 = await deployContract(wallet, BasicToken, ["TokenC", "TC", expandTo18Decimals(10000)], overrides)
+
+  return { token0, token1, token2, factory, router }
 }
