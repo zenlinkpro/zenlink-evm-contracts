@@ -152,7 +152,7 @@ contract Pair is IPair, ERC20 {
             require(
                 balance0Adjusted.mul(balance1Adjusted) >=
                     uint256(_reserve0).mul(_reserve1).mul(1000**2),
-                "Too Small"
+                "Pair: K"
             );
         }
 
