@@ -76,7 +76,6 @@ contract Pair is IPair, ERC20 {
         uint256 _totalSupply = totalSupply();
         if (_totalSupply == 0) {
             liquidity = Math.sqrt(amount0.mul(amount1)).sub(MINIMUM_LIQUIDITY);
-            _mint(address(0), MINIMUM_LIQUIDITY);
         } else {
             liquidity = Math.min(
                 amount0.mul(_totalSupply) / _reserve0,
