@@ -16,7 +16,7 @@ const overrides = {
   gasLimit: 4100000
 }
 
-export async function factoryFixture(_: providers.Web3Provider, [wallet]: Wallet[]): Promise<FactoryFixture> {
+export async function factoryFixture([wallet]: Wallet[], _: providers.Web3Provider,): Promise<FactoryFixture> {
   const factory = await deployContract(wallet, Factory, [], overrides)
   return { factory }
 }
@@ -28,7 +28,7 @@ interface PairFixture extends FactoryFixture {
 }
 
 export async function pairFixture([wallet]: Wallet[], provider: providers.Web3Provider): Promise<PairFixture> {
-  const { factory } = await factoryFixture(provider, [wallet])
+  const { factory } = await factoryFixture([wallet], provider)
 
   const tokenA = await deployContract(wallet, BasicToken, ["TokenA", "TA", expandTo18Decimals(10000)], overrides)
   const tokenB = await deployContract(wallet, BasicToken, ["TokenB", "TB", expandTo18Decimals(10000)], overrides)
