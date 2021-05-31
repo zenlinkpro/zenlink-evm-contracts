@@ -14,7 +14,7 @@ contract Router is IRouter {
     }
 
     modifier ensure(uint256 deadline) {
-        require(deadline >= block.timestamp, "UniswapV2Router: EXPIRED");
+        require(deadline >= block.timestamp, "Router: EXPIRED");
         _;
     }
 
