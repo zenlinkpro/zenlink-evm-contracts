@@ -8,6 +8,10 @@ interface IFactory {
         uint256
     );
 
+    function feeTo() external view returns (address);
+
+    function feeBasePoint() external view returns (uint8);
+
     function getPair(address tokenA, address tokenB)
         external
         view

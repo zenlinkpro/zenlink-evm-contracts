@@ -1,6 +1,7 @@
 pragma solidity ^0.6.0;
 
 import "./interfaces/IPair.sol";
+import "./interfaces/IFactory.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./libraries/Math.sol";
 import "./libraries/UQ112x112.sol";
@@ -16,6 +17,7 @@ contract Pair is IPair, ERC20 {
 
     uint112 private reserve0;
     uint112 private reserve1;
+    uint256 public kLast;
 
     uint256 private unlocked = 1;
     modifier lock() {
@@ -75,6 +77,31 @@ contract Pair is IPair, ERC20 {
         token1 = _token1;
     }
 
+    function _mintFee(uint112 _reserve0, uint112 _reserve1)
+        private
+        returns (uint8 feeBasePoint)
+    {
+        address feeTo = IFactory(factory).feeTo();
+        feeBasePoint = IFactory(factory).feeBasePoint();
+        uint256 _kLast = kLast; // gas savings
+        if (feeBasePoint > 0) {
+            if (_kLast != 0) {
+                uint256 rootK = Math.sqrt(uint256(_reserve0).mul(_reserve1));
+                uint256 rootKLast = Math.sqrt(_kLast);
+                if (rootK > rootKLast) {
+                    uint256 numerator = totalSupply().mul(rootK.sub(rootKLast));
+                    uint256 denominator = rootK.mul(feeBasePoint).add(
+                        rootKLast
+                    );
+                    uint256 liquidity = numerator / denominator;
+                    if (liquidity > 0) _mint(feeTo, liquidity);
+                }
+            }
+        } else if (_kLast != 0) {
+            kLast = 0;
+        }
+    }
+
     function mint(address to)
         external
         override
@@ -87,6 +114,7 @@ contract Pair is IPair, ERC20 {
         uint256 amount0 = balance0.sub(_reserve0);
         uint256 amount1 = balance1.sub(_reserve1);
 
+        uint8 feeBasePoint = _mintFee(_reserve0, _reserve1);
         uint256 _totalSupply = totalSupply();
         if (_totalSupply == 0) {
             liquidity = Math.sqrt(amount0.mul(amount1)).sub(MINIMUM_LIQUIDITY);
@@ -100,6 +128,7 @@ contract Pair is IPair, ERC20 {
         _mint(to, liquidity);
 
         _update(balance0, balance1);
+        if (feeBasePoint > 0) kLast = uint256(reserve0).mul(reserve1);
         emit Mint(msg.sender, amount0, amount1);
     }
 
@@ -109,12 +138,14 @@ contract Pair is IPair, ERC20 {
         lock
         returns (uint256 amount0, uint256 amount1)
     {
+        (uint112 _reserve0, uint112 _reserve1) = getReserves();
         address _token0 = token0;
         address _token1 = token1;
         uint256 balance0 = IERC20(_token0).balanceOf(address(this));
         uint256 balance1 = IERC20(_token1).balanceOf(address(this));
         uint256 liquidity = balanceOf(address(this));
 
+        uint8 feeBasePoint = _mintFee(_reserve0, _reserve1);
         uint256 _totalSupply = totalSupply();
         amount0 = liquidity.mul(balance0) / _totalSupply;
         amount1 = liquidity.mul(balance1) / _totalSupply;
@@ -126,6 +157,7 @@ contract Pair is IPair, ERC20 {
         balance1 = IERC20(_token1).balanceOf(address(this));
 
         _update(balance0, balance1);
+        if (feeBasePoint > 0) kLast = uint256(reserve0).mul(reserve1);
         emit Burn(msg.sender, amount0, amount1, to);
     }
 
@@ -133,7 +165,7 @@ contract Pair is IPair, ERC20 {
         uint256 amount0Out,
         uint256 amount1Out,
         address to
-    ) external lock override {
+    ) external override lock {
         require(amount0Out > 0 || amount1Out > 0, "INSUFFICIENT_OUTPUT_AMOUNT");
         (uint112 _reserve0, uint112 _reserve1) = getReserves();
         require(

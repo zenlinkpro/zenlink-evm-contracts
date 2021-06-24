@@ -4,6 +4,9 @@ import "./interfaces/IFactory.sol";
 import "./pair.sol";
 
 contract Factory is IFactory {
+    address public override feeTo;
+    uint8 public override feeBasePoint;
+
     mapping(address => mapping(address => address)) public override getPair;
     address[] public override allPairs;
 
@@ -14,7 +17,9 @@ contract Factory is IFactory {
         uint256
     );
 
-    constructor() public {}
+    constructor(address _feeTo) public {
+        feeTo = _feeTo;
+    }
 
     function allPairsLength() external view override returns (uint256) {
         return allPairs.length;
@@ -26,8 +31,9 @@ contract Factory is IFactory {
         returns (address pair)
     {
         require(tokenA != tokenB, "IDENTICAL_ADDRESSES");
-        (address token0, address token1) =
-            tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+        (address token0, address token1) = tokenA < tokenB
+            ? (tokenA, tokenB)
+            : (tokenB, tokenA);
         require(token0 != address(0), "ZERO_ADDRESS");
         require(getPair[token0][token1] == address(0), "Factory: PAIR_EXISTS");
         bytes memory bytecode = type(Pair).creationCode;
@@ -40,5 +46,15 @@ contract Factory is IFactory {
         getPair[token1][token0] = pair;
         allPairs.push(pair);
         emit PairCreated(token0, token1, pair, allPairs.length);
+    }
+
+    function setFeeTo(address _feeTo) external {
+        require(msg.sender == feeTo, "FORBIDDEN");
+        feeTo = _feeTo;
+    }
+
+    function setFeeBasePoint(uint8 _basePoint) external {
+        require(msg.sender == feeTo, "FORBIDDEN");
+        feeBasePoint = _basePoint;
     }
 }

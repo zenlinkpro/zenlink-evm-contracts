@@ -62,13 +62,19 @@ contract Router is IRouter {
         if (IFactory(factory).getPair(token0, token1) == address(0)) {
             IFactory(factory).createPair(token0, token1);
         }
-        (uint256 reserve0, uint256 reserve1) =
-            ZenlinkHelper.getReserves(factory, token0, token1);
+        (uint256 reserve0, uint256 reserve1) = ZenlinkHelper.getReserves(
+            factory,
+            token0,
+            token1
+        );
         if (reserve0 == 0 && reserve1 == 0) {
             (amount0, amount1) = (amount0Desired, amount1Desired);
         } else {
-            uint256 amount1Optimal =
-                ZenlinkHelper.quote(amount0Desired, reserve0, reserve1);
+            uint256 amount1Optimal = ZenlinkHelper.quote(
+                amount0Desired,
+                reserve0,
+                reserve1
+            );
             if (amount1Optimal <= amount1Desired) {
                 require(
                     amount1Optimal >= amount1Min,
@@ -76,8 +82,11 @@ contract Router is IRouter {
                 );
                 (amount0, amount1) = (amount0Desired, amount1Optimal);
             } else {
-                uint256 amount0Optimal =
-                    ZenlinkHelper.quote(amount1Desired, reserve1, reserve0);
+                uint256 amount0Optimal = ZenlinkHelper.quote(
+                    amount1Desired,
+                    reserve1,
+                    reserve0
+                );
                 assert(amount0Optimal <= amount0Desired);
                 require(
                     amount0Optimal >= amount0Min,
@@ -122,14 +131,12 @@ contract Router is IRouter {
             (address input, address output) = (path[i], path[i + 1]);
             (address token0, ) = ZenlinkHelper.sortTokens(input, output);
             uint256 amountOut = amounts[i + 1];
-            (uint256 amount0Out, uint256 amount1Out) =
-                input == token0
-                    ? (uint256(0), amountOut)
-                    : (amountOut, uint256(0));
-            address to =
-                i < path.length - 2
-                    ? ZenlinkHelper.pairFor(factory, output, path[i + 2])
-                    : _to;
+            (uint256 amount0Out, uint256 amount1Out) = input == token0
+                ? (uint256(0), amountOut)
+                : (amountOut, uint256(0));
+            address to = i < path.length - 2
+                ? ZenlinkHelper.pairFor(factory, output, path[i + 2])
+                : _to;
             IPair(ZenlinkHelper.pairFor(factory, input, output)).swap(
                 amount0Out,
                 amount1Out,
