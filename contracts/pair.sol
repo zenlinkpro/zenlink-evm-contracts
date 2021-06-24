@@ -17,13 +17,22 @@ contract Pair is IPair, ERC20 {
     uint112 private reserve0;
     uint112 private reserve1;
 
+    uint256 private unlocked = 1;
+    modifier lock() {
+        require(unlocked == 1, "LOCKED");
+        unlocked = 0;
+        _;
+        unlocked = 1;
+    }
+
     function _safeTransfer(
         address token,
         address to,
         uint256 value
     ) private {
-        (bool success, bytes memory data) =
-            token.call(abi.encodeWithSelector(SELECTOR, to, value));
+        (bool success, bytes memory data) = token.call(
+            abi.encodeWithSelector(SELECTOR, to, value)
+        );
         require(
             success && (data.length == 0 || abi.decode(data, (bool))),
             "TRANSFER_FAILED"
@@ -66,7 +75,12 @@ contract Pair is IPair, ERC20 {
         token1 = _token1;
     }
 
-    function mint(address to) external override returns (uint256 liquidity) {
+    function mint(address to)
+        external
+        override
+        lock
+        returns (uint256 liquidity)
+    {
         (uint112 _reserve0, uint112 _reserve1) = getReserves();
         uint256 balance0 = IERC20(token0).balanceOf(address(this));
         uint256 balance1 = IERC20(token1).balanceOf(address(this));
@@ -92,6 +106,7 @@ contract Pair is IPair, ERC20 {
     function burn(address to)
         external
         override
+        lock
         returns (uint256 amount0, uint256 amount1)
     {
         address _token0 = token0;
@@ -118,7 +133,7 @@ contract Pair is IPair, ERC20 {
         uint256 amount0Out,
         uint256 amount1Out,
         address to
-    ) external override {
+    ) external lock override {
         require(amount0Out > 0 || amount1Out > 0, "INSUFFICIENT_OUTPUT_AMOUNT");
         (uint112 _reserve0, uint112 _reserve1) = getReserves();
         require(
@@ -137,14 +152,12 @@ contract Pair is IPair, ERC20 {
             balance0 = IERC20(_token0).balanceOf(address(this));
             balance1 = IERC20(_token1).balanceOf(address(this));
         }
-        uint256 amount0In =
-            balance0 > _reserve0 - amount0Out
-                ? balance0 - (_reserve0 - amount0Out)
-                : 0;
-        uint256 amount1In =
-            balance1 > _reserve1 - amount1Out
-                ? balance1 - (_reserve1 - amount1Out)
-                : 0;
+        uint256 amount0In = balance0 > _reserve0 - amount0Out
+            ? balance0 - (_reserve0 - amount0Out)
+            : 0;
+        uint256 amount1In = balance1 > _reserve1 - amount1Out
+            ? balance1 - (_reserve1 - amount1Out)
+            : 0;
         require(amount0In > 0 || amount1In > 0, " INSUFFICIENT_INPUT_AMOUNT");
         {
             uint256 balance0Adjusted = balance0.mul(1000).sub(amount0In.mul(3));
@@ -161,7 +174,7 @@ contract Pair is IPair, ERC20 {
     }
 
     function _update(uint256 balance0, uint256 balance1) private {
-        require(balance0 <= uint112(-1) && balance1 <= uint112(-1), "Overflow");
+        require(balance0 <= uint112(-1) && balance1 <= uint112(-1), "OVERFLOW");
         reserve0 = uint112(balance0);
         reserve1 = uint112(balance1);
     }
