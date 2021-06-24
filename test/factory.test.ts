@@ -49,4 +49,22 @@ describe('Factory', () => {
         await createPair(TEST_ADDRESSES)
         expect(await factory.allPairsLength()).to.eq(1);
     })
+
+    it('createPair:reverse', async () => {
+        await createPair(TEST_ADDRESSES.slice().reverse() as [string, string])
+        expect(await factory.allPairsLength()).to.eq(1);
+    })
+
+    it('setFeeTo', async () => {
+        await expect(factory.connect(walletTo).setFeeTo(walletTo.address)).to.be.revertedWith('FORBIDDEN')
+        await factory.setFeeTo(wallet.address)
+        expect(await factory.feeTo()).to.eq(wallet.address)
+    })
+
+    it('setFeeBasePoint', async () => {
+        const feeBasePoint = 5;
+        await expect(factory.connect(walletTo).setFeeBasePoint(feeBasePoint)).to.be.revertedWith('FORBIDDEN')
+        await factory.setFeeBasePoint(feeBasePoint)
+        expect(await factory.feeBasePoint()).to.eq(feeBasePoint)
+    })
 })

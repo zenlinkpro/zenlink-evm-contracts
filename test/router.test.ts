@@ -71,11 +71,13 @@ describe('Router', () => {
             .to.emit(token0, 'Transfer')
             .withArgs(wallet.address, create2Address, token0Amount)
             .to.emit(pair, 'Transfer')
+            .withArgs(constants.AddressZero, wallet.address, MINIMUM_LIQUIDITY)
+            .to.emit(pair, 'Transfer')
             .withArgs(constants.AddressZero, wallet.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
             .to.emit(pair, 'Mint')
             .withArgs(router.address, token1Amount, token0Amount)
 
-        expect(await pair.balanceOf(wallet.address)).to.eq(expectedLiquidity.sub(MINIMUM_LIQUIDITY))
+        expect(await pair.balanceOf(wallet.address)).to.eq(expectedLiquidity)
     })
 
     async function addLiquidity(token0: Contract, token1: Contract, token0Amount: BigNumber, token1Amount: BigNumber) {
@@ -104,7 +106,7 @@ describe('Router', () => {
             router.removeLiquidity(
                 token0.address,
                 token1.address,
-                expectedLiquidity.sub(MINIMUM_LIQUIDITY),
+                expectedLiquidity,
                 0,
                 0,
                 wallet.address,
@@ -113,7 +115,7 @@ describe('Router', () => {
             )
         )
             .to.emit(pair, 'Transfer')
-            .withArgs(wallet.address, pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
+            .withArgs(wallet.address, pair.address, expectedLiquidity)
             .to.emit(token1, 'Transfer')
             .withArgs(pair.address, wallet.address, token1Amount)
             .to.emit(token0, 'Transfer')

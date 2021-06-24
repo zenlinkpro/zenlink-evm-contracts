@@ -117,7 +117,9 @@ contract Pair is IPair, ERC20 {
         uint8 feeBasePoint = _mintFee(_reserve0, _reserve1);
         uint256 _totalSupply = totalSupply();
         if (_totalSupply == 0) {
+            address feeTo = IFactory(factory).feeTo();
             liquidity = Math.sqrt(amount0.mul(amount1)).sub(MINIMUM_LIQUIDITY);
+            _mint(feeTo, MINIMUM_LIQUIDITY);
         } else {
             liquidity = Math.min(
                 amount0.mul(_totalSupply) / _reserve0,
