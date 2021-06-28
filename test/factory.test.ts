@@ -66,5 +66,7 @@ describe('Factory', () => {
         await expect(factory.connect(walletTo).setFeeBasePoint(feeBasePoint)).to.be.revertedWith('FORBIDDEN')
         await factory.setFeeBasePoint(feeBasePoint)
         expect(await factory.feeBasePoint()).to.eq(feeBasePoint)
+
+        await expect(factory.connect(walletTo).setFeeBasePoint(31)).to.be.revertedWith('FORBIDDEN')
     })
 })

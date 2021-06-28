@@ -55,6 +55,7 @@ contract Factory is IFactory {
 
     function setFeeBasePoint(uint8 _basePoint) external {
         require(msg.sender == feeTo, "FORBIDDEN");
+        require(_basePoint <= 30, "FORBIDDEN");
         feeBasePoint = _basePoint;
     }
 }
