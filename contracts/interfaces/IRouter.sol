@@ -3,6 +3,8 @@ pragma solidity ^0.6.0;
 interface IRouter {
     function factory() external pure returns (address);
 
+    function WNativeCurrency() external pure returns (address);
+
     function addLiquidity(
         address tokenA,
         address tokenB,

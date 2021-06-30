@@ -4,18 +4,27 @@ import "./interfaces/IRouter.sol";
 import "./interfaces/IPair.sol";
 import "./interfaces/IFactory.sol";
 import "./libraries/zenlinkHelper.sol";
+import "./libraries/Math.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Router is IRouter {
-    address public override factory;
+    using Math for uint256;
 
-    constructor(address _factory) public {
+    address public override factory;
+    address public override WNativeCurrency;
+
+    constructor(address _factory, address _WNativeCurrency) public {
         factory = _factory;
+        WNativeCurrency = _WNativeCurrency;
     }
 
     modifier ensure(uint256 deadline) {
         require(deadline >= block.timestamp, "Router: EXPIRED");
         _;
+    }
+
+    receive() external payable {
+        assert(msg.sender == WNativeCurrency); // only accept Native Currency via fallback from the WNativeCurrency contract
     }
 
     function addLiquidity(
