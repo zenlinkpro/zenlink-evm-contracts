@@ -43,8 +43,9 @@ library ZenlinkHelper {
         address tokenB
     ) internal view returns (uint256 reserveA, uint256 reserveB) {
         (address token0, ) = sortTokens(tokenA, tokenB);
-        (uint256 reserve0, uint256 reserve1) =
-            IPair(pairFor(factory, tokenA, tokenB)).getReserves();
+        (uint256 reserve0, uint256 reserve1) = IPair(
+            pairFor(factory, tokenA, tokenB)
+        ).getReserves();
         (reserveA, reserveB) = tokenA == token0
             ? (reserve0, reserve1)
             : (reserve1, reserve0);
@@ -57,11 +58,35 @@ library ZenlinkHelper {
         uint256 value
     ) internal {
         // bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
-        (bool success, bytes memory data) =
-            token.call(abi.encodeWithSelector(0x23b872dd, from, to, value));
+        (bool success, bytes memory data) = token.call(
+            abi.encodeWithSelector(0x23b872dd, from, to, value)
+        );
         require(
             success && (data.length == 0 || abi.decode(data, (bool))),
             "TransferHelper::transferFrom: transferFrom failed"
+        );
+    }
+
+    function safeTransfer(
+        address token,
+        address to,
+        uint256 value
+    ) internal {
+        // bytes4(keccak256(bytes('transfer(address,uint256)')));
+        (bool success, bytes memory data) = token.call(
+            abi.encodeWithSelector(0xa9059cbb, to, value)
+        );
+        require(
+            success && (data.length == 0 || abi.decode(data, (bool))),
+            "TransferHelper::safeTransfer: transfer failed"
+        );
+    }
+
+    function safeTransferNativeCurrency(address to, uint256 value) internal {
+        (bool success, ) = to.call{value: value}(new bytes(0));
+        require(
+            success,
+            "TransferHelper::safeTransferNativeCurrency: NativeCurrency transfer failed"
         );
     }
 
@@ -108,8 +133,11 @@ library ZenlinkHelper {
         amounts = new uint256[](path.length);
         amounts[0] = amountIn;
         for (uint256 i; i < path.length - 1; i++) {
-            (uint256 reserveIn, uint256 reserveOut) =
-                getReserves(factory, path[i], path[i + 1]);
+            (uint256 reserveIn, uint256 reserveOut) = getReserves(
+                factory,
+                path[i],
+                path[i + 1]
+            );
             amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut);
         }
     }
@@ -123,8 +151,11 @@ library ZenlinkHelper {
         amounts = new uint256[](path.length);
         amounts[amounts.length - 1] = amountOut;
         for (uint256 i = path.length - 1; i > 0; i--) {
-            (uint256 reserveIn, uint256 reserveOut) =
-                getReserves(factory, path[i - 1], path[i]);
+            (uint256 reserveIn, uint256 reserveOut) = getReserves(
+                factory,
+                path[i - 1],
+                path[i]
+            );
             amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut);
         }
     }

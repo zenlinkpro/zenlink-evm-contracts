@@ -1,7 +1,7 @@
 pragma solidity ^0.6.0;
 
 import "./interfaces/IFactory.sol";
-import "./pair.sol";
+import "./Pair.sol";
 
 contract Factory is IFactory {
     address public override feeTo;

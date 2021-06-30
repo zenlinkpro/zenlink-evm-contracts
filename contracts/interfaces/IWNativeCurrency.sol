@@ -1,6 +1,6 @@
 pragma solidity ^0.6.0;
 
-interface INativeCurrency {
+interface IWNativeCurrency {
     function deposit() external payable;
 
     function withdraw(uint256) external;

@@ -86,7 +86,9 @@ contract Pair is IPair, ERC20 {
         uint256 _kLast = kLast; // gas savings
         if (feeBasePoint > 0) {
             if (_kLast != 0) {
-                uint256 rootK = Math.sqrt(uint256(_reserve0).mul(_reserve1));
+                uint256 rootK = Math.sqrt(
+                    uint256(_reserve0).mul(uint256(_reserve1))
+                );
                 uint256 rootKLast = Math.sqrt(_kLast);
                 if (rootK > rootKLast) {
                     uint256 numerator = totalSupply().mul(rootK.sub(rootKLast));

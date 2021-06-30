@@ -2,8 +2,9 @@ pragma solidity ^0.6.0;
 
 import "./interfaces/IRouter.sol";
 import "./interfaces/IPair.sol";
+import "./interfaces/IWNativeCurrency.sol";
 import "./interfaces/IFactory.sol";
-import "./libraries/zenlinkHelper.sol";
+import "./libraries/ZenlinkHelper.sol";
 import "./libraries/Math.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -58,6 +59,46 @@ contract Router is IRouter {
         ZenlinkHelper.safeTransferFrom(token0, msg.sender, pair, amount0);
         ZenlinkHelper.safeTransferFrom(token1, msg.sender, pair, amount1);
         liquidity = IPair(pair).mint(to);
+    }
+
+    function addLiquidityNativeCurrency(
+        address token,
+        uint256 amountTokenDesired,
+        uint256 amountTokenMin,
+        uint256 amountNativeCurrencyMin,
+        address to,
+        uint256 deadline
+    )
+        external
+        payable
+        override
+        ensure(deadline)
+        returns (
+            uint256 amountToken,
+            uint256 amountNativeCurrency,
+            uint256 liquidity
+        )
+    {
+        (amountToken, amountNativeCurrency) = _addLiquidity(
+            token,
+            WNativeCurrency,
+            amountTokenDesired,
+            msg.value,
+            amountTokenMin,
+            amountNativeCurrencyMin
+        );
+        address pair = ZenlinkHelper.pairFor(factory, token, WNativeCurrency);
+        ZenlinkHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
+        IWNativeCurrency(WNativeCurrency).deposit{
+            value: amountNativeCurrency
+        }();
+        assert(IERC20(WNativeCurrency).transfer(pair, amountNativeCurrency));
+        liquidity = IPair(pair).mint(to);
+        if (msg.value > amountNativeCurrency)
+            ZenlinkHelper.safeTransferNativeCurrency(
+                msg.sender,
+                msg.value - amountNativeCurrency
+            ); // refund dust eth, if any
     }
 
     function _addLiquidity(
@@ -131,6 +172,33 @@ contract Router is IRouter {
         require(amount1 >= amount1Min, "Router: INSUFFICIENT_1_AMOUNT");
     }
 
+    function removeLiquidityNativeCurrency(
+        address token,
+        uint256 liquidity,
+        uint256 amountTokenMin,
+        uint256 amountNativeCurrencyMin,
+        address to,
+        uint256 deadline
+    )
+        public
+        override
+        ensure(deadline)
+        returns (uint256 amountToken, uint256 amountNativeCurrency)
+    {
+        (amountToken, amountNativeCurrency) = removeLiquidity(
+            token,
+            WNativeCurrency,
+            liquidity,
+            amountTokenMin,
+            amountNativeCurrencyMin,
+            address(this),
+            deadline
+        );
+        ZenlinkHelper.safeTransfer(token, to, amountToken);
+        IWNativeCurrency(WNativeCurrency).withdraw(amountNativeCurrency);
+        ZenlinkHelper.safeTransferNativeCurrency(to, amountNativeCurrency);
+    }
+
     function _swap(
         uint256[] memory amounts,
         address[] memory path,
@@ -191,6 +259,121 @@ contract Router is IRouter {
             amounts[0]
         );
         _swap(amounts, path, to);
+    }
+
+    function swapExactNativeCurrencyForTokens(
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    )
+        external
+        payable
+        override
+        ensure(deadline)
+        returns (uint256[] memory amounts)
+    {
+        require(path[0] == WNativeCurrency, "Router: INVALID_PATH");
+        amounts = ZenlinkHelper.getAmountsOut(factory, msg.value, path);
+        require(
+            amounts[amounts.length - 1] >= amountOutMin,
+            "Router: INSUFFICIENT_OUTPUT_AMOUNT"
+        );
+        IWNativeCurrency(WNativeCurrency).deposit{value: amounts[0]}();
+        assert(
+            IERC20(WNativeCurrency).transfer(
+                ZenlinkHelper.pairFor(factory, path[0], path[1]),
+                amounts[0]
+            )
+        );
+        _swap(amounts, path, to);
+    }
+
+    function swapTokensForExactNativeCurrency(
+        uint256 amountOut,
+        uint256 amountInMax,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external override ensure(deadline) returns (uint256[] memory amounts) {
+        require(
+            path[path.length - 1] == WNativeCurrency,
+            "Router: INVALID_PATH"
+        );
+        amounts = ZenlinkHelper.getAmountsIn(factory, amountOut, path);
+        require(amounts[0] <= amountInMax, "Router: EXCESSIVE_INPUT_AMOUNT");
+        ZenlinkHelper.safeTransferFrom(
+            path[0],
+            msg.sender,
+            ZenlinkHelper.pairFor(factory, path[0], path[1]),
+            amounts[0]
+        );
+        _swap(amounts, path, address(this));
+        IWNativeCurrency(WNativeCurrency).withdraw(amounts[amounts.length - 1]);
+        ZenlinkHelper.safeTransferNativeCurrency(
+            to,
+            amounts[amounts.length - 1]
+        );
+    }
+
+    function swapExactTokensForNativeCurrency(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external override ensure(deadline) returns (uint256[] memory amounts) {
+        require(
+            path[path.length - 1] == WNativeCurrency,
+            "Router: INVALID_PATH"
+        );
+        amounts = ZenlinkHelper.getAmountsOut(factory, amountIn, path);
+        require(
+            amounts[amounts.length - 1] >= amountOutMin,
+            "Router: INSUFFICIENT_OUTPUT_AMOUNT"
+        );
+        ZenlinkHelper.safeTransferFrom(
+            path[0],
+            msg.sender,
+            ZenlinkHelper.pairFor(factory, path[0], path[1]),
+            amounts[0]
+        );
+        _swap(amounts, path, address(this));
+        IWNativeCurrency(WNativeCurrency).withdraw(amounts[amounts.length - 1]);
+        ZenlinkHelper.safeTransferNativeCurrency(
+            to,
+            amounts[amounts.length - 1]
+        );
+    }
+
+    function swapNativeCurrencyForExactTokens(
+        uint256 amountOut,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    )
+        external
+        payable
+        override
+        ensure(deadline)
+        returns (uint256[] memory amounts)
+    {
+        require(path[0] == WNativeCurrency, "Router: INVALID_PATH");
+        amounts = ZenlinkHelper.getAmountsIn(factory, amountOut, path);
+        require(amounts[0] <= msg.value, "Router: EXCESSIVE_INPUT_AMOUNT");
+        IWNativeCurrency(WNativeCurrency).deposit{value: amounts[0]}();
+        assert(
+            IERC20(WNativeCurrency).transfer(
+                ZenlinkHelper.pairFor(factory, path[0], path[1]),
+                amounts[0]
+            )
+        );
+        _swap(amounts, path, to);
+        if (msg.value > amounts[0])
+            ZenlinkHelper.safeTransferNativeCurrency(
+                msg.sender,
+                msg.value - amounts[0]
+            ); // refund dust eth, if any
     }
 
     function getAmountOut(
