@@ -15,7 +15,7 @@ interface FactoryFixture {
 }
 
 const overrides = {
-  gasLimit: 4100000
+  gasLimit: 6100000
 }
 
 export async function factoryFixture([wallet]: Wallet[], _: providers.Web3Provider,): Promise<FactoryFixture> {

@@ -11,7 +11,7 @@ import { isHexString } from "@ethersproject/bytes";
 use(solidity);
 
 const overrides = {
-    gasLimit: 4100000
+    gasLimit: 6100000
 }
 
 const MINIMUM_LIQUIDITY = BigNumber.from(10).pow(3)
@@ -89,6 +89,47 @@ describe('Router', () => {
         expect(await pair.balanceOf(wallet.address)).to.eq(expectedLiquidity)
     })
 
+    it('addLiquidityNativeCurrency', async () => {
+        const WNativeCurrencyPartnerAmount = expandTo18Decimals(1)
+        const NativeCurrencyAmount = expandTo18Decimals(4)
+        const expectedLiquidity = expandTo18Decimals(2)
+
+        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const create2Address = getCreate2Address(factory.address, [token0.address, WNativeCurrency.address], bytecode)
+        await expect(factory.createPair(token0.address, WNativeCurrency.address))
+            .to.emit(factory, 'PairCreated')
+            .withArgs(
+                token0.address > WNativeCurrency.address ? WNativeCurrency.address : token0.address,
+                token0.address > WNativeCurrency.address ? token0.address : WNativeCurrency.address,
+                create2Address,
+                BigNumber.from(1))
+
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+        const pairToken0 = await pair.token0()
+        await token0.approve(router.address, constants.MaxUint256)
+
+        await expect(
+            router.addLiquidityNativeCurrency(
+                token0.address,
+                WNativeCurrencyPartnerAmount,
+                WNativeCurrencyPartnerAmount,
+                NativeCurrencyAmount,
+                wallet.address,
+                constants.MaxUint256,
+                { ...overrides, value: NativeCurrencyAmount }
+            )
+        )
+            .to.emit(pair, 'Transfer')
+            .withArgs(constants.AddressZero, wallet.address, MINIMUM_LIQUIDITY)
+            .to.emit(pair, 'Transfer')
+            .withArgs(constants.AddressZero, wallet.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
+            .to.emit(pair, 'Mint')
+            .withArgs(
+                router.address,
+                pairToken0 === token0.address ? WNativeCurrencyPartnerAmount : NativeCurrencyAmount,
+                pairToken0 === token0.address ? NativeCurrencyAmount : WNativeCurrencyPartnerAmount)
+    })
+
     async function addLiquidity(token0: Contract, token1: Contract, token0Amount: BigNumber, token1Amount: BigNumber) {
         const bytecode = `0x${Pair.evm.bytecode.object}`
         const create2Address = getCreate2Address(factory.address, [token0.address, token1.address], bytecode)
@@ -135,6 +176,66 @@ describe('Router', () => {
             .withArgs(pair.address, wallet.address, amounts[1])
             .to.emit(pair, 'Burn')
             .withArgs(router.address, amounts[0], amounts[1], wallet.address)
+    })
+
+    it('removeLiquidityNativeCurrency', async () => {
+        const WNativeCurrencyPartnerAmount = expandTo18Decimals(1)
+        const WNativeCurrencyAmount = expandTo18Decimals(4)
+
+        await token0.approve(router.address, constants.MaxUint256)
+
+        await router.addLiquidityNativeCurrency(
+            token0.address,
+            WNativeCurrencyPartnerAmount,
+            WNativeCurrencyPartnerAmount,
+            WNativeCurrencyAmount,
+            wallet.address,
+            constants.MaxUint256,
+            { ...overrides, value: WNativeCurrencyAmount }
+        )
+
+        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const create2Address = getCreate2Address(factory.address, [token0.address, WNativeCurrency.address], bytecode)
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+
+        await pair.approve(router.address, constants.MaxUint256)
+        const pairToken0 = await pair.token0()
+
+        const expectedLiquidity = expandTo18Decimals(2)
+        await expect(
+            router.removeLiquidityNativeCurrency(
+                token0.address,
+                expectedLiquidity.sub(MINIMUM_LIQUIDITY),
+                0,
+                0,
+                wallet.address,
+                constants.MaxUint256,
+                overrides
+            )
+        )
+            .to.emit(pair, 'Transfer')
+            .withArgs(wallet.address, pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
+            .to.emit(pair, 'Transfer')
+            .withArgs(pair.address, constants.AddressZero, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
+            .to.emit(WNativeCurrency, 'Transfer')
+            .withArgs(pair.address, router.address, WNativeCurrencyAmount.sub(2000))
+            .to.emit(token0, 'Transfer')
+            .withArgs(pair.address, router.address, WNativeCurrencyPartnerAmount.sub(500))
+            .to.emit(token0, 'Transfer')
+            .withArgs(router.address, wallet.address, WNativeCurrencyPartnerAmount.sub(500))
+            .to.emit(pair, 'Burn')
+            .withArgs(
+                router.address,
+                pairToken0 === token0.address ? WNativeCurrencyPartnerAmount.sub(500) : WNativeCurrencyAmount.sub(2000),
+                pairToken0 === token0.address ? WNativeCurrencyAmount.sub(2000) : WNativeCurrencyPartnerAmount.sub(500),
+                router.address
+            )
+
+        expect(await pair.balanceOf(wallet.address)).to.eq(MINIMUM_LIQUIDITY)
+        const totalSupplyWETHPartner = await token0.totalSupply()
+        const totalSupplyWETH = await WNativeCurrency.totalSupply()
+        expect(await token0.balanceOf(wallet.address)).to.eq(totalSupplyWETHPartner.sub(500))
+        expect(await WNativeCurrency.balanceOf(wallet.address)).to.eq(totalSupplyWETH.sub(2000))
     })
 
     it('swapExactTokensForTokens', async () => {
