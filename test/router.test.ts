@@ -232,10 +232,10 @@ describe('Router', () => {
             )
 
         expect(await pair.balanceOf(wallet.address)).to.eq(MINIMUM_LIQUIDITY)
-        const totalSupplyWETHPartner = await token0.totalSupply()
-        const totalSupplyWETH = await WNativeCurrency.totalSupply()
-        expect(await token0.balanceOf(wallet.address)).to.eq(totalSupplyWETHPartner.sub(500))
-        expect(await WNativeCurrency.balanceOf(wallet.address)).to.eq(totalSupplyWETH.sub(2000))
+        const totalSupplyWNativeCurrencyPartner = await token0.totalSupply()
+        const totalSupplyWNativeCurrency = await WNativeCurrency.totalSupply()
+        expect(await token0.balanceOf(wallet.address)).to.eq(totalSupplyWNativeCurrencyPartner.sub(500))
+        expect(await WNativeCurrency.balanceOf(wallet.address)).to.eq(totalSupplyWNativeCurrency.sub(2000))
     })
 
     it('swapExactTokensForTokens', async () => {
@@ -305,5 +305,195 @@ describe('Router', () => {
             .withArgs(router.address, expectedSwapAmount, 0, 0, outputAmount, wallet.address)
     })
 
+    it('swapExactNativeCurrencyForTokens', async () => {
+        const WNativeCurrencyPartnerAmount = expandTo18Decimals(10)
+        const WNativeCurrencyAmount = expandTo18Decimals(5)
+        const swapAmount = expandTo18Decimals(1)
+        const expectedOutputAmount = BigNumber.from('1662497915624478906')
+
+        await token0.approve(router.address, constants.MaxUint256)
+
+        await router.addLiquidityNativeCurrency(
+            token0.address,
+            WNativeCurrencyPartnerAmount,
+            WNativeCurrencyPartnerAmount,
+            WNativeCurrencyAmount,
+            wallet.address,
+            constants.MaxUint256,
+            { ...overrides, value: WNativeCurrencyAmount }
+        )
+
+        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const create2Address = getCreate2Address(factory.address, [token0.address, WNativeCurrency.address], bytecode)
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+
+        const pairToken0 = await pair.token0()
+        await expect(
+            router.swapExactNativeCurrencyForTokens(0, [WNativeCurrency.address, token0.address], wallet.address, constants.MaxUint256, {
+                ...overrides,
+                value: swapAmount
+            })
+        )
+            .to.emit(WNativeCurrency, 'Transfer')
+            .withArgs(router.address, pair.address, swapAmount)
+            .to.emit(token0, 'Transfer')
+            .withArgs(pair.address, wallet.address, expectedOutputAmount)
+            .to.emit(pair, 'Swap')
+            .withArgs(
+                router.address,
+                pairToken0 === token0.address ? 0 : swapAmount,
+                pairToken0 === token0.address ? swapAmount : 0,
+                pairToken0 === token0.address ? expectedOutputAmount : 0,
+                pairToken0 === token0.address ? 0 : expectedOutputAmount,
+                wallet.address
+            )
+    })
+
+    it('swapTokensForExactNativeCurrency', async () => {
+        const WNativeCurrencyPartnerAmount = expandTo18Decimals(5)
+        const WNativeCurrencyAmount = expandTo18Decimals(10)
+
+        const expectedSwapAmount = BigNumber.from('557227237267357629')
+        const outputAmount = expandTo18Decimals(1)
+
+        await token0.approve(router.address, constants.MaxUint256)
+        await router.addLiquidityNativeCurrency(
+            token0.address,
+            WNativeCurrencyPartnerAmount,
+            WNativeCurrencyPartnerAmount,
+            WNativeCurrencyAmount,
+            wallet.address,
+            constants.MaxUint256,
+            { ...overrides, value: WNativeCurrencyAmount }
+        )
+
+        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const create2Address = getCreate2Address(factory.address, [token0.address, WNativeCurrency.address], bytecode)
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+
+        const pairToken0 = await pair.token0()
+        await expect(
+            router.swapTokensForExactNativeCurrency(
+                outputAmount,
+                constants.MaxUint256,
+                [token0.address, WNativeCurrency.address],
+                wallet.address,
+                constants.MaxUint256,
+                overrides
+            )
+        )
+            .to.emit(token0, 'Transfer')
+            .withArgs(wallet.address, pair.address, expectedSwapAmount)
+            .to.emit(WNativeCurrency, 'Transfer')
+            .withArgs(pair.address, router.address, outputAmount)
+            .to.emit(pair, 'Swap')
+            .withArgs(
+                router.address,
+                pairToken0 === token0.address ? expectedSwapAmount : 0,
+                pairToken0 === token0.address ? 0 : expectedSwapAmount,
+                pairToken0 === token0.address ? 0 : outputAmount,
+                pairToken0 === token0.address ? outputAmount : 0,
+                router.address
+            )
+    })
+
+    it('swapNativeCurrencyForExactTokens', async () => {
+        const WNativeCurrencyPartnerAmount = expandTo18Decimals(10)
+        const WNativeCurrencyAmount = expandTo18Decimals(5)
+        const expectedSwapAmount = BigNumber.from('557227237267357629')
+        const outputAmount = expandTo18Decimals(1)
+
+        await token0.approve(router.address, constants.MaxUint256)
+        await router.addLiquidityNativeCurrency(
+            token0.address,
+            WNativeCurrencyPartnerAmount,
+            WNativeCurrencyPartnerAmount,
+            WNativeCurrencyAmount,
+            wallet.address,
+            constants.MaxUint256,
+            { ...overrides, value: WNativeCurrencyAmount }
+        )
+
+        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const create2Address = getCreate2Address(factory.address, [token0.address, WNativeCurrency.address], bytecode)
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+
+        const pairToken0 = await pair.token0()
+
+        await expect(
+            router.swapNativeCurrencyForExactTokens(
+                outputAmount,
+                [WNativeCurrency.address, token0.address],
+                wallet.address,
+                constants.MaxUint256,
+                {
+                    ...overrides,
+                    value: expectedSwapAmount
+                }
+            )
+        )
+            .to.emit(WNativeCurrency, 'Transfer')
+            .withArgs(router.address, pair.address, expectedSwapAmount)
+            .to.emit(token0, 'Transfer')
+            .withArgs(pair.address, wallet.address, outputAmount)
+            .to.emit(pair, 'Swap')
+            .withArgs(
+                router.address,
+                pairToken0 === token0.address ? 0 : expectedSwapAmount,
+                pairToken0 === token0.address ? expectedSwapAmount : 0,
+                pairToken0 === token0.address ? outputAmount : 0,
+                pairToken0 === token0.address ? 0 : outputAmount,
+                wallet.address
+            )
+    })
+
+    it('swapExactTokensForNativeCurrency', async () => {
+        const WNativeCurrencyPartnerAmount = expandTo18Decimals(5)
+        const WNativeCurrencyAmount = expandTo18Decimals(10)
+        const swapAmount = expandTo18Decimals(1)
+        const expectedOutputAmount = BigNumber.from('1662497915624478906')
+
+        await token0.approve(router.address, constants.MaxUint256)
+
+        await router.addLiquidityNativeCurrency(
+            token0.address,
+            WNativeCurrencyPartnerAmount,
+            WNativeCurrencyPartnerAmount,
+            WNativeCurrencyAmount,
+            wallet.address,
+            constants.MaxUint256,
+            { ...overrides, value: WNativeCurrencyAmount }
+        )
+        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const create2Address = getCreate2Address(factory.address, [token0.address, WNativeCurrency.address], bytecode)
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+
+        const pairToken0 = await pair.token0()
+        await token0.approve(router.address, constants.MaxUint256)
+
+        await expect(
+            router.swapExactTokensForNativeCurrency(
+                swapAmount,
+                0,
+                [token0.address, WNativeCurrency.address],
+                wallet.address,
+                constants.MaxUint256,
+                overrides
+            )
+        )
+            .to.emit(token0, 'Transfer')
+            .withArgs(wallet.address, pair.address, swapAmount)
+            .to.emit(WNativeCurrency, 'Transfer')
+            .withArgs(pair.address, router.address, expectedOutputAmount)
+            .to.emit(pair, 'Swap')
+            .withArgs(
+                router.address,
+                pairToken0 === token0.address ? swapAmount : 0,
+                pairToken0 === token0.address ? 0 : swapAmount,
+                pairToken0 === token0.address ? 0 : expectedOutputAmount,
+                pairToken0 === token0.address ? expectedOutputAmount : 0,
+                router.address
+            )
+    })
 
 });
