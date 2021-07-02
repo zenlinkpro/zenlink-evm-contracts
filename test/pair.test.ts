@@ -235,7 +235,7 @@ describe('Pair', () => {
         const expectedLiquidity = expandTo18Decimals(1000)
         await pair.transfer(pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
         await pair.burn(wallet.address, overrides)
-        //(sqrt(1001E18 × (1000E18 − 996006981039903216)) − 1000E18)/(10 ×sqrt(1001E18 × (1000E18 − 996006981039903216))/20 +  1000E18) × 1000E18 = 999 002 745 509 855
+        //(sqrt(1001E18 × (1000E18 − 996006981039903216)) − 1000E18)/((30 - 20) ×sqrt(1001E18 × (1000E18 − 996006981039903216))/20 +  1000E18) × 1000E18 = 999 002 745 509 855
         expect(await pair.totalSupply()).to.eq(BigNumber.from(1000).add('999002745509855'))
         expect(await pair.balanceOf(walletTo.address)).to.eq(BigNumber.from(1000).add('999002745509855'))
 
