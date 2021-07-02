@@ -218,4 +218,28 @@ describe('Pair', () => {
         expect(await token0.balanceOf(pair.address)).to.eq(BigNumber.from(1000).add('249501683697445'))
         expect(await token1.balanceOf(pair.address)).to.eq(BigNumber.from(1000).add('250000187312969'))
     })
+
+    it('fee:basePoint=20', async () => {
+        await factory.setFeeBasePoint(20)
+        await factory.setFeeTo(walletTo.address)
+
+        const token0Amount = expandTo18Decimals(1000)
+        const token1Amount = expandTo18Decimals(1000)
+        await addLiquidity(token0Amount, token1Amount)
+
+        const swapAmount = expandTo18Decimals(1)
+        const expectedOutputAmount = BigNumber.from('996006981039903216')
+        await token1.transfer(pair.address, swapAmount)
+        await pair.swap(expectedOutputAmount, 0, wallet.address, overrides)
+
+        const expectedLiquidity = expandTo18Decimals(1000)
+        await pair.transfer(pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
+        await pair.burn(wallet.address, overrides)
+        //(sqrt(1001E18 × (1000E18 − 996006981039903216)) − 1000E18)/(10 ×sqrt(1001E18 × (1000E18 − 996006981039903216))/20 +  1000E18) × 1000E18 = 999 002 745 509 855
+        expect(await pair.totalSupply()).to.eq(BigNumber.from(1000).add('999002745509855'))
+        expect(await pair.balanceOf(walletTo.address)).to.eq(BigNumber.from(1000).add('999002745509855'))
+
+        expect(await token0.balanceOf(pair.address)).to.eq(998006734790781)
+        expect(await token1.balanceOf(pair.address)).to.eq(1000000749252872)
+    })
 });

@@ -92,9 +92,10 @@ contract Pair is IPair, ERC20 {
                 uint256 rootKLast = Math.sqrt(_kLast);
                 if (rootK > rootKLast) {
                     uint256 numerator = totalSupply().mul(rootK.sub(rootKLast));
-                    uint256 denominator = rootK.mul(30 / feeBasePoint - 1).add(
-                        rootKLast
-                    );
+                    uint256 denominator = (
+                        rootK.mul(30 - feeBasePoint).div(feeBasePoint)
+                    )
+                    .add(rootKLast);
                     uint256 liquidity = numerator / denominator;
                     if (liquidity > 0) _mint(feeTo, liquidity);
                 }
