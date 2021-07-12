@@ -1,4 +1,4 @@
-pragma solidity ^0.6.0;
+pragma solidity >=0.8.0;
 
 import "./interfaces/IPair.sol";
 import "./interfaces/IFactory.sol";
@@ -7,6 +7,7 @@ import "./libraries/Math.sol";
 import "./libraries/UQ112x112.sol";
 
 contract Pair is IPair, ERC20 {
+    using Math for uint256;
     uint256 public constant override MINIMUM_LIQUIDITY = 10**3;
     bytes4 private constant SELECTOR =
         bytes4(keccak256(bytes("transfer(address,uint256)")));
@@ -51,23 +52,7 @@ contract Pair is IPair, ERC20 {
         _reserve1 = reserve1;
     }
 
-    event Mint(address indexed sender, uint256 amount0, uint256 amount1);
-    event Burn(
-        address indexed sender,
-        uint256 amount0,
-        uint256 amount1,
-        address indexed to
-    );
-    event Swap(
-        address indexed sender,
-        uint256 amount0In,
-        uint256 amount1In,
-        uint256 amount0Out,
-        uint256 amount1Out,
-        address indexed to
-    );
-
-    constructor() public ERC20("Zenlink", "ZLK") {
+    constructor() ERC20("Zenlink", "ZLK") {
         factory = msg.sender;
     }
 
@@ -92,9 +77,8 @@ contract Pair is IPair, ERC20 {
                 uint256 rootKLast = Math.sqrt(_kLast);
                 if (rootK > rootKLast) {
                     uint256 numerator = totalSupply().mul(rootK.sub(rootKLast));
-                    uint256 denominator = (
-                        rootK.mul(30 - feeBasePoint).div(feeBasePoint)
-                    )
+                    uint256 denominator = (rootK.mul(30 - feeBasePoint) /
+                        feeBasePoint)
                     .add(rootKLast);
                     uint256 liquidity = numerator / denominator;
                     if (liquidity > 0) _mint(feeTo, liquidity);
@@ -211,7 +195,10 @@ contract Pair is IPair, ERC20 {
     }
 
     function _update(uint256 balance0, uint256 balance1) private {
-        require(balance0 <= uint112(-1) && balance1 <= uint112(-1), "OVERFLOW");
+        require(
+            balance0 <= type(uint112).max && balance1 <= type(uint112).max,
+            "OVERFLOW"
+        );
         reserve0 = uint112(balance0);
         reserve1 = uint112(balance1);
     }

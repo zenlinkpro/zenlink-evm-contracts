@@ -1,4 +1,4 @@
-pragma solidity ^0.6.0;
+pragma solidity >=0.8.0;
 
 import "./interfaces/IFactory.sol";
 import "./Pair.sol";
@@ -10,14 +10,7 @@ contract Factory is IFactory {
     mapping(address => mapping(address => address)) public override getPair;
     address[] public override allPairs;
 
-    event PairCreated(
-        address indexed token0,
-        address indexed token1,
-        address pair,
-        uint256
-    );
-
-    constructor(address _feeTo) public {
+    constructor(address _feeTo) {
         feeTo = _feeTo;
     }
 

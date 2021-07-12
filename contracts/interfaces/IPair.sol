@@ -1,4 +1,4 @@
-pragma solidity ^0.6.0;
+pragma solidity >=0.8.0;
 
 interface IPair {
     event Mint(address indexed sender, uint256 amount0, uint256 amount1);
@@ -12,7 +12,7 @@ interface IPair {
         address indexed sender,
         uint256 amount0In,
         uint256 amount1In,
-        uint256 amount0Out, 
+        uint256 amount0Out,
         uint256 amount1Out,
         address indexed to
     );
