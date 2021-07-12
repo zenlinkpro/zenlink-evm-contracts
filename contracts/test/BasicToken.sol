@@ -1,4 +1,4 @@
-pragma solidity ^0.6.0;
+pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
@@ -8,7 +8,7 @@ contract BasicToken is ERC20 {
         string memory setName,
         string memory setSymbol,
         uint256 initialBalance
-    ) public ERC20(setName, setSymbol) {
+    ) ERC20(setName, setSymbol) {
         _mint(msg.sender, initialBalance);
     }
 }

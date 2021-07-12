@@ -1,4 +1,4 @@
-pragma solidity ^0.6.0;
+pragma solidity >=0.8.0;
 
 import "./interfaces/IRouter.sol";
 import "./interfaces/IPair.sol";
@@ -14,7 +14,7 @@ contract Router is IRouter {
     address public override factory;
     address public override WNativeCurrency;
 
-    constructor(address _factory, address _WNativeCurrency) public {
+    constructor(address _factory, address _WNativeCurrency) {
         factory = _factory;
         WNativeCurrency = _WNativeCurrency;
     }
