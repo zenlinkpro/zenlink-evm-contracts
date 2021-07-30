@@ -38,7 +38,7 @@ contract Router is IRouter {
         address to,
         uint256 deadline
     )
-        external
+        public
         override
         ensure(deadline)
         returns (
@@ -62,38 +62,35 @@ contract Router is IRouter {
     }
 
     function addLiquiditySingleToken(
-        address[]calldata path,
+        address[] calldata path,
         uint256 amountIn,
         uint256 amountSwapIn,
         uint256 amountSwapOutMin,
         address to,
         uint256 deadline
-    )
-        external
-        override
-        ensure(deadline)
-        returns (
-            uint256 liquidity
-        )
-    {
+    ) external override ensure(deadline) returns (uint256 liquidity) {
         address token0 = path[0];
         address token1 = path[path.length - 1];
-        address pair = ZenlinkHelper.pairFor(factory, token0, token1);
         uint256[] memory amounts = swapExactTokensForTokens(
             amountSwapIn,
             amountSwapOutMin,
             path,
-            pair,
+            msg.sender,
             deadline
         );
-        uint256 amount0;
-        uint256 amount1;
-        uint256 amountInReserve;
         {
+            uint256 amountInReserve;
             amountInReserve = amountIn - amountSwapIn;
-            (amount0, amount1) = _addLiquidity(token0, token1, amountInReserve, amounts[amounts.length -1], amountInReserve, amounts[amounts.length -1]);
-            ZenlinkHelper.safeTransferFrom(token0, msg.sender, pair, amount0);
-            liquidity = IPair(pair).mint(to);
+            (, , liquidity) = addLiquidity(
+                token0,
+                token1,
+                amountInReserve,
+                amounts[amounts.length - 1],
+                amountInReserve,
+                amounts[amounts.length - 1],
+                to,
+                deadline
+            );
         }
     }
 
