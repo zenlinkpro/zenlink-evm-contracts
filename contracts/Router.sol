@@ -71,6 +71,7 @@ contract Router is IRouter {
     ) external override ensure(deadline) returns (uint256 liquidity) {
         address token0 = path[0];
         address token1 = path[path.length - 1];
+        
         uint256[] memory amounts = swapExactTokensForTokens(
             amountSwapIn,
             amountSwapOutMin,
@@ -78,20 +79,20 @@ contract Router is IRouter {
             msg.sender,
             deadline
         );
-        {
-            uint256 amountInReserve;
-            amountInReserve = amountIn - amountSwapIn;
-            (, , liquidity) = addLiquidity(
-                token0,
-                token1,
-                amountInReserve,
-                amounts[amounts.length - 1],
-                amountInReserve,
-                amounts[amounts.length - 1],
-                to,
-                deadline
-            );
-        }
+
+        uint256 amountInReserve;
+        amountInReserve = amountIn - amountSwapIn;
+
+        (, , liquidity) = addLiquidity(
+            token0,
+            token1,
+            amountInReserve,
+            amounts[amounts.length - 1],
+            amountInReserve,
+            amounts[amounts.length - 1],
+            to,
+            deadline
+        );
     }
 
     function addLiquidityNativeCurrency(
