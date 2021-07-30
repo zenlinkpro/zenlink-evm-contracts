@@ -1,9 +1,9 @@
 pragma solidity >=0.8.0;
 
 interface IRouter {
-    function factory() external returns (address);
+    function factory() external view returns (address);
 
-    function WNativeCurrency() external returns (address);
+    function WNativeCurrency() external view returns (address);
 
     function addLiquidity(
         address tokenA,
@@ -19,6 +19,19 @@ interface IRouter {
         returns (
             uint256 amountA,
             uint256 amountB,
+            uint256 liquidity
+        );
+
+    function addLiquiditySingleToken(
+        address[] calldata path,
+        uint256 amountIn,
+        uint256 amountSwapIn,
+        uint256 amountSwapOutMin,
+        address to,
+        uint256 deadline
+    )
+        external
+        returns (
             uint256 liquidity
         );
 
