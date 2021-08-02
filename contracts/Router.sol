@@ -132,7 +132,7 @@ contract Router is IRouter {
             ZenlinkHelper.safeTransferNativeCurrency(
                 msg.sender,
                 msg.value - amountNativeCurrency
-            ); // refund dust eth, if any
+            ); // refund dust native currency, if any
     }
 
     function _addLiquidity(
