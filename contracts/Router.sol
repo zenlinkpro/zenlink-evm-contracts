@@ -82,13 +82,14 @@ contract Router is IRouter {
 
         uint256 amountInReserve;
         amountInReserve = amountIn - amountSwapIn;
-
+        uint256 amountInReserveMin = amountInReserve.mul(9) / 10;
+        
         (, , liquidity) = addLiquidity(
             token0,
             token1,
             amountInReserve,
             amounts[amounts.length - 1],
-            amountInReserve,
+            amountInReserveMin,
             amounts[amounts.length - 1],
             to,
             deadline
