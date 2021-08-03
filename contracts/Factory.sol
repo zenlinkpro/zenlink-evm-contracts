@@ -51,4 +51,40 @@ contract Factory is IFactory {
         require(_basePoint <= 30, "FORBIDDEN");
         feeBasePoint = _basePoint;
     }
+
+    function lockPairMint(address tokenA, address tokenB) external {
+        require(msg.sender == admin, "FORBIDDEN");
+        address pair = getPair[tokenA][tokenB];
+        IPair(pair).lockMint();
+    }
+
+    function unlockPairMint(address tokenA, address tokenB) external {
+        require(msg.sender == admin, "FORBIDDEN");
+        address pair = getPair[tokenA][tokenB];
+        IPair(pair).unlockMint();
+    }
+
+    function lockPairBurn(address tokenA, address tokenB) external {
+        require(msg.sender == admin, "FORBIDDEN");
+        address pair = getPair[tokenA][tokenB];
+        IPair(pair).lockBurn();
+    }
+
+    function unlockPairBurn(address tokenA, address tokenB) external {
+        require(msg.sender == admin, "FORBIDDEN");
+        address pair = getPair[tokenA][tokenB];
+        IPair(pair).unlockBurn();
+    }
+
+    function lockPairSwap(address tokenA, address tokenB) external {
+        require(msg.sender == admin, "FORBIDDEN");
+        address pair = getPair[tokenA][tokenB];
+        IPair(pair).lockSwap();
+    }
+
+    function unlockPairSwap(address tokenA, address tokenB) external {
+        require(msg.sender == admin, "FORBIDDEN");
+        address pair = getPair[tokenA][tokenB];
+        IPair(pair).unlockSwap();
+    }
 }

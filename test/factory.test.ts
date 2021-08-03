@@ -69,4 +69,16 @@ describe('Factory', () => {
 
         await expect(factory.connect(walletTo).setFeeBasePoint(31)).to.be.revertedWith('FORBIDDEN')
     })
+
+    it('lock:forbidden', async () => {
+        await createPair(TEST_ADDRESSES)
+        await expect(factory.connect(walletTo).lockPairMint(...TEST_ADDRESSES)).to.be.revertedWith('FORBIDDEN')
+        await expect(factory.connect(walletTo).unlockPairMint(...TEST_ADDRESSES)).to.be.revertedWith('FORBIDDEN')
+
+        await expect(factory.connect(walletTo).lockPairBurn(...TEST_ADDRESSES)).to.be.revertedWith('FORBIDDEN')
+        await expect(factory.connect(walletTo).unlockPairBurn(...TEST_ADDRESSES)).to.be.revertedWith('FORBIDDEN')
+
+        await expect(factory.connect(walletTo).lockPairSwap(...TEST_ADDRESSES)).to.be.revertedWith('FORBIDDEN')
+        await expect(factory.connect(walletTo).unlockPairSwap(...TEST_ADDRESSES)).to.be.revertedWith('FORBIDDEN')
+    })
 })

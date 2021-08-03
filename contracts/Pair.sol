@@ -18,14 +18,64 @@ contract Pair is IPair, ERC20 {
 
     uint112 private reserve0;
     uint112 private reserve1;
-    uint256 private kLast;
+    uint256 public kLast;
 
-    uint256 private unlocked = 1;
+    uint8 private unlocked = 1;
+
+    uint8 private mintUnlocked = 0;
+    uint8 private burnLocked = 0;
+    uint8 private swapLocked = 0;
+
     modifier lock() {
         require(unlocked == 1, "LOCKED");
         unlocked = 0;
         _;
         unlocked = 1;
+    }
+
+    modifier mintUnlock() {
+        require(mintUnlocked == 0, "mint locked");
+        _;
+    }
+
+    modifier burnUnlock() {
+        require(burnLocked == 0, "burn locked");
+        _;
+    }
+
+    modifier swapUnlock() {
+        require(swapLocked == 0, "swap locked");
+        _;
+    }
+
+    function lockMint() external override {
+        require(msg.sender == factory, "Only called by factory");
+        mintUnlocked = 1;
+    }
+
+    function unlockMint() external override {
+        require(msg.sender == factory, "Only called by factory");
+        mintUnlocked = 0;
+    }
+
+    function lockBurn() external override {
+        require(msg.sender == factory, "Only called by factory");
+        burnLocked = 1;
+    }
+
+    function unlockBurn() external override {
+        require(msg.sender == factory, "Only called by factory");
+        burnLocked = 0;
+    }
+
+    function lockSwap() external override {
+        require(msg.sender == factory, "Only called by factory");
+        swapLocked = 1;
+    }
+
+    function unlockSwap() external override {
+        require(msg.sender == factory, "Only called by factory");
+        swapLocked = 0;
     }
 
     function _safeTransfer(
@@ -78,8 +128,7 @@ contract Pair is IPair, ERC20 {
                 if (rootK > rootKLast) {
                     uint256 numerator = totalSupply().mul(rootK.sub(rootKLast));
                     uint256 denominator = (rootK.mul(30 - feeBasePoint) /
-                        feeBasePoint)
-                    .add(rootKLast);
+                        feeBasePoint).add(rootKLast);
                     uint256 liquidity = numerator / denominator;
                     if (liquidity > 0) _mint(feeTo, liquidity);
                 }
@@ -93,6 +142,7 @@ contract Pair is IPair, ERC20 {
         external
         override
         lock
+        mintUnlock
         returns (uint256 liquidity)
     {
         (uint112 _reserve0, uint112 _reserve1) = getReserves();
@@ -125,6 +175,7 @@ contract Pair is IPair, ERC20 {
         external
         override
         lock
+        burnUnlock
         returns (uint256 amount0, uint256 amount1)
     {
         (uint112 _reserve0, uint112 _reserve1) = getReserves();
@@ -154,7 +205,7 @@ contract Pair is IPair, ERC20 {
         uint256 amount0Out,
         uint256 amount1Out,
         address to
-    ) external override lock {
+    ) external override lock swapUnlock {
         require(amount0Out > 0 || amount1Out > 0, "INSUFFICIENT_OUTPUT_AMOUNT");
         (uint112 _reserve0, uint112 _reserve1) = getReserves();
         require(

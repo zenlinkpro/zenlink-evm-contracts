@@ -43,4 +43,13 @@ interface IPair {
     ) external;
 
     function initialize(address, address) external;
+
+    function lockMint() external;
+    function unlockMint() external;
+
+    function lockBurn() external; 
+    function unlockBurn() external;
+
+    function lockSwap() external;
+    function unlockSwap() external;
 }

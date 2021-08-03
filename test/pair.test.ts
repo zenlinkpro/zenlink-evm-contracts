@@ -242,4 +242,77 @@ describe('Pair', () => {
         expect(await token0.balanceOf(pair.address)).to.eq(998006734790781)
         expect(await token1.balanceOf(pair.address)).to.eq(1000000749252872)
     })
+
+    it('lock: forbidden', async () => {
+        await expect(pair.lockMint()).to.be.revertedWith("Only called by factory")
+        await expect(pair.unlockMint()).to.be.revertedWith("Only called by factory")
+
+        await expect(pair.lockBurn()).to.be.revertedWith("Only called by factory")
+        await expect(pair.unlockMint()).to.be.revertedWith("Only called by factory")
+
+        await expect(pair.lockSwap()).to.be.revertedWith("Only called by factory")
+        await expect(pair.unlockSwap()).to.be.revertedWith("Only called by factory")
+    })
+
+    it('lock: mint', async () => {
+        await factory.lockPairMint(token0.address, token1.address)
+
+        const token0Amount = expandTo18Decimals(5)
+        const token1Amount = expandTo18Decimals(10)
+        await token0.transfer(pair.address, token0Amount)
+        await token1.transfer(pair.address, token1Amount)
+
+        await expect(pair.mint(wallet.address, overrides)).to.be.revertedWith('mint locked')
+
+        await factory.unlockPairMint(token0.address, token1.address)
+
+        await expect(pair.mint(wallet.address, overrides))
+            .to.emit(pair, 'Mint')
+            .withArgs(wallet.address, token0Amount, token1Amount)
+    })
+
+    it('lock: burn', async () => {
+        await factory.lockPairBurn(token0.address, token1.address)
+
+        const token0Amount = expandTo18Decimals(3)
+        const token1Amount = expandTo18Decimals(3)
+        await addLiquidity(token0Amount, token1Amount)
+
+        const expectedLiquidity = expandTo18Decimals(3)
+        await pair.transfer(pair.address, expectedLiquidity)
+
+        await expect(pair.burn(wallet.address, overrides)).to.be.revertedWith('burn locked')
+
+        await factory.unlockPairBurn(token0.address, token1.address)
+
+        await expect(pair.burn(wallet.address, overrides))
+            .to.emit(token0, 'Transfer')
+            .withArgs(pair.address, wallet.address, token0Amount)
+            .to.emit(token1, 'Transfer')
+            .withArgs(pair.address, wallet.address, token1Amount)
+            .to.emit(pair, 'Burn')
+            .withArgs(wallet.address, token0Amount, token1Amount, wallet.address)
+    })
+
+    it('lock: swap', async () => {
+        await factory.lockPairSwap(token0.address, token1.address)
+
+        const token0Amount = expandTo18Decimals(5)
+        const token1Amount = expandTo18Decimals(10)
+        await addLiquidity(token0Amount, token1Amount)
+
+        const swapAmount = expandTo18Decimals(1)
+        const expectedOutputAmount = BigNumber.from('453305446940074565')
+        await token1.transfer(pair.address, swapAmount)
+
+        await expect(pair.swap(expectedOutputAmount, 0, wallet.address, overrides)).to.be.revertedWith('swap locked')
+
+        await factory.unlockPairSwap(token0.address, token1.address)
+
+        await expect(pair.swap(expectedOutputAmount, 0, wallet.address, overrides))
+            .to.emit(token0, 'Transfer')
+            .withArgs(pair.address, wallet.address, expectedOutputAmount)
+            .to.emit(pair, 'Swap')
+            .withArgs(wallet.address, 0, swapAmount, expectedOutputAmount, 0, wallet.address)
+    })
 });
