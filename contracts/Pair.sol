@@ -18,7 +18,7 @@ contract Pair is IPair, ERC20 {
 
     uint112 private reserve0;
     uint112 private reserve1;
-    uint256 public kLast;
+    uint256 private kLast;
 
     uint256 private unlocked = 1;
     modifier lock() {
