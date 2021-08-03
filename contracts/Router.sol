@@ -64,33 +64,31 @@ contract Router is IRouter {
     function addLiquiditySingleToken(
         address[] calldata path,
         uint256 amountIn,
-        uint256 amountSwapIn,
-        uint256 amountSwapOutMin,
+        uint256 amountSwapOut,
+        uint256 amountSwapInMax,
         address to,
         uint256 deadline
     ) external override ensure(deadline) returns (uint256 liquidity) {
         address token0 = path[0];
         address token1 = path[path.length - 1];
-        
-        uint256[] memory amounts = swapExactTokensForTokens(
-            amountSwapIn,
-            amountSwapOutMin,
+
+        uint256[] memory amounts = swapTokensForExactTokens(
+            amountSwapOut,
+            amountSwapInMax,
             path,
-            msg.sender,
+            to,
             deadline
         );
-
-        uint256 amountInReserve;
-        amountInReserve = amountIn - amountSwapIn;
-        uint256 amountInReserveMin = amountInReserve.mul(9) / 10;
         
+        uint256 amountInReserve = amountIn - amounts[0];
+        uint256 amountInReserveMin = amountInReserve * 9 / 10;
         (, , liquidity) = addLiquidity(
             token0,
             token1,
             amountInReserve,
-            amounts[amounts.length - 1],
+            amounts[amounts.length -1],
             amountInReserveMin,
-            amounts[amounts.length - 1],
+            amounts[amounts.length -1],
             to,
             deadline
         );
@@ -284,7 +282,7 @@ contract Router is IRouter {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external override ensure(deadline) returns (uint256[] memory amounts) {
+    ) public override ensure(deadline) returns (uint256[] memory amounts) {
         amounts = ZenlinkHelper.getAmountsIn(factory, amountOut, path);
         require(amounts[0] <= amountInMax, "Router: EXCESSIVE_INPUT_AMOUNT");
         ZenlinkHelper.safeTransferFrom(
