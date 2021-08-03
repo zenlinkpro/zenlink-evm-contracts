@@ -66,7 +66,7 @@ contract Pair is IPair, ERC20 {
         private
         returns (uint8 feeBasePoint)
     {
-        address feeTo = IFactory(factory).feeTo();
+        address feeTo = IFactory(factory).admin();
         feeBasePoint = IFactory(factory).feeBasePoint();
         uint256 _kLast = kLast; // gas savings
         if (feeBasePoint > 0) {
@@ -104,7 +104,7 @@ contract Pair is IPair, ERC20 {
         uint8 feeBasePoint = _mintFee(_reserve0, _reserve1);
         uint256 _totalSupply = totalSupply();
         if (_totalSupply == 0) {
-            address feeTo = IFactory(factory).feeTo();
+            address feeTo = IFactory(factory).admin();
             liquidity = Math.sqrt(amount0.mul(amount1)).sub(MINIMUM_LIQUIDITY);
             _mint(feeTo, MINIMUM_LIQUIDITY);
         } else {

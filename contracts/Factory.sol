@@ -4,14 +4,14 @@ import "./interfaces/IFactory.sol";
 import "./Pair.sol";
 
 contract Factory is IFactory {
-    address public override feeTo;
+    address public override admin;
     uint8 public override feeBasePoint;
 
     mapping(address => mapping(address => address)) public override getPair;
     address[] public override allPairs;
 
-    constructor(address _feeTo) {
-        feeTo = _feeTo;
+    constructor(address _admin) {
+        admin = _admin;
     }
 
     function allPairsLength() external view override returns (uint256) {
@@ -41,13 +41,13 @@ contract Factory is IFactory {
         emit PairCreated(token0, token1, pair, allPairs.length);
     }
 
-    function setFeeTo(address _feeTo) external {
-        require(msg.sender == feeTo, "FORBIDDEN");
-        feeTo = _feeTo;
+    function setAdmin(address _admin) external {
+        require(msg.sender == admin, "FORBIDDEN");
+        admin = _admin;
     }
 
     function setFeeBasePoint(uint8 _basePoint) external {
-        require(msg.sender == feeTo, "FORBIDDEN");
+        require(msg.sender == admin, "FORBIDDEN");
         require(_basePoint <= 30, "FORBIDDEN");
         feeBasePoint = _basePoint;
     }

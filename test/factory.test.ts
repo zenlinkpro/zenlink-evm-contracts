@@ -55,10 +55,10 @@ describe('Factory', () => {
         expect(await factory.allPairsLength()).to.eq(1);
     })
 
-    it('setFeeTo', async () => {
-        await expect(factory.connect(walletTo).setFeeTo(walletTo.address)).to.be.revertedWith('FORBIDDEN')
-        await factory.setFeeTo(wallet.address)
-        expect(await factory.feeTo()).to.eq(wallet.address)
+    it('setAdmin', async () => {
+        await expect(factory.connect(walletTo).setAdmin(walletTo.address)).to.be.revertedWith('FORBIDDEN')
+        await factory.setAdmin(wallet.address)
+        expect(await factory.admin()).to.eq(wallet.address)
     })
 
     it('setFeeBasePoint', async () => {
