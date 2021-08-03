@@ -89,6 +89,31 @@ describe('Router', () => {
         expect(await pair.balanceOf(wallet.address)).to.eq(expectedLiquidity)
     })
 
+    it('addLiquiditySingleToken', async () => {
+        let tokens = token0.address > token1.address ? [token1, token0] : [token0, token1]
+
+        const token1Amount = '549903311500105273839447'
+        const token0Amount = '403957892781062528318836'
+        let amounts = token0.address > token1.address ? [token1Amount, token0Amount] : [token0Amount, token1Amount]
+
+        await token0.approve(router.address, constants.MaxUint256)
+        await token1.approve(router.address, constants.MaxUint256)
+
+        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const create2Address = getCreate2Address(factory.address, [token0.address, token1.address], bytecode)
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+
+        await addLiquidityWithString(tokens[0], tokens[1], amounts[0], amounts[1])
+
+        await router.addLiquiditySingleToken(
+            [token0.address, token1.address],
+            '100000000000000000000',
+            '64552102673537973031',
+            '50072014029053536754',
+            wallet.address,
+            constants.MaxUint256)
+    })
+
     it('addLiquidityNativeCurrency', async () => {
         const WNativeCurrencyPartnerAmount = expandTo18Decimals(1)
         const NativeCurrencyAmount = expandTo18Decimals(4)
@@ -131,6 +156,17 @@ describe('Router', () => {
     })
 
     async function addLiquidity(token0: Contract, token1: Contract, token0Amount: BigNumber, token1Amount: BigNumber) {
+        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const create2Address = getCreate2Address(factory.address, [token0.address, token1.address], bytecode)
+        await factory.createPair(token0.address, token1.address)
+
+        await token0.transfer(create2Address, token0Amount)
+        await token1.transfer(create2Address, token1Amount)
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+        await pair.mint(wallet.address, overrides)
+    }
+
+    async function addLiquidityWithString(token0: Contract, token1: Contract, token0Amount: string, token1Amount: string) {
         const bytecode = `0x${Pair.evm.bytecode.object}`
         const create2Address = getCreate2Address(factory.address, [token0.address, token1.address], bytecode)
         await factory.createPair(token0.address, token1.address)

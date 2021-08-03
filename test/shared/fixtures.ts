@@ -32,8 +32,8 @@ interface PairFixture extends FactoryFixture {
 export async function pairFixture([wallet]: Wallet[], provider: providers.Web3Provider): Promise<PairFixture> {
   const { factory } = await factoryFixture([wallet], provider)
 
-  const tokenA = await deployContract(wallet, BasicToken, ["TokenA", "TA", expandTo18Decimals(10000)], overrides)
-  const tokenB = await deployContract(wallet, BasicToken, ["TokenB", "TB", expandTo18Decimals(10000)], overrides)
+  const tokenA = await deployContract(wallet, BasicToken, ["TokenA", "TA", '1549903311500105273839447'], overrides)
+  const tokenB = await deployContract(wallet, BasicToken, ["TokenB", "TB", '1403957892781062528318836'], overrides)
 
   await factory.createPair(tokenA.address, tokenB.address, overrides)
   const pairAddress = await factory.getPair(tokenA.address, tokenB.address)
@@ -61,8 +61,8 @@ export async function routerFixture([wallet]: Wallet[], provider: providers.Web3
 
   const router = await deployContract(wallet, Router, [factory.address, nativeCurrency.address], overrides)
 
-  let token0 = await deployContract(wallet, BasicToken, ["TokenA", "TA", expandTo18Decimals(10000)], overrides)
-  let token1 = await deployContract(wallet, BasicToken, ["TokenB", "TB", expandTo18Decimals(10000)], overrides)
+  let token0 = await deployContract(wallet, BasicToken, ["TokenA", "TA", '1549903311500105273839447'], overrides)
+  let token1 = await deployContract(wallet, BasicToken, ["TokenB", "TB", '1403957892781062528318836'], overrides)
 
   return { token0, token1, factory, router, nativeCurrency }
 }
