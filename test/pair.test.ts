@@ -196,7 +196,7 @@ describe('Pair', () => {
 
     it('feeTo:on', async () => {
         await factory.setFeeBasePoint(5)
-        await factory.setAdmin(walletTo.address)
+        await factory.setFeeto(walletTo.address)
 
         const token0Amount = expandTo18Decimals(1000)
         const token1Amount = expandTo18Decimals(1000)
@@ -221,7 +221,7 @@ describe('Pair', () => {
 
     it('fee:basePoint=20', async () => {
         await factory.setFeeBasePoint(20)
-        await factory.setAdmin(walletTo.address)
+        await factory.setFeeto(walletTo.address)
 
         const token0Amount = expandTo18Decimals(1000)
         const token1Amount = expandTo18Decimals(1000)
