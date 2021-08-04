@@ -2,9 +2,9 @@
 
 pragma solidity >=0.8.0;
 
+import "./Math.sol";
 import "../core/interfaces/IPair.sol";
 import "../core/interfaces/IFactory.sol";
-import "./Math.sol";
 
 library ZenlinkHelper {
     using Math for uint256;
