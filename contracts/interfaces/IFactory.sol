@@ -10,6 +10,10 @@ interface IFactory {
 
     function admin() external view returns (address);
 
+    function adminCandidate() external view returns (address);
+
+    function feeto() external view returns (address);
+
     function feeBasePoint() external view returns (uint8);
 
     function getPair(address tokenA, address tokenB)

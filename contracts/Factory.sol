@@ -5,6 +5,9 @@ import "./Pair.sol";
 
 contract Factory is IFactory {
     address public override admin;
+    address public override feeto;
+    address public override adminCandidate;
+
     uint8 public override feeBasePoint;
 
     mapping(address => mapping(address => address)) public override getPair;
@@ -12,6 +15,8 @@ contract Factory is IFactory {
 
     constructor(address _admin) {
         admin = _admin;
+        feeto = _admin;
+        adminCandidate = _admin;
     }
 
     function allPairsLength() external view override returns (uint256) {
@@ -41,14 +46,60 @@ contract Factory is IFactory {
         emit PairCreated(token0, token1, pair, allPairs.length);
     }
 
-    function setAdmin(address _admin) external {
+    function setAdminCandidate(address _candidate) external {
         require(msg.sender == admin, "FORBIDDEN");
-        admin = _admin;
+        adminCandidate = _candidate;
+    }
+
+    function candidateConfirm() external{
+        require(msg.sender == adminCandidate, "FORBIDDEN");
+        admin = adminCandidate;
+    }
+
+    function setFeeto(address _feeto) external {
+        require(msg.sender == admin, "FORBIDDEN");
+        feeto = _feeto;
     }
 
     function setFeeBasePoint(uint8 _basePoint) external {
         require(msg.sender == admin, "FORBIDDEN");
         require(_basePoint <= 30, "FORBIDDEN");
         feeBasePoint = _basePoint;
+    }
+
+    function lockPairMint(address tokenA, address tokenB) external {
+        require(msg.sender == admin, "FORBIDDEN");
+        address pair = getPair[tokenA][tokenB];
+        IPair(pair).lockMint();
+    }
+
+    function unlockPairMint(address tokenA, address tokenB) external {
+        require(msg.sender == admin, "FORBIDDEN");
+        address pair = getPair[tokenA][tokenB];
+        IPair(pair).unlockMint();
+    }
+
+    function lockPairBurn(address tokenA, address tokenB) external {
+        require(msg.sender == admin, "FORBIDDEN");
+        address pair = getPair[tokenA][tokenB];
+        IPair(pair).lockBurn();
+    }
+
+    function unlockPairBurn(address tokenA, address tokenB) external {
+        require(msg.sender == admin, "FORBIDDEN");
+        address pair = getPair[tokenA][tokenB];
+        IPair(pair).unlockBurn();
+    }
+
+    function lockPairSwap(address tokenA, address tokenB) external {
+        require(msg.sender == admin, "FORBIDDEN");
+        address pair = getPair[tokenA][tokenB];
+        IPair(pair).lockSwap();
+    }
+
+    function unlockPairSwap(address tokenA, address tokenB) external {
+        require(msg.sender == admin, "FORBIDDEN");
+        address pair = getPair[tokenA][tokenB];
+        IPair(pair).unlockSwap();
     }
 }
