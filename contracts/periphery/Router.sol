@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity >=0.8.0;
 
 import "../interfaces/IRouter.sol";
@@ -79,16 +81,16 @@ contract Router is IRouter {
             to,
             deadline
         );
-        
+
         uint256 amountInReserve = amountIn - amounts[0];
-        uint256 amountInReserveMin = amountInReserve * 9 / 10;
+        uint256 amountInReserveMin = (amountInReserve * 9) / 10;
         (, , liquidity) = addLiquidity(
             token0,
             token1,
             amountInReserve,
-            amounts[amounts.length -1],
+            amounts[amounts.length - 1],
             amountInReserveMin,
-            amounts[amounts.length -1],
+            amounts[amounts.length - 1],
             to,
             deadline
         );
