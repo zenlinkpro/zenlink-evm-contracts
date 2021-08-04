@@ -1,7 +1,6 @@
 {
   "name": "zenlink-evm",
   "version": "1.0.0",
-  "main": "index.js",
   "repository": "https://github.com/zenlinkpro/zenlink-evm.git",
   "author": "byterui <shirui_yj133@163.com>",
   "license": "MIT",
