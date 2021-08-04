@@ -56,7 +56,7 @@ describe('Factory', () => {
     })
 
     it('setAdmin', async () => {
-        await expect(factory.connect(walletTo).setAdminCandidate(walletTo.address)).to.be.revertedWith('FORBIDDEN')
+        await expect(factory.connect(walletTo).setAdminCandidate(walletTo.address)).to.be.revertedWith('not admin')
         await factory.setAdminCandidate(walletTo.address)
         await factory.connect(walletTo).candidateConfirm()
         expect(await factory.admin()).to.eq(walletTo.address)
@@ -64,22 +64,22 @@ describe('Factory', () => {
 
     it('setFeeBasePoint', async () => {
         const feeBasePoint = 5;
-        await expect(factory.connect(walletTo).setFeeBasePoint(feeBasePoint)).to.be.revertedWith('FORBIDDEN')
+        await expect(factory.connect(walletTo).setFeeBasePoint(feeBasePoint)).to.be.revertedWith('not admin')
         await factory.setFeeBasePoint(feeBasePoint)
         expect(await factory.feeBasePoint()).to.eq(feeBasePoint)
 
-        await expect(factory.connect(walletTo).setFeeBasePoint(31)).to.be.revertedWith('FORBIDDEN')
+        await expect(factory.connect(walletTo).setFeeBasePoint(31)).to.be.revertedWith('not admin')
     })
 
     it('lock:forbidden', async () => {
         await createPair(TEST_ADDRESSES)
-        await expect(factory.connect(walletTo).lockPairMint(...TEST_ADDRESSES)).to.be.revertedWith('FORBIDDEN')
-        await expect(factory.connect(walletTo).unlockPairMint(...TEST_ADDRESSES)).to.be.revertedWith('FORBIDDEN')
+        await expect(factory.connect(walletTo).lockPairMint(...TEST_ADDRESSES)).to.be.revertedWith('not admin')
+        await expect(factory.connect(walletTo).unlockPairMint(...TEST_ADDRESSES)).to.be.revertedWith('not admin')
 
-        await expect(factory.connect(walletTo).lockPairBurn(...TEST_ADDRESSES)).to.be.revertedWith('FORBIDDEN')
-        await expect(factory.connect(walletTo).unlockPairBurn(...TEST_ADDRESSES)).to.be.revertedWith('FORBIDDEN')
+        await expect(factory.connect(walletTo).lockPairBurn(...TEST_ADDRESSES)).to.be.revertedWith('not admin')
+        await expect(factory.connect(walletTo).unlockPairBurn(...TEST_ADDRESSES)).to.be.revertedWith('not admin')
 
-        await expect(factory.connect(walletTo).lockPairSwap(...TEST_ADDRESSES)).to.be.revertedWith('FORBIDDEN')
-        await expect(factory.connect(walletTo).unlockPairSwap(...TEST_ADDRESSES)).to.be.revertedWith('FORBIDDEN')
+        await expect(factory.connect(walletTo).lockPairSwap(...TEST_ADDRESSES)).to.be.revertedWith('not admin')
+        await expect(factory.connect(walletTo).unlockPairSwap(...TEST_ADDRESSES)).to.be.revertedWith('not admin')
     })
 })
