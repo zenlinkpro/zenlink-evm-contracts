@@ -2,9 +2,9 @@
 
 pragma solidity >=0.8.0;
 
-import "../interfaces/IPair.sol";
-import "../interfaces/IFactory.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./interfaces/IPair.sol";
+import "./interfaces/IFactory.sol";
 import "../libraries/Math.sol";
 import "../libraries/UQ112x112.sol";
 

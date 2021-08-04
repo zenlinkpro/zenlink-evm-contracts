@@ -2,8 +2,8 @@
 
 pragma solidity >=0.8.0;
 
-import "../interfaces/IPair.sol";
-import "../interfaces/IFactory.sol";
+import "../core/interfaces/IPair.sol";
+import "../core/interfaces/IFactory.sol";
 import "./Math.sol";
 
 library ZenlinkHelper {

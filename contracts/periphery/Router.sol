@@ -2,13 +2,11 @@
 
 pragma solidity >=0.8.0;
 
-import "../interfaces/IRouter.sol";
-import "../interfaces/IPair.sol";
-import "../interfaces/IWNativeCurrency.sol";
-import "../interfaces/IFactory.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./interfaces/IRouter.sol";
+import "./interfaces/IWNativeCurrency.sol";
 import "../libraries/ZenlinkHelper.sol";
 import "../libraries/Math.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Router is IRouter {
     using Math for uint256;

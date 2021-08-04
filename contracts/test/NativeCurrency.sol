@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity >=0.8.0;
 
-import "../interfaces/IWNativeCurrency.sol";
+import "../periphery/interfaces/IWNativeCurrency.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Example class
