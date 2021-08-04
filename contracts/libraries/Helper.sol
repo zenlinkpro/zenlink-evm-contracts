@@ -6,7 +6,7 @@ import "./Math.sol";
 import "../core/interfaces/IPair.sol";
 import "../core/interfaces/IFactory.sol";
 
-library ZenlinkHelper {
+library Helper {
     using Math for uint256;
 
     function sortTokens(address tokenA, address tokenB)
@@ -14,11 +14,11 @@ library ZenlinkHelper {
         pure
         returns (address token0, address token1)
     {
-        require(tokenA != tokenB, "ZenlinkHelper: IDENTICAL_ADDRESSES");
+        require(tokenA != tokenB, "Helper: IDENTICAL_ADDRESSES");
         (token0, token1) = tokenA < tokenB
             ? (tokenA, tokenB)
             : (tokenB, tokenA);
-        require(token0 != address(0), "ZenlinkHelper: ZERO_ADDRESS");
+        require(token0 != address(0), "Helper: ZERO_ADDRESS");
     }
 
     function pairFor(
@@ -98,10 +98,10 @@ library ZenlinkHelper {
         uint256 reserveIn,
         uint256 reserveOut
     ) internal pure returns (uint256 amountOut) {
-        require(amountIn > 0, "ZenlinkHelper: INSUFFICIENT_INPUT_AMOUNT");
+        require(amountIn > 0, "Helper: INSUFFICIENT_INPUT_AMOUNT");
         require(
             reserveIn > 0 && reserveOut > 0,
-            "ZenlinkHelper: INSUFFICIENT_LIQUIDITY"
+            "Helper: INSUFFICIENT_LIQUIDITY"
         );
         uint256 amountInWithFee = amountIn.mul(997);
         uint256 numerator = amountInWithFee.mul(reserveOut);
@@ -115,10 +115,10 @@ library ZenlinkHelper {
         uint256 reserveIn,
         uint256 reserveOut
     ) internal pure returns (uint256 amountIn) {
-        require(amountOut > 0, "ZenlinkHelper: INSUFFICIENT_OUTPUT_AMOUNT");
+        require(amountOut > 0, "Helper: INSUFFICIENT_OUTPUT_AMOUNT");
         require(
             reserveIn > 0 && reserveOut > 0,
-            "ZenlinkHelper: INSUFFICIENT_LIQUIDITY"
+            "Helper: INSUFFICIENT_LIQUIDITY"
         );
         uint256 numerator = reserveIn.mul(amountOut).mul(1000);
         uint256 denominator = reserveOut.sub(amountOut).mul(997);
@@ -131,7 +131,7 @@ library ZenlinkHelper {
         uint256 amountIn,
         address[] memory path
     ) internal view returns (uint256[] memory amounts) {
-        require(path.length >= 2, "ZenlinkHelper: INVALID_PATH");
+        require(path.length >= 2, "Helper: INVALID_PATH");
         amounts = new uint256[](path.length);
         amounts[0] = amountIn;
         for (uint256 i; i < path.length - 1; i++) {
@@ -149,7 +149,7 @@ library ZenlinkHelper {
         uint256 amountOut,
         address[] memory path
     ) internal view returns (uint256[] memory amounts) {
-        require(path.length >= 2, "ZenlinkHelper: INVALID_PATH");
+        require(path.length >= 2, "Helper: INVALID_PATH");
         amounts = new uint256[](path.length);
         amounts[amounts.length - 1] = amountOut;
         for (uint256 i = path.length - 1; i > 0; i--) {

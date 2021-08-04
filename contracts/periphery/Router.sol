@@ -5,7 +5,7 @@ pragma solidity >=0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IRouter.sol";
 import "./interfaces/IWNativeCurrency.sol";
-import "../libraries/ZenlinkHelper.sol";
+import "../libraries/Helper.sol";
 import "../libraries/Math.sol";
 
 contract Router is IRouter {
@@ -55,9 +55,9 @@ contract Router is IRouter {
             amount0Min,
             amount1Min
         );
-        address pair = ZenlinkHelper.pairFor(factory, token0, token1);
-        ZenlinkHelper.safeTransferFrom(token0, msg.sender, pair, amount0);
-        ZenlinkHelper.safeTransferFrom(token1, msg.sender, pair, amount1);
+        address pair = Helper.pairFor(factory, token0, token1);
+        Helper.safeTransferFrom(token0, msg.sender, pair, amount0);
+        Helper.safeTransferFrom(token1, msg.sender, pair, amount1);
         liquidity = IPair(pair).mint(to);
     }
 
@@ -120,15 +120,15 @@ contract Router is IRouter {
             amountTokenMin,
             amountNativeCurrencyMin
         );
-        address pair = ZenlinkHelper.pairFor(factory, token, WNativeCurrency);
-        ZenlinkHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
+        address pair = Helper.pairFor(factory, token, WNativeCurrency);
+        Helper.safeTransferFrom(token, msg.sender, pair, amountToken);
         IWNativeCurrency(WNativeCurrency).deposit{
             value: amountNativeCurrency
         }();
         assert(IERC20(WNativeCurrency).transfer(pair, amountNativeCurrency));
         liquidity = IPair(pair).mint(to);
         if (msg.value > amountNativeCurrency)
-            ZenlinkHelper.safeTransferNativeCurrency(
+            Helper.safeTransferNativeCurrency(
                 msg.sender,
                 msg.value - amountNativeCurrency
             ); // refund dust native currency, if any
@@ -145,7 +145,7 @@ contract Router is IRouter {
         if (IFactory(factory).getPair(token0, token1) == address(0)) {
             IFactory(factory).createPair(token0, token1);
         }
-        (uint256 reserve0, uint256 reserve1) = ZenlinkHelper.getReserves(
+        (uint256 reserve0, uint256 reserve1) = Helper.getReserves(
             factory,
             token0,
             token1
@@ -153,7 +153,7 @@ contract Router is IRouter {
         if (reserve0 == 0 && reserve1 == 0) {
             (amount0, amount1) = (amount0Desired, amount1Desired);
         } else {
-            uint256 amount1Optimal = ZenlinkHelper.quote(
+            uint256 amount1Optimal = Helper.quote(
                 amount0Desired,
                 reserve0,
                 reserve1
@@ -165,7 +165,7 @@ contract Router is IRouter {
                 );
                 (amount0, amount1) = (amount0Desired, amount1Optimal);
             } else {
-                uint256 amount0Optimal = ZenlinkHelper.quote(
+                uint256 amount0Optimal = Helper.quote(
                     amount1Desired,
                     reserve1,
                     reserve0
@@ -194,10 +194,10 @@ contract Router is IRouter {
         ensure(deadline)
         returns (uint256 amount0, uint256 amount1)
     {
-        address pair = ZenlinkHelper.pairFor(factory, token0, token1);
+        address pair = Helper.pairFor(factory, token0, token1);
         IERC20(pair).transferFrom(msg.sender, pair, liquidity);
         (uint256 amountA, uint256 amountB) = IPair(pair).burn(to);
-        (address tokenA, ) = ZenlinkHelper.sortTokens(token0, token1);
+        (address tokenA, ) = Helper.sortTokens(token0, token1);
         (amount0, amount1) = tokenA == token0
             ? (amountA, amountB)
             : (amountB, amountA);
@@ -227,9 +227,9 @@ contract Router is IRouter {
             address(this),
             deadline
         );
-        ZenlinkHelper.safeTransfer(token, to, amountToken);
+        Helper.safeTransfer(token, to, amountToken);
         IWNativeCurrency(WNativeCurrency).withdraw(amountNativeCurrency);
-        ZenlinkHelper.safeTransferNativeCurrency(to, amountNativeCurrency);
+        Helper.safeTransferNativeCurrency(to, amountNativeCurrency);
     }
 
     function _swap(
@@ -239,15 +239,15 @@ contract Router is IRouter {
     ) private {
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
-            (address token0, ) = ZenlinkHelper.sortTokens(input, output);
+            (address token0, ) = Helper.sortTokens(input, output);
             uint256 amountOut = amounts[i + 1];
             (uint256 amount0Out, uint256 amount1Out) = input == token0
                 ? (uint256(0), amountOut)
                 : (amountOut, uint256(0));
             address to = i < path.length - 2
-                ? ZenlinkHelper.pairFor(factory, output, path[i + 2])
+                ? Helper.pairFor(factory, output, path[i + 2])
                 : _to;
-            IPair(ZenlinkHelper.pairFor(factory, input, output)).swap(
+            IPair(Helper.pairFor(factory, input, output)).swap(
                 amount0Out,
                 amount1Out,
                 to
@@ -262,15 +262,15 @@ contract Router is IRouter {
         address to,
         uint256 deadline
     ) public override ensure(deadline) returns (uint256[] memory amounts) {
-        amounts = ZenlinkHelper.getAmountsOut(factory, amountIn, path);
+        amounts = Helper.getAmountsOut(factory, amountIn, path);
         require(
             amounts[amounts.length - 1] >= amountOutMin,
             "Router: INSUFFICIENT_OUTPUT_AMOUNT"
         );
-        ZenlinkHelper.safeTransferFrom(
+        Helper.safeTransferFrom(
             path[0],
             msg.sender,
-            ZenlinkHelper.pairFor(factory, path[0], path[1]),
+            Helper.pairFor(factory, path[0], path[1]),
             amounts[0]
         );
         _swap(amounts, path, to);
@@ -283,12 +283,12 @@ contract Router is IRouter {
         address to,
         uint256 deadline
     ) public override ensure(deadline) returns (uint256[] memory amounts) {
-        amounts = ZenlinkHelper.getAmountsIn(factory, amountOut, path);
+        amounts = Helper.getAmountsIn(factory, amountOut, path);
         require(amounts[0] <= amountInMax, "Router: EXCESSIVE_INPUT_AMOUNT");
-        ZenlinkHelper.safeTransferFrom(
+        Helper.safeTransferFrom(
             path[0],
             msg.sender,
-            ZenlinkHelper.pairFor(factory, path[0], path[1]),
+            Helper.pairFor(factory, path[0], path[1]),
             amounts[0]
         );
         _swap(amounts, path, to);
@@ -307,7 +307,7 @@ contract Router is IRouter {
         returns (uint256[] memory amounts)
     {
         require(path[0] == WNativeCurrency, "Router: INVALID_PATH");
-        amounts = ZenlinkHelper.getAmountsOut(factory, msg.value, path);
+        amounts = Helper.getAmountsOut(factory, msg.value, path);
         require(
             amounts[amounts.length - 1] >= amountOutMin,
             "Router: INSUFFICIENT_OUTPUT_AMOUNT"
@@ -315,7 +315,7 @@ contract Router is IRouter {
         IWNativeCurrency(WNativeCurrency).deposit{value: amounts[0]}();
         assert(
             IERC20(WNativeCurrency).transfer(
-                ZenlinkHelper.pairFor(factory, path[0], path[1]),
+                Helper.pairFor(factory, path[0], path[1]),
                 amounts[0]
             )
         );
@@ -333,20 +333,17 @@ contract Router is IRouter {
             path[path.length - 1] == WNativeCurrency,
             "Router: INVALID_PATH"
         );
-        amounts = ZenlinkHelper.getAmountsIn(factory, amountOut, path);
+        amounts = Helper.getAmountsIn(factory, amountOut, path);
         require(amounts[0] <= amountInMax, "Router: EXCESSIVE_INPUT_AMOUNT");
-        ZenlinkHelper.safeTransferFrom(
+        Helper.safeTransferFrom(
             path[0],
             msg.sender,
-            ZenlinkHelper.pairFor(factory, path[0], path[1]),
+            Helper.pairFor(factory, path[0], path[1]),
             amounts[0]
         );
         _swap(amounts, path, address(this));
         IWNativeCurrency(WNativeCurrency).withdraw(amounts[amounts.length - 1]);
-        ZenlinkHelper.safeTransferNativeCurrency(
-            to,
-            amounts[amounts.length - 1]
-        );
+        Helper.safeTransferNativeCurrency(to, amounts[amounts.length - 1]);
     }
 
     function swapExactTokensForNativeCurrency(
@@ -360,23 +357,20 @@ contract Router is IRouter {
             path[path.length - 1] == WNativeCurrency,
             "Router: INVALID_PATH"
         );
-        amounts = ZenlinkHelper.getAmountsOut(factory, amountIn, path);
+        amounts = Helper.getAmountsOut(factory, amountIn, path);
         require(
             amounts[amounts.length - 1] >= amountOutMin,
             "Router: INSUFFICIENT_OUTPUT_AMOUNT"
         );
-        ZenlinkHelper.safeTransferFrom(
+        Helper.safeTransferFrom(
             path[0],
             msg.sender,
-            ZenlinkHelper.pairFor(factory, path[0], path[1]),
+            Helper.pairFor(factory, path[0], path[1]),
             amounts[0]
         );
         _swap(amounts, path, address(this));
         IWNativeCurrency(WNativeCurrency).withdraw(amounts[amounts.length - 1]);
-        ZenlinkHelper.safeTransferNativeCurrency(
-            to,
-            amounts[amounts.length - 1]
-        );
+        Helper.safeTransferNativeCurrency(to, amounts[amounts.length - 1]);
     }
 
     function swapNativeCurrencyForExactTokens(
@@ -392,18 +386,18 @@ contract Router is IRouter {
         returns (uint256[] memory amounts)
     {
         require(path[0] == WNativeCurrency, "Router: INVALID_PATH");
-        amounts = ZenlinkHelper.getAmountsIn(factory, amountOut, path);
+        amounts = Helper.getAmountsIn(factory, amountOut, path);
         require(amounts[0] <= msg.value, "Router: EXCESSIVE_INPUT_AMOUNT");
         IWNativeCurrency(WNativeCurrency).deposit{value: amounts[0]}();
         assert(
             IERC20(WNativeCurrency).transfer(
-                ZenlinkHelper.pairFor(factory, path[0], path[1]),
+                Helper.pairFor(factory, path[0], path[1]),
                 amounts[0]
             )
         );
         _swap(amounts, path, to);
         if (msg.value > amounts[0])
-            ZenlinkHelper.safeTransferNativeCurrency(
+            Helper.safeTransferNativeCurrency(
                 msg.sender,
                 msg.value - amounts[0]
             ); // refund dust eth, if any
@@ -414,7 +408,7 @@ contract Router is IRouter {
         uint256 reserveIn,
         uint256 reserveOut
     ) public pure override returns (uint256 amountOut) {
-        return ZenlinkHelper.getAmountOut(amountIn, reserveIn, reserveOut);
+        return Helper.getAmountOut(amountIn, reserveIn, reserveOut);
     }
 
     function getAmountIn(
@@ -422,7 +416,7 @@ contract Router is IRouter {
         uint256 reserveIn,
         uint256 reserveOut
     ) public pure override returns (uint256 amountIn) {
-        return ZenlinkHelper.getAmountOut(amountOut, reserveIn, reserveOut);
+        return Helper.getAmountOut(amountOut, reserveIn, reserveOut);
     }
 
     function getAmountsOut(uint256 amountIn, address[] memory path)
@@ -431,7 +425,7 @@ contract Router is IRouter {
         override
         returns (uint256[] memory amounts)
     {
-        return ZenlinkHelper.getAmountsOut(factory, amountIn, path);
+        return Helper.getAmountsOut(factory, amountIn, path);
     }
 
     function getAmountsIn(uint256 amountOut, address[] memory path)
@@ -440,6 +434,6 @@ contract Router is IRouter {
         override
         returns (uint256[] memory amounts)
     {
-        return ZenlinkHelper.getAmountsIn(factory, amountOut, path);
+        return Helper.getAmountsIn(factory, amountOut, path);
     }
 }
