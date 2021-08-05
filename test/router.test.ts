@@ -1,12 +1,11 @@
 import { expect, use } from "chai";
 import { Contract, constants, BigNumber } from "ethers";
-import { solidity, MockProvider, createFixtureLoader } from "ethereum-waffle";
+const { waffle } = require("hardhat");
+const { solidity, wallet, walletTo } = waffle;
 import { pairFixture, routerFixture } from './shared/fixtures'
 
-import { getCreate2Address } from './shared/utilities'
-import { expandTo18Decimals } from './shared/utilities'
-import Pair from '../build/Pair.json'
-import { isHexString } from "@ethersproject/bytes";
+import { getCreate2Address, expandTo18Decimals } from './shared/utilities'
+import Pair from '../build/contracts/core/Pair.sol/Pair.json'
 
 use(solidity);
 
@@ -18,10 +17,8 @@ const MINIMUM_LIQUIDITY = BigNumber.from(10).pow(3)
 
 
 describe('Router', () => {
-    const testProvider = new MockProvider();
-    const [wallet, walletTo] = testProvider.getWallets();
-
-    const loadFixture = createFixtureLoader([wallet], testProvider);
+    let provider = waffle.provider;
+    const [wallet, walletTo] = provider.getWallets();
 
     let factory: Contract;
     let token0: Contract;
@@ -30,7 +27,7 @@ describe('Router', () => {
     let WNativeCurrency: Contract;
 
     beforeEach(async function () {
-        const fixture = await loadFixture(routerFixture)
+        const fixture = await await routerFixture(wallet)
         factory = fixture.factory
         token0 = fixture.token0
         token1 = fixture.token1
@@ -46,13 +43,13 @@ describe('Router', () => {
     it('addLiquidity', async () => {
         let tokens = token0.address > token1.address ? [token1, token0] : [token0, token1]
 
-        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const bytecode = Pair.bytecode
         const create2Address = getCreate2Address(factory.address, [token0.address, token1.address], bytecode)
         await expect(factory.createPair(token0.address, token1.address))
             .to.emit(factory, 'PairCreated')
             .withArgs(tokens[0].address, tokens[1].address, create2Address, BigNumber.from(1))
 
-        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), wallet)
 
         const token0Amount = expandTo18Decimals(1)
         const token1Amount = expandTo18Decimals(4)
@@ -99,9 +96,9 @@ describe('Router', () => {
         await token0.approve(router.address, constants.MaxUint256)
         await token1.approve(router.address, constants.MaxUint256)
 
-        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const bytecode = Pair.bytecode
         const create2Address = getCreate2Address(factory.address, [token0.address, token1.address], bytecode)
-        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), wallet)
 
         await addLiquidityWithString(tokens[0], tokens[1], amounts[0], amounts[1])
 
@@ -119,7 +116,7 @@ describe('Router', () => {
         const NativeCurrencyAmount = expandTo18Decimals(4)
         const expectedLiquidity = expandTo18Decimals(2)
 
-        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const bytecode = Pair.bytecode
         const create2Address = getCreate2Address(factory.address, [token0.address, WNativeCurrency.address], bytecode)
         await expect(factory.createPair(token0.address, WNativeCurrency.address))
             .to.emit(factory, 'PairCreated')
@@ -129,7 +126,7 @@ describe('Router', () => {
                 create2Address,
                 BigNumber.from(1))
 
-        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), wallet)
         const pairToken0 = await pair.token0()
         await token0.approve(router.address, constants.MaxUint256)
 
@@ -156,24 +153,24 @@ describe('Router', () => {
     })
 
     async function addLiquidity(token0: Contract, token1: Contract, token0Amount: BigNumber, token1Amount: BigNumber) {
-        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const bytecode = Pair.bytecode
         const create2Address = getCreate2Address(factory.address, [token0.address, token1.address], bytecode)
         await factory.createPair(token0.address, token1.address)
 
         await token0.transfer(create2Address, token0Amount)
         await token1.transfer(create2Address, token1Amount)
-        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), wallet);
         await pair.mint(wallet.address, overrides)
     }
 
     async function addLiquidityWithString(token0: Contract, token1: Contract, token0Amount: string, token1Amount: string) {
-        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const bytecode = Pair.bytecode
         const create2Address = getCreate2Address(factory.address, [token0.address, token1.address], bytecode)
         await factory.createPair(token0.address, token1.address)
 
         await token0.transfer(create2Address, token0Amount)
         await token1.transfer(create2Address, token1Amount)
-        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), wallet);
         await pair.mint(wallet.address, overrides)
     }
 
@@ -187,9 +184,9 @@ describe('Router', () => {
         await addLiquidity(tokens[0], tokens[1], amounts[0], amounts[1])
 
         const expectedLiquidity = expandTo18Decimals(2)
-        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const bytecode = Pair.bytecode
         const create2Address = getCreate2Address(factory.address, [token0.address, token1.address], bytecode)
-        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), wallet);
 
         await pair.approve(router.address, constants.MaxUint256)
         await expect(
@@ -230,9 +227,9 @@ describe('Router', () => {
             { ...overrides, value: WNativeCurrencyAmount }
         )
 
-        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const bytecode = Pair.bytecode
         const create2Address = getCreate2Address(factory.address, [token0.address, WNativeCurrency.address], bytecode)
-        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), wallet)
 
         await pair.approve(router.address, constants.MaxUint256)
         const pairToken0 = await pair.token0()
@@ -282,12 +279,23 @@ describe('Router', () => {
         const swapAmount = expandTo18Decimals(1)
         const expectedOutputAmount = BigNumber.from('1662497915624478906')
 
-        await addLiquidity(tokens[0], tokens[1], token0Amount, token1Amount)
         await token0.approve(router.address, constants.MaxUint256)
+        await token1.approve(router.address, constants.MaxUint256)
 
-        const bytecode = `0x${Pair.evm.bytecode.object}`
-        const create2Address = getCreate2Address(factory.address, [token0.address, token1.address], bytecode)
-        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+        await router.addLiquidity(
+            tokens[0].address,
+            tokens[1].address,
+            token0Amount,
+            token1Amount,
+            0,
+            0,
+            wallet.address,
+            constants.MaxUint256,
+            overrides
+        )
+
+        let pairAddress = await factory.getPair(token1.address, token0.address)
+        const pair = new Contract(pairAddress, JSON.stringify(Pair.abi), wallet)
 
         await expect(
             router.swapExactTokensForTokens(
@@ -300,11 +308,11 @@ describe('Router', () => {
             )
         )
             .to.emit(tokens[0], 'Transfer')
-            .withArgs(wallet.address, pair.address, swapAmount)
+            .withArgs(wallet.address, pairAddress, swapAmount)
             .to.emit(tokens[1], 'Transfer')
-            .withArgs(pair.address, wallet.address, expectedOutputAmount)
+            .withArgs(pairAddress, wallet.address, expectedOutputAmount)
             .to.emit(pair, 'Swap')
-            .withArgs(router.address, swapAmount, 0, 0, expectedOutputAmount, wallet.address)
+            .withArgs(router.address, 0, swapAmount, expectedOutputAmount, 0, wallet.address)
     })
 
     it('swapTokensForExactTokens', async () => {
@@ -315,14 +323,25 @@ describe('Router', () => {
         const expectedSwapAmount = BigNumber.from('557227237267357629')
         const outputAmount = expandTo18Decimals(1)
 
-        await addLiquidity(tokens[0], tokens[1], token0Amount, token1Amount)
         await token0.approve(router.address, constants.MaxUint256)
+        await token1.approve(router.address, constants.MaxUint256)
 
-        const bytecode = `0x${Pair.evm.bytecode.object}`
-        const create2Address = getCreate2Address(factory.address, [token0.address, token1.address], bytecode)
-        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+        await router.addLiquidity(
+            tokens[0].address,
+            tokens[1].address,
+            token0Amount,
+            token1Amount,
+            0,
+            0,
+            wallet.address,
+            constants.MaxUint256,
+            overrides
+        )
 
-        await token0.approve(router.address, constants.MaxUint256)
+        const bytecode = Pair.bytecode
+        const create2Address = getCreate2Address(factory.address, [tokens[0].address, tokens[1].address], bytecode)
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), wallet)
+
         await expect(
             router.swapTokensForExactTokens(
                 outputAmount,
@@ -359,9 +378,9 @@ describe('Router', () => {
             { ...overrides, value: WNativeCurrencyAmount }
         )
 
-        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const bytecode = Pair.bytecode
         const create2Address = getCreate2Address(factory.address, [token0.address, WNativeCurrency.address], bytecode)
-        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), wallet)
 
         const pairToken0 = await pair.token0()
         await expect(
@@ -403,9 +422,9 @@ describe('Router', () => {
             { ...overrides, value: WNativeCurrencyAmount }
         )
 
-        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const bytecode = Pair.bytecode
         const create2Address = getCreate2Address(factory.address, [token0.address, WNativeCurrency.address], bytecode)
-        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), wallet)
 
         const pairToken0 = await pair.token0()
         await expect(
@@ -450,10 +469,9 @@ describe('Router', () => {
             { ...overrides, value: WNativeCurrencyAmount }
         )
 
-        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const bytecode = Pair.bytecode
         const create2Address = getCreate2Address(factory.address, [token0.address, WNativeCurrency.address], bytecode)
-        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
-
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), wallet)
         const pairToken0 = await pair.token0()
 
         await expect(
@@ -500,9 +518,9 @@ describe('Router', () => {
             constants.MaxUint256,
             { ...overrides, value: WNativeCurrencyAmount }
         )
-        const bytecode = `0x${Pair.evm.bytecode.object}`
+        const bytecode = Pair.bytecode
         const create2Address = getCreate2Address(factory.address, [token0.address, WNativeCurrency.address], bytecode)
-        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), testProvider).connect(wallet);
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), wallet)
 
         const pairToken0 = await pair.token0()
         await token0.approve(router.address, constants.MaxUint256)

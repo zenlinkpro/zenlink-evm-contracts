@@ -1,8 +1,8 @@
 import { expect, use } from "chai";
-import { ethers, Contract } from "ethers";
-import { deployContract, solidity, MockProvider } from "ethereum-waffle";
+const { waffle } = require("hardhat");
+const { solidity, deployContract, wallet, walletTo } = waffle;
 
-import BasicToken from '../build/BasicToken.json';
+import BasicToken from '../build/contracts/test/BasicToken.sol/BasicToken.json'
 
 
 use(solidity);
@@ -12,8 +12,9 @@ const overrides = {
 }
 
 describe('BaseToken', () => {
-    const [wallet, walletTo] = new MockProvider().getWallets();
-    let token: Contract;
+    let provider = waffle.provider;
+    const [wallet, walletTo] = provider.getWallets();
+    let token: any;
 
     beforeEach(async () => {
         token = await deployContract(wallet, BasicToken, ["Basic", 'BSC', 1000]);

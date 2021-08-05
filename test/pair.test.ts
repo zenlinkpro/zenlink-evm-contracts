@@ -1,6 +1,7 @@
 import { expect, use } from "chai";
 import { Contract, constants, BigNumber } from "ethers";
-import { solidity, MockProvider, createFixtureLoader } from "ethereum-waffle";
+const { waffle } = require("hardhat");
+const { solidity, wallet, walletTo } = waffle;
 import { factoryFixture, pairFixture } from './shared/fixtures'
 import { expandTo18Decimals } from './shared/utilities'
 
@@ -14,10 +15,9 @@ const overrides = {
 }
 
 describe('Pair', () => {
-    const testProvider = new MockProvider();
-    const [wallet, walletTo] = testProvider.getWallets();
+    let provider = waffle.provider;
+    const [wallet, walletTo] = provider.getWallets();
 
-    const loadFixture = createFixtureLoader([wallet], testProvider);
 
     let factory: Contract;
     let token0: Contract;
@@ -25,7 +25,7 @@ describe('Pair', () => {
     let pair: Contract;
 
     beforeEach(async () => {
-        const fixture = await loadFixture(pairFixture)
+        const fixture = await pairFixture(wallet)
         factory = fixture.factory
         token0 = fixture.token0
         token1 = fixture.token1
