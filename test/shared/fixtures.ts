@@ -2,7 +2,7 @@ import { Contract, Wallet } from 'ethers'
 import { waffle } from "hardhat";
 const { deployContract } = waffle;
 
-import { expandTo18Decimals,getCreate2Address } from './utilities'
+import { expandTo10Decimals } from './utilities'
 
 import BasicToken from '../../build/contracts/test/BasicToken.sol/BasicToken.json'
 import Factory from '../../build/contracts/core//Factory.sol/Factory.json'
@@ -75,7 +75,7 @@ interface StakeFixture extends PairFixture{
 
 export async function StakeFixture(wallet: Wallet ): Promise<StakeFixture>{
   const { factory, token0, token1, pair} = await pairFixture(wallet)
-  let rewardToken = await deployContract(wallet, BasicToken, ["stake reward", "SR", expandTo18Decimals(100000)], overrides)
+  let rewardToken = await deployContract(wallet, BasicToken, ["stake reward", "SR", expandTo10Decimals(1)], overrides)
   let stake = await deployContract(wallet, Stake, [pair.address, rewardToken.address, wallet.address, 3, 5000], overrides)
   
   return { factory, token0, token1, pair, stake, rewardToken }

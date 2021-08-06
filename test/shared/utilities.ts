@@ -10,6 +10,10 @@ export function expandTo18Decimals(n: number): BigNumber {
   return BigNumber.from(n).mul(BigNumber.from(10).pow(18))
 }
 
+export function expandTo10Decimals(n: number): BigNumber {
+  return BigNumber.from(n).mul(BigNumber.from(10).pow(10))
+}
+
 function getDomainSeparator(name: string, tokenAddress: string) {
   return utils.keccak256(
     utils.defaultAbiCoder.encode(
