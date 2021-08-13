@@ -14,7 +14,7 @@ contract Stake is Pausable, ReentrancyGuard, AdminUpgradeable {
 
     struct StakeData {
         uint256 stake_amount;
-        uint256 blocknumner;
+        uint256 block_number;
         uint256 interest;
     }
 
@@ -22,7 +22,7 @@ contract Stake is Pausable, ReentrancyGuard, AdminUpgradeable {
     address public immutable REWARD_TOKEN;
     uint256 public immutable START_BLOCK;
     uint256 public immutable END_BLOCK;
-    uint256 private _total_insterst;
+    uint256 private _total_interest;
     uint256 private _total_reward;
 
     mapping(address => StakeData) private StakeDatas;
@@ -33,6 +33,9 @@ contract Stake is Pausable, ReentrancyGuard, AdminUpgradeable {
         uint256 start_block,
         uint256 end_block
     ) {
+        require (start_block >= block.number, 'startBlock less than blockNumber');
+        require (end_block > start_block, 'startBlock less than or equal to endBlock');
+
         _initializeAdmin(msg.sender);
         STAKED_TOKEN = stake_token;
         REWARD_TOKEN = reward_token;
@@ -59,11 +62,11 @@ contract Stake is Pausable, ReentrancyGuard, AdminUpgradeable {
 
         StakeData memory data = StakeDatas[msg.sender];
 
-        data.blocknumner = data.blocknumner < START_BLOCK
+        data.block_number = data.block_number < START_BLOCK
             ? START_BLOCK
             : block.number;
 
-        added_interest = amount.mul(END_BLOCK - data.blocknumner);
+        added_interest = amount.mul(END_BLOCK - data.block_number);
 
         _total_insterst = _total_insterst.add(added_interest);
 
@@ -79,9 +82,9 @@ contract Stake is Pausable, ReentrancyGuard, AdminUpgradeable {
         StakeData memory data = StakeDatas[msg.sender];
         require(data.stake_amount <= amount, "insufficent stake amount");
 
-        data.blocknumner = block.number < END_BLOCK ? block.number : END_BLOCK;
+        data.block_number = block.number < END_BLOCK ? block.number : END_BLOCK;
 
-        removed_interest = amount.mul(END_BLOCK - data.blocknumner);
+        removed_interest = amount.mul(END_BLOCK - data.block_number);
 
         _total_insterst = _total_insterst.sub(removed_interest);
 
@@ -103,7 +106,7 @@ contract Stake is Pausable, ReentrancyGuard, AdminUpgradeable {
             _total_insterst;
 
         data.interest = 0;
-        data.blocknumner = block.number;
+        data.block_number = block.number;
         StakeDatas[msg.sender] = data;
         Helper.safeTransfer(REWARD_TOKEN, msg.sender, claim_reward_amount);
     }
