@@ -68,7 +68,7 @@ contract Stake is Pausable, ReentrancyGuard, AdminUpgradeable {
 
         added_interest = amount.mul(END_BLOCK - data.block_number);
 
-        _total_insterst = _total_insterst.add(added_interest);
+        _total_interest = _total_interest.add(added_interest);
 
         data.stake_amount = data.stake_amount.add(amount);
         data.interest = data.interest.add(added_interest);
@@ -86,7 +86,7 @@ contract Stake is Pausable, ReentrancyGuard, AdminUpgradeable {
 
         removed_interest = amount.mul(END_BLOCK - data.block_number);
 
-        _total_insterst = _total_insterst.sub(removed_interest);
+        _total_interest = _total_interest.sub(removed_interest);
 
         data.stake_amount = data.stake_amount.sub(amount);
         data.interest = data.interest.sub(removed_interest);
@@ -103,7 +103,7 @@ contract Stake is Pausable, ReentrancyGuard, AdminUpgradeable {
 
         claim_reward_amount =
             _total_reward.mul(data.interest) /
-            _total_insterst;
+            _total_interest;
 
         data.interest = 0;
         data.block_number = block.number;
