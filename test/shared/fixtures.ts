@@ -76,7 +76,7 @@ interface StakeFixture extends PairFixture{
 export async function StakeFixture(wallet: Wallet ): Promise<StakeFixture>{
   const { factory, token0, token1, pair} = await pairFixture(wallet)
   let rewardToken = await deployContract(wallet, BasicToken, ["stake reward", "SR", expandTo10Decimals(1)], overrides)
-  let stake = await deployContract(wallet, Stake, [pair.address, rewardToken.address, wallet.address, 3, 5000], overrides)
+  let stake = await deployContract(wallet, Stake, [pair.address, rewardToken.address, 1000, 11000], overrides)
   
   return { factory, token0, token1, pair, stake, rewardToken }
 }
