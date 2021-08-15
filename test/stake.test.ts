@@ -63,7 +63,7 @@ describe('Stake', () => {
         const rewardBalanceAfter = await rewardToken.balanceOf(wallet.address)
         expect(rewardBalanceAfter - rewardBalanceBefore).to.equal(totalReward)
 
-        startBlock += (await provider.getBlock('latest')).number + 10
+        startBlock = (await provider.getBlock('latest')).number + 100
         endBlock = (startBlock + stakePeriod)
     });
 
@@ -117,7 +117,7 @@ describe('Stake', () => {
         const rewardBalanceAfter = await rewardToken.balanceOf(wallet.address)
         expect(rewardBalanceAfter - rewardBalanceBefore).to.equal(totalReward)
 
-        startBlock += (await provider.getBlock('latest')).number + 10
+        startBlock = (await provider.getBlock('latest')).number + 100
         endBlock = (startBlock + stakePeriod)
     })
 
@@ -168,9 +168,9 @@ describe('Stake', () => {
         expect(rewardBalanceAfterWalletTo - rewardBalanceBeforeWalletTo)
             .equal(walletToInterest.mul(totalReward).div(walletInterest.add(walletToInterest)));
 
-        startBlock += (await provider.getBlock('latest')).number + 10
+        startBlock = (await provider.getBlock('latest')).number + 100
         endBlock = (startBlock + stakePeriod)
-    }).timeout(50000)
+    })
 
     it("2 account stake at different block: claim first", async() =>{
         const stakeAmount = expandTo10Decimals(1)
@@ -223,9 +223,9 @@ describe('Stake', () => {
         expect(rewardBalanceAfterWalletTo - rewardBalanceBeforeWalletTo)
             .equal(walletToInterest.mul(totalReward).div(walletInterest.add(walletToInterest)));
 
-        startBlock += (await provider.getBlock('latest')).number + 10
+        startBlock = (await provider.getBlock('latest')).number + 100
         endBlock = (startBlock + stakePeriod)
-    }).timeout(50000)
+    })
 
     it("blacklist", async () => {
         await time.advanceBlockTo(startBlock)
@@ -243,5 +243,5 @@ describe('Stake', () => {
         await expect(stake.connect(walletTo).claim(overrides))
             .to.emit(stake, 'RewardsClaimed')
             .withArgs(walletTo.address, totalReward)
-    }).timeout(50000)
+    })
 });
