@@ -1,11 +1,17 @@
 import { expect, use } from "chai";
+import { MockProvider } from "ethereum-waffle";
 import { Contract, constants, BigNumber } from "ethers";
 import { waffle } from "hardhat";
-const { solidity } = waffle;
 import { StakeFixture } from "./shared/fixtures"
 import { expandTo10Decimals, mineBlockWithTimestamp } from './shared/utilities';
 
-use(solidity);
+use(waffle.solidity);
+
+async function mineBlockWithNumber(provider: MockProvider, blocks: number): Promise<void> {
+    for (let index = 0; index < blocks; index++) {
+        await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
+    }
+}
 
 const overrides = {
     gasLimit: 4100000
@@ -16,7 +22,7 @@ let endBlock = 11000
 let stakePeriod = 10000
 
 describe('Stake', () => {
-    let provider = waffle.provider;
+    const provider: MockProvider = waffle.provider;
 
     const [wallet, walletTo] = provider.getWallets();
 
@@ -49,23 +55,19 @@ describe('Stake', () => {
     });
 
     it('1 account stake all period', async () => {
-        let stakeAmount = expandTo10Decimals(1)
-        let rewardBalanceBefore = await rewardToken.balanceOf(wallet.address)
+        const stakeAmount = expandTo10Decimals(1)
+        const rewardBalanceBefore = await rewardToken.balanceOf(wallet.address)
 
-        for (let index = 0; index < startBlock; index++) {
-            await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
-        }
+        await mineBlockWithNumber(provider, startBlock)
 
         await stake.stake(stakeAmount, overrides)
 
-        for (let index = 0; index < stakePeriod; index++) {
-            await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
-        }
+        await mineBlockWithNumber(provider, stakePeriod)
 
         await stake.redeem(stakeAmount, overrides)
         await stake.claim()
 
-        let rewardBalanceAfter = await rewardToken.balanceOf(wallet.address)
+        const rewardBalanceAfter = await rewardToken.balanceOf(wallet.address)
         expect(rewardBalanceAfter - rewardBalanceBefore).to.equal(totalReward)
 
         startBlock += (await provider.getBlock('latest')).number + 10
@@ -74,7 +76,7 @@ describe('Stake', () => {
 
 
     it("pause", async () => {
-        let stakeAmount = expandTo10Decimals(1)
+        const stakeAmount = expandTo10Decimals(1)
 
         await stake.pauseStake()
         await expect(stake.connect(walletTo).unpauseStake(overrides)).to.be.revertedWith('not admin')
@@ -98,92 +100,74 @@ describe('Stake', () => {
 
 
     it('1 account stake at different block', async() =>{
-        let stakeAmount = expandTo10Decimals(1)
-        let rewardBalanceBefore = await rewardToken.balanceOf(wallet.address)
+        const stakeAmount = expandTo10Decimals(1)
+        const rewardBalanceBefore = await rewardToken.balanceOf(wallet.address)
 
         await stake.stake(stakeAmount, overrides)
-        let beforeStake = startBlock - (await provider.getBlock('latest')).number
+        const beforeStake = startBlock - (await provider.getBlock('latest')).number
 
-        for (let index = 0; index < beforeStake; index++) {
-            await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
-        }
+        await mineBlockWithNumber(provider, beforeStake)
 
         // staking start
 
-        for (let index = 0; index < 1000; index++) {
-            await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
-        }
+        await mineBlockWithNumber(provider, 1000)
 
         // after 1000 block, wallet add stake amount
         await stake.stake(stakeAmount, overrides)
 
-        for (let index = 0; index < 1000; index++) {
-            await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
-        }
+        await mineBlockWithNumber(provider, 1000)
 
         // after 2000 block, wallet add stake amount
         await stake.stake(stakeAmount, overrides)
 
-        for (let index = 0; index < stakePeriod - 2000; index++) {
-            await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
-        }
+        await mineBlockWithNumber(provider, stakePeriod - 2000)
 
         // staking end
 
-        let stakeTokenReserve = await stakeToken.balanceOf(wallet.address)
+        const stakeTokenReserve = await stakeToken.balanceOf(wallet.address)
         await stake.redeem(stakeAmount, overrides)
         expect(await stakeToken.balanceOf(wallet.address)).to.equal(stakeTokenReserve.add(stakeAmount))
 
         await stake.claim()
 
-        let rewardBalanceAfter = await rewardToken.balanceOf(wallet.address)
+        const rewardBalanceAfter = await rewardToken.balanceOf(wallet.address)
         expect(rewardBalanceAfter - rewardBalanceBefore).to.equal(totalReward)
 
         startBlock += (await provider.getBlock('latest')).number + 10
         endBlock = (startBlock + stakePeriod)
     })
 
-    it("2 account stake at different block", async() =>{
-        let stakeAmount = expandTo10Decimals(1)
-        let rewardBalanceBeforeWallet = await rewardToken.balanceOf(wallet.address)
-        let rewardBalanceBeforeWalletTo = await rewardToken.balanceOf(walletTo.address)
+    it("2 account stake at different block: redeem first", async() =>{
+        const stakeAmount = expandTo10Decimals(1)
+        const rewardBalanceBeforeWallet = await rewardToken.balanceOf(wallet.address)
+        const rewardBalanceBeforeWalletTo = await rewardToken.balanceOf(walletTo.address)
 
         await stake.stake(stakeAmount, overrides)
-        let beforeStake = startBlock - (await provider.getBlock('latest')).number
+        const beforeStake = startBlock - (await provider.getBlock('latest')).number
 
-        for (let index = 0; index < beforeStake; index++) {
-            await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
-        }
+        await mineBlockWithNumber(provider, beforeStake)
 
         // staking start
-        for (let index = 0; index < 999; index++) {
-            await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
-        }
+        await mineBlockWithNumber(provider, 999)
 
         // after staking begin 1000 block, walletTo stake
         await stake.connect(walletTo).stake(stakeAmount, overrides)
 
-        for (let index = 0; index < 999; index++) {
-            await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
-        }
+        await mineBlockWithNumber(provider, 999)
 
         // after staking begin 2000 block, wallet redeem half of stake amount.
-        let stakeTokenAmount = await stakeToken.balanceOf(wallet.address);
+        const stakeTokenAmount = await stakeToken.balanceOf(wallet.address);
         await stake.connect(wallet).redeem(stakeAmount.div(2), overrides)
         expect(stakeTokenAmount.add(stakeAmount.div(2))).to.equal((await stakeToken.balanceOf(wallet.address)))
 
-        for (let index = 0; index < 1999; index++) {
-            await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
-        }
+        await mineBlockWithNumber(provider, 1999)
 
         // after staking begin 4000 block, walletTo redeem half stake amount.
-        let stakeTokenAmountWalletTo = await stakeToken.balanceOf(walletTo.address)
+        const stakeTokenAmountWalletTo = await stakeToken.balanceOf(walletTo.address)
         await stake.connect(walletTo).redeem(stakeAmount.div(2), overrides)
         expect(stakeTokenAmountWalletTo.add(stakeAmount.div(2))).to.equal((await stakeToken.balanceOf(walletTo.address)))
 
-        for (let index = 0; index < stakePeriod - 4000; index++) {
-            await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
-        }
+        await mineBlockWithNumber(provider, stakePeriod - 4000)
 
         // stake end
         await stake.connect(wallet).redeem(stakeAmount.div(2), overrides)
@@ -191,13 +175,75 @@ describe('Stake', () => {
         await stake.connect(wallet).claim()
         await stake.connect(walletTo).claim()
 
-        let rewardBalanceAfterWallet = await rewardToken.balanceOf(wallet.address)
-        let rewardBalanceAfterWalletTo = await rewardToken.balanceOf(walletTo.address)
+        const rewardBalanceAfterWallet = await rewardToken.balanceOf(wallet.address)
+        const rewardBalanceAfterWalletTo = await rewardToken.balanceOf(walletTo.address)
 
         //walletInterest = (10000000000 × 10000 − (10000000000) / 2 × (10000 − 2000));
-        let walletInterest = BigNumber.from(60000000000000);
+        const walletInterest = BigNumber.from(60000000000000);
+
         // walletToInterest =  (10000000000 × (10000 − 1000) − 10000000000 /2 × (10000 − 6000))
-        let walletToInterest = BigNumber.from(70000000000000);
+        const walletToInterest = BigNumber.from(70000000000000);
+        expect(rewardBalanceAfterWallet - rewardBalanceBeforeWallet)
+            .equal(walletInterest.mul(totalReward).div(walletInterest.add(walletToInterest)));
+
+        expect(rewardBalanceAfterWalletTo - rewardBalanceBeforeWalletTo)
+            .equal(walletToInterest.mul(totalReward).div(walletInterest.add(walletToInterest)));
+
+        startBlock += (await provider.getBlock('latest')).number + 10
+        endBlock = (startBlock + stakePeriod)
+    }).timeout(50000)
+
+    it("2 account stake at different block: claim first", async() =>{
+        const stakeAmount = expandTo10Decimals(1)
+        const rewardBalanceBeforeWallet = await rewardToken.balanceOf(wallet.address)
+        const rewardBalanceBeforeWalletTo = await rewardToken.balanceOf(walletTo.address)
+
+        await stake.stake(stakeAmount, overrides)
+        const beforeStake = startBlock - (await provider.getBlock('latest')).number
+
+        await mineBlockWithNumber(provider, beforeStake)
+
+        // staking start
+        await mineBlockWithNumber(provider, 999)
+
+        // after staking begin 1000 block, walletTo stake
+        await stake.connect(walletTo).stake(stakeAmount, overrides)
+
+        await mineBlockWithNumber(provider, 999)
+
+        // after staking begin 2000 block, wallet redeem half of stake amount.
+        const stakeTokenAmount = await stakeToken.balanceOf(wallet.address);
+        await stake.connect(wallet).redeem(stakeAmount.div(2), overrides)
+        expect(stakeTokenAmount.add(stakeAmount.div(2))).to.equal((await stakeToken.balanceOf(wallet.address)))
+
+        await mineBlockWithNumber(provider, 1999)
+
+        // after staking begin 4000 block, walletTo redeem half stake amount.
+        const stakeTokenAmountWalletTo = await stakeToken.balanceOf(walletTo.address)
+        await stake.connect(walletTo).redeem(stakeAmount.div(2), overrides)
+        expect(stakeTokenAmountWalletTo.add(stakeAmount.div(2))).to.equal((await stakeToken.balanceOf(walletTo.address)))
+
+        await mineBlockWithNumber(provider, stakePeriod - 4000)
+
+        // stake end
+        await mineBlockWithNumber(provider, 10)
+
+        await stake.connect(wallet).claim()
+        await mineBlockWithNumber(provider, 10)
+        await stake.connect(wallet).redeem(stakeAmount.div(2), overrides)
+        await mineBlockWithNumber(provider, 10)
+        await stake.connect(walletTo).claim()
+        await mineBlockWithNumber(provider, 10)
+        await stake.connect(walletTo).redeem(stakeAmount.div(2), overrides)
+
+        const rewardBalanceAfterWallet = await rewardToken.balanceOf(wallet.address)
+        const rewardBalanceAfterWalletTo = await rewardToken.balanceOf(walletTo.address)
+
+        //walletInterest = (10000000000 × 10000 − (10000000000) / 2 × (10000 − 2000));
+        const walletInterest = BigNumber.from(60000000000000);
+
+        // walletToInterest =  (10000000000 × (10000 − 1000) − 10000000000 /2 × (10000 − 6000))
+        const walletToInterest = BigNumber.from(70000000000000);
         expect(rewardBalanceAfterWallet - rewardBalanceBeforeWallet)
             .equal(walletInterest.mul(totalReward).div(walletInterest.add(walletToInterest)));
 
@@ -209,20 +255,16 @@ describe('Stake', () => {
     }).timeout(50000)
 
     it("blacklist", async () => {
-        let beforeStake = startBlock - (await provider.getBlock('latest')).number
+        const beforeStake = startBlock - (await provider.getBlock('latest')).number
 
-        for (let index = 0; index < beforeStake; index++) {
-            await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
-        }
+        await mineBlockWithNumber(provider, beforeStake)
         
-        let stakeAmount = expandTo10Decimals(1)
+        const stakeAmount = expandTo10Decimals(1)
         await stake.connect(walletTo).stake(stakeAmount, overrides)
         await stake.setBlackList(walletTo.address)
         await expect(stake.connect(walletTo).stake(stakeAmount, overrides)).to.be.revertedWith('IN_BLACK_LIST')
         await expect(stake.connect(walletTo).redeem(stakeAmount, overrides)).to.be.revertedWith('IN_BLACK_LIST')
-        for (let index = 0; index < stakePeriod; index++) {
-            await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
-        }
+        await mineBlockWithNumber(provider, stakePeriod)
 
         await expect(stake.connect(walletTo).claim(overrides)).to.be.revertedWith('IN_BLACK_LIST')
 
