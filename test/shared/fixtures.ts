@@ -1,4 +1,4 @@
-import { Contract, Wallet } from 'ethers'
+import { BigNumber, Contract, Wallet } from 'ethers'
 import { waffle } from "hardhat";
 const { deployContract } = waffle;
 
@@ -73,10 +73,10 @@ interface StakeFixture extends PairFixture{
   rewardToken: Contract
 }
 
-export async function StakeFixture(wallet: Wallet ): Promise<StakeFixture>{
+export async function StakeFixture(wallet: Wallet,stakeStartBlock: number, endStartBlock: number ): Promise<StakeFixture>{
   const { factory, token0, token1, pair} = await pairFixture(wallet)
   let rewardToken = await deployContract(wallet, BasicToken, ["stake reward", "SR", expandTo10Decimals(1)], overrides)
-  let stake = await deployContract(wallet, Stake, [pair.address, rewardToken.address, 1000, 11000], overrides)
+  let stake = await deployContract(wallet, Stake, [pair.address, rewardToken.address, stakeStartBlock, endStartBlock], overrides)
   
   return { factory, token0, token1, pair, stake, rewardToken }
 }
