@@ -115,7 +115,7 @@ contract Stake is Pausable, ReentrancyGuard, AdminUpgradeable {
             ? START_BLOCK
             : block.number;
 
-        uint256 addedInterest = amount.mul(END_BLOCK - stakerInfo.lastUpdatedBlock);
+        uint256 addedInterest = amount.mul(END_BLOCK.sub(stakerInfo.lastUpdatedBlock));
 
         totalInterest = totalInterest.add(addedInterest);
 
@@ -139,7 +139,7 @@ contract Stake is Pausable, ReentrancyGuard, AdminUpgradeable {
 
         stakerInfo.lastUpdatedBlock = block.number < END_BLOCK ? block.number : END_BLOCK;
 
-        uint256 removedInterest = amount.mul(END_BLOCK - stakerInfo.lastUpdatedBlock);
+        uint256 removedInterest = amount.mul(END_BLOCK.sub(stakerInfo.lastUpdatedBlock));
 
         totalInterest = totalInterest.sub(removedInterest);
 
