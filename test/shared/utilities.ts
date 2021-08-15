@@ -1,5 +1,6 @@
 import { utils } from 'ethers'
 import { BigNumber } from '@ethersproject/bignumber'
+import { MockProvider } from 'ethereum-waffle'
 
 
 const PERMIT_TYPEHASH = utils.keccak256(
@@ -45,7 +46,7 @@ export function getCreate2Address(
   return utils.getAddress(`0x${utils.keccak256(sanitizedInputs).slice(-40)}`)
 }
 
-export async function mineBlockWithTimestamp(provider: any, timestamp: number): Promise<void> {
+export async function mineBlockWithTimestamp(provider: MockProvider, timestamp: number): Promise<void> {
   await provider.send('evm_setNextBlockTimestamp', [timestamp]);
-  await provider.send('evm_mine');
+  await provider.send('evm_mine', []);
 }
