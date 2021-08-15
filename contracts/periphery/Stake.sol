@@ -135,7 +135,7 @@ contract Stake is Pausable, ReentrancyGuard, AdminUpgradeable {
 
         StakerInfo storage stakerInfo = _stakerInfos[msg.sender];
         require(!stakerInfo.inBlackList, 'IN_BLACK_LIST');
-        require(stakerInfo.stakedAmount >= amount, "INSUFFICIENT_STAKED_AMOUNT");
+        require(amount <= stakerInfo.stakedAmount, "INSUFFICIENT_STAKED_AMOUNT");
 
         stakerInfo.lastUpdatedBlock = block.number < END_BLOCK ? block.number : END_BLOCK;
 
