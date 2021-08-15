@@ -11,7 +11,7 @@ const overrides = {
     gasLimit: 4100000
 }
 
-let startBlock= 1000
+let startBlock = 1000
 let endBlock = 11000
 let stakePeriod = 10000
 
@@ -61,7 +61,7 @@ describe('Stake', () => {
         for (let index = 0; index < stakePeriod; index++) {
             await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
         }
-        
+
         await stake.redeem(stakeAmount, overrides)
         await stake.claim()
 
@@ -72,10 +72,35 @@ describe('Stake', () => {
         endBlock = (startBlock + stakePeriod)
     });
 
+
+    it("pause", async () => {
+        let stakeAmount = expandTo10Decimals(1)
+
+        await stake.pauseStake()
+        await expect(stake.connect(walletTo).unpauseStake(overrides)).to.be.revertedWith('not admin')
+        await expect(stake.stake(stakeAmount, overrides)).to.be.revertedWith("STAKE_PAUSED")
+        await stake.unpauseStake(overrides)
+        await expect(await stake.stake(stakeAmount, overrides))
+            .to.emit(stake, "Staked")
+            .withArgs(wallet.address, stakeAmount, stakeAmount.mul(stakePeriod))
+
+        await stake.pauseRedeem()
+        await expect(stake.connect(walletTo).unpauseRedeem(overrides)).to.be.revertedWith('not admin')
+        await stake.unpauseRedeem(overrides)
+        await expect(stake.redeem(stakeAmount, overrides)).to.be.revertedWith('STAKE_NOT_STARTED')
+
+        await stake.pauseClaim()
+        await expect(stake.connect(walletTo).unpauseClaim(overrides)).to.be.revertedWith('not admin')
+        await stake.unpauseClaim(overrides)
+        await expect(stake.claim(overrides)).to.be.revertedWith('STAKE_NOT_FINISHED')
+    })
+
+
+
     it('1 account stake at different block', async() =>{
         let stakeAmount = expandTo10Decimals(1)
         let rewardBalanceBefore = await rewardToken.balanceOf(wallet.address)
-        
+
         await stake.stake(stakeAmount, overrides)
         let beforeStake = startBlock - (await provider.getBlock('latest')).number
 
@@ -102,7 +127,7 @@ describe('Stake', () => {
         for (let index = 0; index < stakePeriod - 2000; index++) {
             await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
         }
-        
+
         // staking end
 
         let stakeTokenReserve = await stakeToken.balanceOf(wallet.address)
@@ -110,7 +135,7 @@ describe('Stake', () => {
         expect(await stakeToken.balanceOf(wallet.address)).to.equal(stakeTokenReserve.add(stakeAmount))
 
         await stake.claim()
-        
+
         let rewardBalanceAfter = await rewardToken.balanceOf(wallet.address)
         expect(rewardBalanceAfter - rewardBalanceBefore).to.equal(totalReward)
 
@@ -146,7 +171,7 @@ describe('Stake', () => {
         let stakeTokenAmount = await stakeToken.balanceOf(wallet.address);
         await stake.connect(wallet).redeem(stakeAmount.div(2), overrides)
         expect(stakeTokenAmount.add(stakeAmount.div(2))).to.equal((await stakeToken.balanceOf(wallet.address)))
-        
+
         for (let index = 0; index < 1999; index++) {
             await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
         }
@@ -178,5 +203,33 @@ describe('Stake', () => {
 
         expect(rewardBalanceAfterWalletTo - rewardBalanceBeforeWalletTo)
             .equal(walletToInterest.mul(totalReward).div(walletInterest.add(walletToInterest)));
-    })
+
+        startBlock += (await provider.getBlock('latest')).number + 10
+        endBlock = (startBlock + stakePeriod)
+    }).timeout(50000)
+
+    it("blacklist", async () => {
+        let beforeStake = startBlock - (await provider.getBlock('latest')).number
+
+        for (let index = 0; index < beforeStake; index++) {
+            await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
+        }
+        
+        let stakeAmount = expandTo10Decimals(1)
+        await stake.connect(walletTo).stake(stakeAmount, overrides)
+        await stake.setBlackList(walletTo.address)
+        await expect(stake.connect(walletTo).stake(stakeAmount, overrides)).to.be.revertedWith('IN_BLACK_LIST')
+        await expect(stake.connect(walletTo).redeem(stakeAmount, overrides)).to.be.revertedWith('IN_BLACK_LIST')
+        for (let index = 0; index < stakePeriod; index++) {
+            await mineBlockWithTimestamp(provider, (await provider.getBlock('latest')).timestamp + 12)
+        }
+
+        await expect(stake.connect(walletTo).claim(overrides)).to.be.revertedWith('IN_BLACK_LIST')
+
+        await stake.removeBlackList(walletTo.address)
+        await expect(stake.connect(walletTo).claim(overrides))
+            .to.emit(stake, 'RewardsClaimed')
+            .withArgs(walletTo.address, totalReward)
+
+    }).timeout(500000)
 });
