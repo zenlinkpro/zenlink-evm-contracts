@@ -76,13 +76,33 @@ contract Stake is Pausable, ReentrancyGuard, AdminUpgradeable {
     function removeBlackList(address blacklistAddress) public onlyAdmin {
         _stakerInfos[blacklistAddress].inBlackList = false;
     }
+    
+    function getStakerInfo(address staker) 
+        external 
+        view 
+        returns (uint256 stakedAmount, uint256 accInterest)  
+    {
+        StakerInfo memory stakerInfo = _stakerInfos[staker];
+        stakedAmount = stakerInfo.stakedAmount;
+        accInterest = stakerInfo.accInterest;
+    }
+    
+    function pause() external onlyAdmin whenNotPaused {
+        _pause();
+    }
+
+    function unpause() external onlyAdmin whenPaused {
+        _unpause();
+    }
 
     /**
      * @dev Stakes tokens
      * @param amount Amount to stake
      **/
-    function stake(uint256 amount) public inStakePeriod returns (uint256 addedInterest) {
+    function stake(uint256 amount) public inStakePeriod nonReentrant whenNotPaused {
         require(amount > 0, 'INVALID_ZERO_AMOUNT');
+        StakerInfo storage stakerInfo = _stakerInfos[msg.sender];
+        require(!stakerInfo.inBlackList, 'IN_BLACK_LIST');
 
         Helper.safeTransferFrom(
             STAKED_TOKEN,
@@ -91,20 +111,17 @@ contract Stake is Pausable, ReentrancyGuard, AdminUpgradeable {
             amount
         );
 
-        StakerInfo memory stakerInfo = _stakerInfos[msg.sender];
-        require(!stakerInfo.inBlackList, 'IN_BLACK_LIST');
-
         stakerInfo.lastUpdatedBlock = stakerInfo.lastUpdatedBlock < START_BLOCK
             ? START_BLOCK
             : block.number;
 
-        addedInterest = amount.mul(END_BLOCK - stakerInfo.lastUpdatedBlock);
+        uint256 addedInterest = amount.mul(END_BLOCK - stakerInfo.lastUpdatedBlock);
 
         totalInterest = totalInterest.add(addedInterest);
 
         stakerInfo.stakedAmount = stakerInfo.stakedAmount.add(amount);
         stakerInfo.accInterest = stakerInfo.accInterest.add(addedInterest);
-
+        
         emit Staked(msg.sender, amount, addedInterest);
     }
 
@@ -112,16 +129,17 @@ contract Stake is Pausable, ReentrancyGuard, AdminUpgradeable {
      * @dev Redeems staked tokens
      * @param amount Amount to redeem
      **/
-    function redeem(uint256 amount) public returns (uint256 removedInterest) {
+    function redeem(uint256 amount) public nonReentrant {
         require(amount > 0, 'INVALID_ZERO_AMOUNT');
         require(block.number > START_BLOCK, "STAKE_NOT_STARTED");
 
-        StakerInfo memory stakerInfo = _stakerInfos[msg.sender];
+        StakerInfo storage stakerInfo = _stakerInfos[msg.sender];
+        require(!stakerInfo.inBlackList, 'IN_BLACK_LIST');
         require(stakerInfo.stakedAmount <= amount, "INSUFFICIENT_STAKED_AMOUNT");
 
         stakerInfo.lastUpdatedBlock = block.number < END_BLOCK ? block.number : END_BLOCK;
 
-        removedInterest = amount.mul(END_BLOCK - stakerInfo.lastUpdatedBlock);
+        uint256 removedInterest = amount.mul(END_BLOCK - stakerInfo.lastUpdatedBlock);
 
         totalInterest = totalInterest.sub(removedInterest);
 
@@ -148,15 +166,15 @@ contract Stake is Pausable, ReentrancyGuard, AdminUpgradeable {
     /**
      * @dev Claims all amount of `REWARD_TOKEN` calculated from staker interest
      **/
-    function claim() public returns (uint256 claimRewardAmount) {
+    function claim() public nonReentrant {
         require(block.number > END_BLOCK, "STAKE_NOT_FINISHED");
         require(totalInterest > 0, 'INVALID_ZERO_TOTAL_INTEREST');
 
-        StakerInfo memory stakerInfo = _stakerInfos[msg.sender];
-        require(stakerInfo.accInterest > 0, "INSUFFICIENT_ACCUMULATED_INTEREST");
+        StakerInfo storage stakerInfo = _stakerInfos[msg.sender];
         require(!stakerInfo.inBlackList, 'IN_BLACK_LIST');
+        require(stakerInfo.accInterest > 0, "INSUFFICIENT_ACCUMULATED_INTEREST");
 
-        claimRewardAmount = totalRewardAmount.mul(stakerInfo.accInterest) / totalInterest;
+        uint256 claimRewardAmount = totalRewardAmount.mul(stakerInfo.accInterest) / totalInterest;
 
         stakerInfo.accInterest = 0;
         stakerInfo.lastUpdatedBlock = block.number;
