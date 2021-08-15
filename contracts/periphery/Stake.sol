@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity >=0.8.0;
 
 import "../libraries/Helper.sol";
 import "../libraries/Math.sol";
 import "../libraries/AdminUpgradeable.sol";
+
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract Stake is ReentrancyGuard, AdminUpgradeable {
@@ -37,7 +36,7 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
     bool private _stakePaused;
     // Is redeem paused
     bool private _redeemPaused;
-    // Is claim Paused
+    // Is claim paused
     bool private _claimPaused;
 
     // Info of each staker that stakes token
@@ -91,15 +90,15 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
     /**
      * @dev Updates total reward amount by admin
      **/
-    function syncReward() public onlyAdmin inStakePeriod {
+    function syncReward() external onlyAdmin inStakePeriod {
         totalRewardAmount = IERC20(REWARD_TOKEN).balanceOf(address(this));
     }
 
-    function setBlackList(address blacklistAddress) public onlyAdmin {
+    function setBlackList(address blacklistAddress) external onlyAdmin {
         _stakerInfos[blacklistAddress].inBlackList = true;
     }
 
-    function removeBlackList(address blacklistAddress) public onlyAdmin {
+    function removeBlackList(address blacklistAddress) external onlyAdmin {
         _stakerInfos[blacklistAddress].inBlackList = false;
     }
     
@@ -147,7 +146,7 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
      * @dev Stakes tokens
      * @param amount Amount to stake
      **/
-    function stake(uint256 amount) public inStakePeriod nonReentrant whenStakeNotPaused {
+    function stake(uint256 amount) external inStakePeriod nonReentrant whenStakeNotPaused {
         require(amount > 0, 'INVALID_ZERO_AMOUNT');
         StakerInfo storage stakerInfo = _stakerInfos[msg.sender];
         require(!stakerInfo.inBlackList, 'IN_BLACK_LIST');
@@ -177,7 +176,7 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
      * @dev Redeems staked tokens
      * @param amount Amount to redeem
      **/
-    function redeem(uint256 amount) public nonReentrant whenRedeemNotPaused {
+    function redeem(uint256 amount) external nonReentrant whenRedeemNotPaused {
         require(amount > 0, 'INVALID_ZERO_AMOUNT');
         require(block.number > START_BLOCK, "STAKE_NOT_STARTED");
 
@@ -214,7 +213,7 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
     /**
      * @dev Claims all amount of `REWARD_TOKEN` calculated from staker interest
      **/
-    function claim() public nonReentrant whenClaimNotPaused {
+    function claim() external nonReentrant whenClaimNotPaused {
         require(block.number > END_BLOCK, "STAKE_NOT_FINISHED");
         require(totalInterest > 0, 'INVALID_ZERO_TOTAL_INTEREST');
 
