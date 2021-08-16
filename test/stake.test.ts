@@ -1,12 +1,25 @@
 import { expect, use } from "chai";
-import { MockProvider } from "ethereum-waffle";
+import { deployContract, MockProvider } from "ethereum-waffle";
 import { Contract, constants, BigNumber } from "ethers";
 import { waffle } from "hardhat";
 import { StakeFixture } from "./shared/fixtures"
 import { createTimeMachine } from "./shared/time";
 import { expandTo10Decimals } from './shared/utilities';
 
+import BasicToken from '../build/contracts/test/BasicToken.sol/BasicToken.json'
+
 use(waffle.solidity);
+
+async function advanceStartBlock (
+    provider: MockProvider, 
+    blocks: number, 
+    periodBlocks: number
+): Promise<[number, number]> {
+    const currentBlock = (await provider.getBlock('latest')).number
+    const startBlock = currentBlock + blocks
+
+    return [startBlock, startBlock + periodBlocks]
+}
 
 const overrides = {
     gasLimit: 4100000
@@ -43,12 +56,69 @@ describe('Stake', () => {
         await stakeToken.mint(wallet.address, overrides)
         await stakeToken.transfer(walletTo.address, expandTo10Decimals(500), overrides)
         // set reward
-        totalReward = await rewardToken.totalSupply()
-        await rewardToken.transfer(stake.address, totalReward, overrides)
-        await stake.syncReward()
+        totalReward = BigNumber.from('100000000')
+        await rewardToken.approve(stake.address, constants.MaxUint256, overrides)
+        await stake.addReward(totalReward, overrides)
         await stakeToken.approve(stake.address, constants.MaxUint256, overrides)
         await stakeToken.connect(walletTo).approve(stake.address, constants.MaxUint256, overrides)
     });
+
+    afterEach(async () => {
+        [startBlock, endBlock] = await advanceStartBlock(provider, 100, stakePeriod)
+    })
+
+    it('add reward', async () => {
+        const amountOfRewardToAdd = BigNumber.from('100000000')
+        const previousRewardAmount = await stake.totalRewardAmount();
+        await stake.addReward(amountOfRewardToAdd, overrides);
+        const currentRewardAmount = await stake.totalRewardAmount();
+
+        expect(amountOfRewardToAdd.add(previousRewardAmount)).to.equal(currentRewardAmount);
+    })
+
+    it('remove reward', async () => {
+        const amountOfRewardToRemove = BigNumber.from('50000000')
+        const previousRewardAmount = await stake.totalRewardAmount();
+        await stake.removeReward(amountOfRewardToRemove, overrides);
+        const currentRewardAmount = await stake.totalRewardAmount();
+
+        expect(previousRewardAmount.sub(amountOfRewardToRemove)).to.equal(currentRewardAmount);
+    })
+
+    it('remove reward: fail', async () => {
+        const amountOfRewardToRemove = BigNumber.from('110000000')
+        await expect(
+            stake.removeReward(amountOfRewardToRemove, overrides)
+        ).to.be.revertedWith('INSUFFICIENT_REWARD_AMOUNT');
+    })
+
+    it('withdraw: other token', async () => {
+        const otherToken = await deployContract(
+            wallet, 
+            BasicToken, 
+            ["other Token", "OT", expandTo10Decimals(500)], 
+            overrides
+        )
+        const transferAmount = expandTo10Decimals(200)
+        await otherToken.transfer(stake.address, transferAmount, overrides)
+        expect(await otherToken.balanceOf(stake.address)).to.equal(transferAmount)
+        expect(await otherToken.balanceOf(wallet.address)).to.equal(expandTo10Decimals(300))
+        await stake.withdraw(otherToken.address, wallet.address, expandTo10Decimals(100), overrides)
+        expect(await otherToken.balanceOf(stake.address)).to.equal(expandTo10Decimals(100))
+        expect(await otherToken.balanceOf(wallet.address)).to.equal(expandTo10Decimals(400))
+    })
+
+    it('withdraw: reward token', async () => {
+        const amountOfRewardToRemove = BigNumber.from('50000000')
+        await stake.removeReward(amountOfRewardToRemove, overrides)
+        await rewardToken.transfer(stake.address, BigNumber.from('10000000'), overrides)
+        expect(await rewardToken.balanceOf(stake.address)).to.equal(BigNumber.from('60000000'))
+        await stake.withdraw(rewardToken.address, wallet.address, BigNumber.from('10000000'), overrides)
+        expect(await rewardToken.balanceOf(stake.address)).to.equal(BigNumber.from('50000000'))
+        await expect(
+            stake.withdraw(rewardToken.address, wallet.address, BigNumber.from('1'), overrides)
+        ).to.be.revertedWith('INSUFFICIENT_REWARD_BALANCE');
+    })
 
     it('1 account stake all period', async () => {
         const stakeAmount = expandTo10Decimals(1)
@@ -62,9 +132,6 @@ describe('Stake', () => {
 
         const rewardBalanceAfter = await rewardToken.balanceOf(wallet.address)
         expect(rewardBalanceAfter - rewardBalanceBefore).to.equal(totalReward)
-
-        startBlock = (await provider.getBlock('latest')).number + 100
-        endBlock = (startBlock + stakePeriod)
     });
 
     it("pause", async () => {
@@ -116,9 +183,6 @@ describe('Stake', () => {
 
         const rewardBalanceAfter = await rewardToken.balanceOf(wallet.address)
         expect(rewardBalanceAfter - rewardBalanceBefore).to.equal(totalReward)
-
-        startBlock = (await provider.getBlock('latest')).number + 100
-        endBlock = (startBlock + stakePeriod)
     })
 
     it("2 account stake at different block: redeem first", async() =>{
@@ -167,9 +231,6 @@ describe('Stake', () => {
 
         expect(rewardBalanceAfterWalletTo - rewardBalanceBeforeWalletTo)
             .equal(walletToInterest.mul(totalReward).div(walletInterest.add(walletToInterest)));
-
-        startBlock = (await provider.getBlock('latest')).number + 100
-        endBlock = (startBlock + stakePeriod)
     })
 
     it("2 account stake at different block: claim first", async() =>{
@@ -222,9 +283,6 @@ describe('Stake', () => {
 
         expect(rewardBalanceAfterWalletTo - rewardBalanceBeforeWalletTo)
             .equal(walletToInterest.mul(totalReward).div(walletInterest.add(walletToInterest)));
-
-        startBlock = (await provider.getBlock('latest')).number + 100
-        endBlock = (startBlock + stakePeriod)
     })
 
     it("blacklist", async () => {
