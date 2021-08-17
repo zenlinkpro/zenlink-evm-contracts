@@ -29,6 +29,8 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
     uint256 public immutable END_BLOCK;
     // The total interest of whole stake
     uint256 public totalInterest;
+    // The total staked amount of whole stake
+    uint256 public totalStakedAmount;
     // The total reward amount of whole stake
     uint256 public totalRewardAmount;
 
@@ -194,6 +196,7 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
         uint256 addedInterest = amount.mul(END_BLOCK.sub(stakerInfo.lastUpdatedBlock));
 
         totalInterest = totalInterest.add(addedInterest);
+        totalStakedAmount = totalStakedAmount.add(amount);
 
         stakerInfo.stakedAmount = stakerInfo.stakedAmount.add(amount);
         stakerInfo.accInterest = stakerInfo.accInterest.add(addedInterest);
@@ -211,13 +214,15 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
 
         StakerInfo storage stakerInfo = _stakerInfos[msg.sender];
         require(!stakerInfo.inBlackList, 'IN_BLACK_LIST');
-        require(amount <= stakerInfo.stakedAmount, "INSUFFICIENT_STAKED_AMOUNT");
+        require(amount <= totalStakedAmount, 'INSUFFICIENT_TOTAL_STAKED_AMOUNT');
+        require(amount <= stakerInfo.stakedAmount, 'INSUFFICIENT_STAKED_AMOUNT');
 
         stakerInfo.lastUpdatedBlock = block.number < END_BLOCK ? block.number : END_BLOCK;
 
         uint256 removedInterest = amount.mul(END_BLOCK.sub(stakerInfo.lastUpdatedBlock));
 
         totalInterest = totalInterest.sub(removedInterest);
+        totalStakedAmount = totalStakedAmount.sub(amount);
 
         stakerInfo.stakedAmount = stakerInfo.stakedAmount.sub(amount);
         stakerInfo.accInterest = stakerInfo.accInterest.sub(removedInterest);
