@@ -29,6 +29,7 @@ interface IRouter {
         uint256 amountIn,
         uint256 amountSwapIn,
         uint256 amountSwapOutMin,
+        uint256 amountInReserveMin,
         address to,
         uint256 deadline
     )

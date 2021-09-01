@@ -1,7 +1,8 @@
 node_modules
 cache
 build
-yarn.lock
 dist
 .deps
 artifacts
+.DS_Store
+*/.DS_Store

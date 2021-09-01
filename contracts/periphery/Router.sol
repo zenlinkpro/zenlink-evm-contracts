@@ -66,6 +66,7 @@ contract Router is IRouter {
         uint256 amountIn,
         uint256 amountSwapOut,
         uint256 amountSwapInMax,
+        uint256 amountInReserveMin,
         address to,
         uint256 deadline
     ) external override ensure(deadline) returns (uint256 liquidity) {
@@ -81,14 +82,14 @@ contract Router is IRouter {
         );
 
         uint256 amountInReserve = amountIn - amounts[0];
-        uint256 amountInReserveMin = (amountInReserve * 9) / 10;
+        //uint256 amountInReserveMin = (amountInReserve * 8) / 10;
         (, , liquidity) = addLiquidity(
-            token0,
             token1,
+            token0,
+            amounts[amounts.length - 1],
             amountInReserve,
             amounts[amounts.length - 1],
             amountInReserveMin,
-            amounts[amounts.length - 1],
             to,
             deadline
         );

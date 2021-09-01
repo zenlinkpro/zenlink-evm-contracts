@@ -1,5 +1,6 @@
 import { utils } from 'ethers'
 import { BigNumber } from '@ethersproject/bignumber'
+import { MockProvider } from 'ethereum-waffle'
 
 
 const PERMIT_TYPEHASH = utils.keccak256(
@@ -8,6 +9,10 @@ const PERMIT_TYPEHASH = utils.keccak256(
 
 export function expandTo18Decimals(n: number): BigNumber {
   return BigNumber.from(n).mul(BigNumber.from(10).pow(18))
+}
+
+export function expandTo10Decimals(n: number): BigNumber {
+  return BigNumber.from(n).mul(BigNumber.from(10).pow(10))
 }
 
 function getDomainSeparator(name: string, tokenAddress: string) {
@@ -41,7 +46,7 @@ export function getCreate2Address(
   return utils.getAddress(`0x${utils.keccak256(sanitizedInputs).slice(-40)}`)
 }
 
-export async function mineBlockWithTimestamp(provider: any, timestamp: number): Promise<void> {
+export async function mineBlockWithTimestamp(provider: MockProvider, timestamp: number): Promise<void> {
   await provider.send('evm_setNextBlockTimestamp', [timestamp]);
-  await provider.send('evm_mine');
+  await provider.send('evm_mine', []);
 }
