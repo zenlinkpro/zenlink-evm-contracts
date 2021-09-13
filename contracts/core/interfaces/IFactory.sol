@@ -14,10 +14,17 @@ interface IFactory {
 
     function feeBasePoint() external view returns (uint8);
 
+    function lockForPairCreate() external view returns (bool);
+
     function getPair(address tokenA, address tokenB)
         external
         view
         returns (address pair);
+    
+    function getBootstrap(address tokenA, address tokenB)
+        external
+        view
+        returns (address bootstrap);
 
     function allPairs(uint256) external view returns (address pair);
 

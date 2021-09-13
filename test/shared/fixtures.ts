@@ -2,7 +2,7 @@ import { BigNumber, Contract, Wallet } from 'ethers'
 import { waffle } from "hardhat";
 const { deployContract } = waffle;
 
-import { expandTo10Decimals } from './utilities'
+import { expandTo10Decimals, expandTo18Decimals } from './utilities'
 
 import BasicToken from '../../build/contracts/test/BasicToken.sol/BasicToken.json'
 import Factory from '../../build/contracts/core//Factory.sol/Factory.json'
@@ -10,6 +10,7 @@ import Pair from '../../build/contracts/core/Pair.sol/Pair.json'
 import Router from '../../build/contracts/periphery/Router.sol/Router.json'
 import NativeCurrency from '../../build/contracts/test/NativeCurrency.sol/NativeCurrency.json'
 import Stake from '../../build/contracts/periphery/Stake.sol/Stake.json'
+import Bootstrap from '../../build/contracts/periphery/Bootstrap.sol/Bootstrap.json'
 
 interface FactoryFixture {
   factory: Contract
@@ -79,4 +80,36 @@ export async function StakeFixture(wallet: Wallet,stakeStartBlock: number, endSt
   let stake = await deployContract(wallet, Stake, [pair.address, rewardToken.address, stakeStartBlock, endStartBlock], overrides)
   
   return { factory, token0, token1, pair, stake, rewardToken }
+}
+
+interface BootstrapFixture {
+  factory: Contract
+  token0: Contract
+  token1: Contract
+  bootstrap: Contract
+}
+
+export async function BootstrapFixture(wallet: Wallet, endBlock: number): Promise<BootstrapFixture> {
+  const { factory } = await factoryFixture(wallet)
+  const token0 = await deployContract(
+    wallet, 
+    BasicToken, 
+    ["TokenA", "TA", expandTo18Decimals(1000)], 
+    overrides
+  )
+  const token1 = await deployContract(
+    wallet, 
+    BasicToken, 
+    ["TokenB", "TB", expandTo18Decimals(1000)], 
+    overrides
+  )
+  await factory.setBootstrap(token0.address, token1.address, wallet.address)
+  const bootstrap = await deployContract(
+    wallet, 
+    Bootstrap, 
+    [factory.address, token0.address, token1.address, 10000, 10000, endBlock],
+    overrides
+  )
+
+  return { factory, token0, token1, bootstrap }
 }

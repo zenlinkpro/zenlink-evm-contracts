@@ -9,8 +9,10 @@ import "../libraries/AdminUpgradeable.sol";
 contract Factory is AdminUpgradeable, IFactory {
     address public override feeto;
     uint8 public override feeBasePoint;
+    bool public override lockForPairCreate;
 
     mapping(address => mapping(address => address)) public override getPair;
+    mapping(address => mapping(address => address)) public override getBootstrap;
     address[] public override allPairs;
 
     constructor(address _admin) {
@@ -27,12 +29,19 @@ contract Factory is AdminUpgradeable, IFactory {
         override
         returns (address pair)
     {
+        require(
+            !lockForPairCreate || (lockForPairCreate && msg.sender == admin), 
+            "CREATE_PAIR_LOCKED"
+        );
         require(tokenA != tokenB, "IDENTICAL_ADDRESSES");
         (address token0, address token1) = tokenA < tokenB
             ? (tokenA, tokenB)
             : (tokenB, tokenA);
         require(token0 != address(0), "ZERO_ADDRESS");
         require(getPair[token0][token1] == address(0), "Factory: PAIR_EXISTS");
+        if (getBootstrap[token0][token1] != address(0)) {
+            require(getBootstrap[token0][token1] == msg.sender, 'NOT_BOOTSTRAP_OWNER');
+        }
         bytes memory bytecode = type(Pair).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(token0, token1));
         assembly {
@@ -43,6 +52,20 @@ contract Factory is AdminUpgradeable, IFactory {
         getPair[token1][token0] = pair;
         allPairs.push(pair);
         emit PairCreated(token0, token1, pair, allPairs.length);
+    }
+
+    function setBootstrap(address tokenA, address tokenB, address bootstrap) external onlyAdmin {
+        require(getPair[tokenA][tokenB] == address(0), "Factory: PAIR_EXISTS");
+        getBootstrap[tokenA][tokenB] = bootstrap;
+        getBootstrap[tokenB][tokenA] = bootstrap;
+    }
+
+    function lockPairCreate() external onlyAdmin {
+        lockForPairCreate = true;
+    }
+
+    function unlockPairCreate() external onlyAdmin {
+        lockForPairCreate = false;
     }
 
     function setFeeto(address _feeto) external onlyAdmin {

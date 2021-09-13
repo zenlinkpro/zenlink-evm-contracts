@@ -27,7 +27,7 @@ describe('Router', () => {
     let WNativeCurrency: Contract;
 
     beforeEach(async function () {
-        const fixture = await await routerFixture(wallet)
+        const fixture = await routerFixture(wallet)
         factory = fixture.factory
         token0 = fixture.token0
         token1 = fixture.token1
