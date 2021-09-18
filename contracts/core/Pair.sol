@@ -104,7 +104,7 @@ contract Pair is IPair, ERC20 {
         _reserve1 = reserve1;
     }
 
-    constructor() ERC20("Zenlink", "ZLK") {
+    constructor() ERC20("Zenlink LP Token", "ZLK-LP") {
         factory = msg.sender;
     }
 
