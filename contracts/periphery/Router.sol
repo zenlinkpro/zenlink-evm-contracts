@@ -82,7 +82,6 @@ contract Router is IRouter {
         );
 
         uint256 amountInReserve = amountIn - amounts[0];
-        //uint256 amountInReserveMin = (amountInReserve * 8) / 10;
         (, , liquidity) = addLiquidity(
             token1,
             token0,
@@ -132,6 +131,80 @@ contract Router is IRouter {
             Helper.safeTransferNativeCurrency(
                 msg.sender,
                 msg.value - amountNativeCurrency
+            ); // refund dust native currency, if any
+    }
+
+    function addLiquiditySingleNativeCurrency(
+        address[] memory path,
+        uint256 amountSwapOut,
+        uint256 nativeCurrencySwapInMax,
+        uint256 nativeCurrencyReserveMin,
+        address to,
+        uint256 deadline
+    )
+        external
+        payable
+        override
+        ensure(deadline)
+        returns (
+            uint256 amountToken,
+            uint256 amountNativeCurrency,
+            uint256 liquidity
+        )
+    {
+        // Swap
+        require(path[0] == WNativeCurrency, "Router: INVALID_PATH");
+        uint256[] memory amounts = Helper.getAmountsIn(
+            factory,
+            amountSwapOut,
+            path
+        );
+
+        require(amounts[0] <= msg.value, "Router: EXCESSIVE_INPUT_AMOUNT");
+        IWNativeCurrency(WNativeCurrency).deposit{value: amounts[0]}();
+
+        assert(
+            IERC20(WNativeCurrency).transfer(
+                Helper.pairFor(factory, path[0], path[1]),
+                amounts[0]
+            )
+        );
+
+        _swap(amounts, path, to);
+
+        require(
+            amounts[0] <= nativeCurrencySwapInMax,
+            "not allow bigger than nativeCurrencySwapInMax"
+        );
+
+        // Addliquidity
+        address token = path[path.length - 1];
+        uint256 nativeCurrencyReserve = msg.value - amounts[0];
+        (amountToken, amountNativeCurrency) = _addLiquidity(
+            token,
+            WNativeCurrency,
+            amounts[amounts.length - 1],
+            nativeCurrencyReserve,
+            amounts[amounts.length - 1],
+            nativeCurrencyReserveMin
+        );
+
+        address pair = Helper.pairFor(factory, token, WNativeCurrency);
+
+        Helper.safeTransferFrom(token, msg.sender, pair, amountToken);
+
+        IWNativeCurrency(WNativeCurrency).deposit{
+            value: amountNativeCurrency
+        }();
+
+        assert(IERC20(WNativeCurrency).transfer(pair, amountNativeCurrency));
+
+        liquidity = IPair(pair).mint(to);
+
+        if (msg.value > (amountNativeCurrency + amounts[0]))
+            Helper.safeTransferNativeCurrency(
+                msg.sender,
+                msg.value - (amountNativeCurrency + amounts[0])
             ); // refund dust native currency, if any
     }
 

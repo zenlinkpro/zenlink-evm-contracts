@@ -112,6 +112,61 @@ describe('Router', () => {
             constants.MaxUint256)
     })
 
+    it('addLiquiditySingleNativeCurrency', async () => {
+        const WNativeCurrencyPartnerAmount = expandTo18Decimals(1)
+        const NativeCurrencyAmount = expandTo18Decimals(1)
+
+        const bytecode = Pair.bytecode
+        const create2Address = getCreate2Address(factory.address, [token0.address, WNativeCurrency.address], bytecode)
+        await expect(factory.createPair(token0.address, WNativeCurrency.address))
+            .to.emit(factory, 'PairCreated')
+            .withArgs(
+                token0.address > WNativeCurrency.address ? WNativeCurrency.address : token0.address,
+                token0.address > WNativeCurrency.address ? token0.address : WNativeCurrency.address,
+                create2Address,
+                BigNumber.from(1))
+
+        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), wallet)
+        const pairToken0 = await pair.token0()
+        
+        await token0.approve(router.address, constants.MaxUint256)
+
+        await router.addLiquidityNativeCurrency(
+            token0.address,
+            WNativeCurrencyPartnerAmount,
+            WNativeCurrencyPartnerAmount,
+            NativeCurrencyAmount,
+            wallet.address,
+            constants.MaxUint256,
+            { ...overrides, value: NativeCurrencyAmount })
+
+        await expect(router.addLiquiditySingleNativeCurrency(
+            [WNativeCurrency.address, token0.address],
+            '49000000000',
+            '50000000000',
+            '0',
+            wallet.address,
+            constants.MaxUint256,
+            { ...overrides, value: '100000000000' })
+        )
+            .to.emit(WNativeCurrency, 'Transfer')  // Deposit NativeCurrency
+            .withArgs(constants.AddressZero, router.address, '49147444736')
+            .to.emit(pair, "Swap")                 // Swap
+            .withArgs(router.address,              
+                pairToken0 == token0.address ? 0 : 49147444736,
+                pairToken0 == token0.address ? 49147444736 : 0,
+                pairToken0 == token0.address ? 49000000000 : 0,
+                pairToken0 == token0.address ? 0 : 49000000000,
+                wallet.address
+            ) 
+            .to.emit(token0, 'Transfer')           // Transfer Token                          
+            .withArgs(wallet.address, pair.address, '49000000000')
+            .to.emit(WNativeCurrency, 'Transfer')  // Withdraw NativeCurrency
+            .withArgs(router.address, pair.address, '49000004809')
+            .to.emit(pair, 'Transfer')             // Mint Lp
+            .withArgs(constants.AddressZero, wallet.address, '49000002400')
+    })
+
     it('addLiquidityNativeCurrency', async () => {
         const WNativeCurrencyPartnerAmount = expandTo18Decimals(1)
         const NativeCurrencyAmount = expandTo18Decimals(4)
@@ -297,6 +352,7 @@ describe('Router', () => {
 
         let pairAddress = await factory.getPair(token1.address, token0.address)
         const pair = new Contract(pairAddress, JSON.stringify(Pair.abi), wallet)
+        const pairToken0 = await pair.token0()
 
         await expect(
             router.swapExactTokensForTokens(
@@ -313,7 +369,12 @@ describe('Router', () => {
             .to.emit(tokens[1], 'Transfer')
             .withArgs(pairAddress, wallet.address, expectedOutputAmount)
             .to.emit(pair, 'Swap')
-            .withArgs(router.address, 0, swapAmount, expectedOutputAmount, 0, wallet.address)
+            .withArgs(router.address,
+                pairToken0 == tokens[0].address ? swapAmount : 0,
+                pairToken0 == tokens[0].address ? 0 : swapAmount,
+                pairToken0 == tokens[0].address ? 0 : expectedOutputAmount,
+                pairToken0 == tokens[0].address ? expectedOutputAmount : 0,
+                wallet.address)
     })
 
     it('swapTokensForExactTokens', async () => {

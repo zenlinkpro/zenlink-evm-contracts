@@ -5,7 +5,6 @@ pragma solidity >=0.8.0;
 import "../periphery/interfaces/IWNativeCurrency.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-// Example class
 contract NativeCurrency is IWNativeCurrency, ERC20 {
     constructor(string memory setName, string memory setSymbol)
         ERC20(setName, setSymbol)

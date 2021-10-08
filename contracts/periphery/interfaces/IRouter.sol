@@ -54,6 +54,22 @@ interface IRouter {
             uint256 liquidity
         );
 
+    function addLiquiditySingleNativeCurrency(
+        address[] calldata path,
+        uint256 amountSwapOut,
+        uint256 nativeCurrencySwapInMax,
+        uint256 nativeCurrencyReserveMin,
+        address to,
+        uint256 deadline
+    )
+        external
+        payable
+        returns (
+            uint256 amountToken,
+            uint256 amountNativeCurrency,
+            uint256 liquidity
+        );
+
     function removeLiquidity(
         address tokenA,
         address tokenB,
