@@ -14,9 +14,6 @@ contract ZenlinkToken is ERC20, AdminUpgradeable {
     // address map that can be transferred at any time.
     mapping(address => bool) public whitelistMap;
 
-    // address list that can be transferred at any time.
-    address[] public allWhitelist;
-
     modifier canTransfer() {
         require(
             transferable == true || whitelistMap[msg.sender] == true,
@@ -39,10 +36,6 @@ contract ZenlinkToken is ERC20, AdminUpgradeable {
 
     function decimals() public view virtual override returns (uint8) {
         return decimal;
-    }
-
-    function allPairsLength() external view returns (uint256) {
-        return allWhitelist.length;
     }
 
     function addWhitelist(address user) external onlyAdmin {
