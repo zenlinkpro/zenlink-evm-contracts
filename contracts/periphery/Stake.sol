@@ -46,7 +46,7 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
     event Staked(address indexed user, uint256 amount, uint256 interest);
     event Redeem(address indexed user, uint256 redeemAmount, uint256 interest);
     event RewardsClaimed(address indexed to, uint256 amount);
-    event Withdraw(address indexed token, address indexed to, uint256 amount);
+    event WithdrawExtraFunds(address indexed token, address indexed to, uint256 amount);
     event StakePaused(address indexed caller);
     event StakeUnpaused(address indexed caller);
     event RedeemPaused(address indexed caller);
@@ -118,16 +118,21 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
     }
 
     /**
-     * @dev withdraw by admin
+     * @dev Return funds directly transfered to this contract, will not affect the portion of the amount 
+     *      that participated in stake using `stake` function
      **/
-    function withdraw(address token, address to, uint256 amount) external onlyAdmin {
+    function withdrawExtraFunds(address token, address to, uint256 amount) external onlyAdmin {
+        if (token == STAKED_TOKEN) {
+            uint256 stakedBalance = IERC20(STAKED_TOKEN).balanceOf(address(this));
+            require(stakedBalance.sub(amount) >= totalStakedAmount, 'INSUFFICIENT_STAKED_BALANCE');
+        }
         if (token == REWARD_TOKEN) {
             uint256 rewardBalance = IERC20(REWARD_TOKEN).balanceOf(address(this));
             require(rewardBalance.sub(amount) >= totalRewardAmount, 'INSUFFICIENT_REWARD_BALANCE');
         }
         Helper.safeTransfer(token, to, amount);
 
-        emit Withdraw(token, to, amount);
+        emit WithdrawExtraFunds(token, to, amount);
     }
     
     function getStakerInfo(address staker) 
