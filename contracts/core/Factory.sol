@@ -73,11 +73,13 @@ contract Factory is AdminUpgradeable, IFactory {
 
     function setFeeto(address _feeto) external onlyAdmin {
         feeto = _feeto;
+        emit FeetoUpdated(_feeto);
     }
 
     function setFeeBasePoint(uint8 _basePoint) external onlyAdmin {
         require(_basePoint <= 30, "FORBIDDEN");
         feeBasePoint = _basePoint;
+        emit FeeBasePointUpdated(_basePoint);
     }
 
     function lockPairMint(address tokenA, address tokenB) external onlyAdmin {

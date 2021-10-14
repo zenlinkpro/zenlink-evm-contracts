@@ -20,6 +20,12 @@ interface IFactory {
         address indexed tokenB,
         address indexed bootstrap
     );
+    event FeetoUpdated(
+        address indexed feeto
+    );
+    event FeeBasePointUpdated(
+        uint8 basePoint
+    );
 
     function feeto() external view returns (address);
 
