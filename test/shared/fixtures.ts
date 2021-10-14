@@ -11,6 +11,7 @@ import Router from '../../build/contracts/periphery/Router.sol/Router.json'
 import NativeCurrency from '../../build/contracts/test/NativeCurrency.sol/NativeCurrency.json'
 import Stake from '../../build/contracts/periphery/Stake.sol/Stake.json'
 import Bootstrap from '../../build/contracts/periphery/Bootstrap.sol/Bootstrap.json'
+import ZenlinkToken from '../../build/contracts/tokens/ZenlinkToken.sol/ZenlinkToken.json'
 
 interface FactoryFixture {
   factory: Contract
@@ -69,16 +70,16 @@ export async function routerFixture(wallet: Wallet): Promise<RouterFixture> {
   return { token0, token1, factory, router, nativeCurrency }
 }
 
-interface StakeFixture extends PairFixture{
+interface StakeFixture extends PairFixture {
   stake: Contract
   rewardToken: Contract
 }
 
-export async function StakeFixture(wallet: Wallet,stakeStartBlock: number, endStartBlock: number ): Promise<StakeFixture>{
-  const { factory, token0, token1, pair} = await pairFixture(wallet)
+export async function StakeFixture(wallet: Wallet, stakeStartBlock: number, endStartBlock: number): Promise<StakeFixture> {
+  const { factory, token0, token1, pair } = await pairFixture(wallet)
   let rewardToken = await deployContract(wallet, BasicToken, ["stake reward", "SR", expandTo10Decimals(1)], overrides)
   let stake = await deployContract(wallet, Stake, [pair.address, rewardToken.address, stakeStartBlock, endStartBlock], overrides)
-  
+
   return { factory, token0, token1, pair, stake, rewardToken }
 }
 
@@ -92,24 +93,34 @@ interface BootstrapFixture {
 export async function BootstrapFixture(wallet: Wallet, endBlock: number): Promise<BootstrapFixture> {
   const { factory } = await factoryFixture(wallet)
   const token0 = await deployContract(
-    wallet, 
-    BasicToken, 
-    ["TokenA", "TA", expandTo18Decimals(1000)], 
+    wallet,
+    BasicToken,
+    ["TokenA", "TA", expandTo18Decimals(1000)],
     overrides
   )
   const token1 = await deployContract(
-    wallet, 
-    BasicToken, 
-    ["TokenB", "TB", expandTo18Decimals(1000)], 
+    wallet,
+    BasicToken,
+    ["TokenB", "TB", expandTo18Decimals(1000)],
     overrides
   )
   await factory.setBootstrap(token0.address, token1.address, wallet.address)
   const bootstrap = await deployContract(
-    wallet, 
-    Bootstrap, 
+    wallet,
+    Bootstrap,
     [factory.address, token0.address, token1.address, 10000, 10000, endBlock],
     overrides
   )
 
   return { factory, token0, token1, bootstrap }
+}
+
+
+interface ZenlinkTokenFixture {
+  zenlinkToken: Contract
+}
+
+export async function ZenlinkTokenFixture(wallet: Wallet): Promise<ZenlinkTokenFixture> {
+  const zenlinkToken = await deployContract(wallet, ZenlinkToken, ["ZLK", "zenlink token", 18, '30000000000000000000000000'], overrides)
+  return { zenlinkToken }
 }
