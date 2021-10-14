@@ -16,7 +16,6 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
         uint256 stakedAmount;      // How many stake tokens the user has provided
         uint256 lastUpdatedBlock;  // Last block number that user behavior occurs
         uint256 accInterest;       // Accumulated interest the user has owned
-        bool inBlackList;          // Is staker in blackList
     }
 
     // The STAKED TOKEN
@@ -130,14 +129,6 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
 
         emit Withdraw(token, to, amount);
     }
-
-    function setBlackList(address blacklistAddress) external onlyAdmin {
-        _stakerInfos[blacklistAddress].inBlackList = true;
-    }
-
-    function removeBlackList(address blacklistAddress) external onlyAdmin {
-        _stakerInfos[blacklistAddress].inBlackList = false;
-    }
     
     function getStakerInfo(address staker) 
         external 
@@ -192,7 +183,6 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
     function stake(uint256 amount) external beforeEndPeriod nonReentrant whenStakeNotPaused {
         require(amount > 0, 'INVALID_ZERO_AMOUNT');
         StakerInfo storage stakerInfo = _stakerInfos[msg.sender];
-        require(!stakerInfo.inBlackList, 'IN_BLACK_LIST');
 
         Helper.safeTransferFrom(
             STAKED_TOKEN,
@@ -225,7 +215,6 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
         require(block.number > START_BLOCK, "STAKE_NOT_STARTED");
 
         StakerInfo storage stakerInfo = _stakerInfos[msg.sender];
-        require(!stakerInfo.inBlackList, 'IN_BLACK_LIST');
         require(amount <= totalStakedAmount, 'INSUFFICIENT_TOTAL_STAKED_AMOUNT');
         require(amount <= stakerInfo.stakedAmount, 'INSUFFICIENT_STAKED_AMOUNT');
 
@@ -264,7 +253,6 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
         require(totalInterest > 0, 'INVALID_ZERO_TOTAL_INTEREST');
 
         StakerInfo storage stakerInfo = _stakerInfos[msg.sender];
-        require(!stakerInfo.inBlackList, 'IN_BLACK_LIST');
         require(stakerInfo.accInterest > 0, "INSUFFICIENT_ACCUMULATED_INTEREST");
 
         uint256 claimRewardAmount = totalRewardAmount.mul(stakerInfo.accInterest) / totalInterest;
