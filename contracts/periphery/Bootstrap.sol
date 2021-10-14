@@ -35,7 +35,9 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
     event Provided(address indexed user, uint256 amount0, uint256 amount1);
     event LiquidityClaimed(address indexed to, uint256 amount);
     event Refund(address indexed to, uint256 amount0, uint256 amount1);
-    event Withdraw(address indexed token, address indexed to, uint256 amount);
+    event WithdrawExtraFunds(address indexed token, address indexed to, uint256 amount);
+    event MinumAmountUpdated(uint256 amount0, uint256 amount1);
+    event EndBlockUpdated(uint256 endBlock);
 
     constructor(
         address _factory,
@@ -104,6 +106,7 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
         onlyAdmin 
     {
         MINUM_AMOUNT0 = amount0;
+        emit MinumAmountUpdated(amount0, MINUM_AMOUNT1);
     }
 
     function setMinumAmount1(uint256 amount1) 
@@ -112,6 +115,7 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
         onlyAdmin 
     {
         MINUM_AMOUNT1 = amount1;
+        emit MinumAmountUpdated(MINUM_AMOUNT0, amount1);
     }
 
     function setEndBlock(uint256 endBlock) 
@@ -121,6 +125,7 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
     {
         require(endBlock > block.number, 'INVALID_END_BLOCK');
         END_BLOCK = endBlock;
+        emit EndBlockUpdated(endBlock);
     }
 
     function getUserInfo(address user) 
@@ -271,8 +276,12 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
         emit Refund(msg.sender, _amount0, _amount1);
     }
 
-    function withdraw(
-        address token, 
+    /**
+     * @dev Return funds directly transfered to this contract, will not affect the portion of the amount 
+     *      that participated in bootstrap using `addProvision` function
+     **/
+    function withdrawExtraFunds(
+        address token,
         address to, 
         uint256 amount
     ) external onlyAdmin {
@@ -286,6 +295,6 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
         }
         Helper.safeTransfer(token, to, amount);
 
-        emit Withdraw(token, to, amount);
+        emit WithdrawExtraFunds(token, to, amount);
     }
 }

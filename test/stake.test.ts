@@ -92,7 +92,7 @@ describe('Stake', () => {
         ).to.be.revertedWith('INSUFFICIENT_REWARD_AMOUNT');
     })
 
-    it('withdraw: other token', async () => {
+    it('withdrawExtraFunds: other token', async () => {
         const otherToken = await deployContract(
             wallet, 
             BasicToken, 
@@ -103,20 +103,20 @@ describe('Stake', () => {
         await otherToken.transfer(stake.address, transferAmount, overrides)
         expect(await otherToken.balanceOf(stake.address)).to.equal(transferAmount)
         expect(await otherToken.balanceOf(wallet.address)).to.equal(expandTo10Decimals(300))
-        await stake.withdraw(otherToken.address, wallet.address, expandTo10Decimals(100), overrides)
+        await stake.withdrawExtraFunds(otherToken.address, wallet.address, expandTo10Decimals(100), overrides)
         expect(await otherToken.balanceOf(stake.address)).to.equal(expandTo10Decimals(100))
         expect(await otherToken.balanceOf(wallet.address)).to.equal(expandTo10Decimals(400))
     })
 
-    it('withdraw: reward token', async () => {
+    it('withdrawExtraFunds: reward token', async () => {
         const amountOfRewardToRemove = BigNumber.from('50000000')
         await stake.removeReward(amountOfRewardToRemove, overrides)
         await rewardToken.transfer(stake.address, BigNumber.from('10000000'), overrides)
         expect(await rewardToken.balanceOf(stake.address)).to.equal(BigNumber.from('60000000'))
-        await stake.withdraw(rewardToken.address, wallet.address, BigNumber.from('10000000'), overrides)
+        await stake.withdrawExtraFunds(rewardToken.address, wallet.address, BigNumber.from('10000000'), overrides)
         expect(await rewardToken.balanceOf(stake.address)).to.equal(BigNumber.from('50000000'))
         await expect(
-            stake.withdraw(rewardToken.address, wallet.address, BigNumber.from('1'), overrides)
+            stake.withdrawExtraFunds(rewardToken.address, wallet.address, BigNumber.from('1'), overrides)
         ).to.be.revertedWith('INSUFFICIENT_REWARD_BALANCE');
     })
 
@@ -283,23 +283,5 @@ describe('Stake', () => {
 
         expect(rewardBalanceAfterWalletTo - rewardBalanceBeforeWalletTo)
             .equal(walletToInterest.mul(totalReward).div(walletInterest.add(walletToInterest)));
-    })
-
-    it("blacklist", async () => {
-        await time.advanceBlockTo(startBlock)
-        
-        const stakeAmount = expandTo10Decimals(1)
-        await stake.connect(walletTo).stake(stakeAmount, overrides)
-        await stake.setBlackList(walletTo.address)
-        await expect(stake.connect(walletTo).stake(stakeAmount, overrides)).to.be.revertedWith('IN_BLACK_LIST')
-        await expect(stake.connect(walletTo).redeem(stakeAmount, overrides)).to.be.revertedWith('IN_BLACK_LIST')
-        await time.advanceBlockTo(endBlock)
-
-        await expect(stake.connect(walletTo).claim(overrides)).to.be.revertedWith('IN_BLACK_LIST')
-
-        await stake.removeBlackList(walletTo.address)
-        await expect(stake.connect(walletTo).claim(overrides))
-            .to.emit(stake, 'RewardsClaimed')
-            .withArgs(walletTo.address, totalReward)
     })
 });

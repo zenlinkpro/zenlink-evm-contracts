@@ -58,23 +58,28 @@ contract Factory is AdminUpgradeable, IFactory {
         require(getPair[tokenA][tokenB] == address(0), "Factory: PAIR_EXISTS");
         getBootstrap[tokenA][tokenB] = bootstrap;
         getBootstrap[tokenB][tokenA] = bootstrap;
+        emit BootstrapSetted(tokenA, tokenB, bootstrap);
     }
 
     function lockPairCreate() external onlyAdmin {
         lockForPairCreate = true;
+        emit PairCreateLocked(msg.sender);
     }
 
     function unlockPairCreate() external onlyAdmin {
         lockForPairCreate = false;
+        emit PairCreateUnlocked(msg.sender);
     }
 
     function setFeeto(address _feeto) external onlyAdmin {
         feeto = _feeto;
+        emit FeetoUpdated(_feeto);
     }
 
     function setFeeBasePoint(uint8 _basePoint) external onlyAdmin {
         require(_basePoint <= 30, "FORBIDDEN");
         feeBasePoint = _basePoint;
+        emit FeeBasePointUpdated(_basePoint);
     }
 
     function lockPairMint(address tokenA, address tokenB) external onlyAdmin {

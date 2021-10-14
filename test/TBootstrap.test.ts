@@ -209,7 +209,7 @@ describe('Bootstrap', () => {
         expect(totalAmount1).to.equal(BigNumber.from('1000'))
     })
 
-    it('withdraw', async() => {
+    it('withdrawExtraFunds', async() => {
         const otherToken = await deployContract(
             wallet, 
             BasicToken, 
@@ -220,7 +220,7 @@ describe('Bootstrap', () => {
         await otherToken.transfer(bootstrap.address, transferAmount, overrides) 
         expect(await otherToken.balanceOf(bootstrap.address)).to.equal(transferAmount)
         expect(await otherToken.balanceOf(wallet.address)).to.equal(expandTo10Decimals(300))
-        await bootstrap.withdraw(otherToken.address, wallet.address, expandTo10Decimals(100), overrides)
+        await bootstrap.withdrawExtraFunds(otherToken.address, wallet.address, expandTo10Decimals(100), overrides)
         expect(await otherToken.balanceOf(bootstrap.address)).to.equal(expandTo10Decimals(100))
         expect(await otherToken.balanceOf(wallet.address)).to.equal(expandTo10Decimals(400)) 
     })

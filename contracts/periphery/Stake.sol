@@ -16,7 +16,6 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
         uint256 stakedAmount;      // How many stake tokens the user has provided
         uint256 lastUpdatedBlock;  // Last block number that user behavior occurs
         uint256 accInterest;       // Accumulated interest the user has owned
-        bool inBlackList;          // Is staker in blackList
     }
 
     // The STAKED TOKEN
@@ -47,7 +46,13 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
     event Staked(address indexed user, uint256 amount, uint256 interest);
     event Redeem(address indexed user, uint256 redeemAmount, uint256 interest);
     event RewardsClaimed(address indexed to, uint256 amount);
-    event Withdraw(address indexed token, address indexed to, uint256 amount);
+    event WithdrawExtraFunds(address indexed token, address indexed to, uint256 amount);
+    event StakePaused(address indexed caller);
+    event StakeUnpaused(address indexed caller);
+    event RedeemPaused(address indexed caller);
+    event RedeemUnpaused(address indexed caller);
+    event ClaimPaused(address indexed caller);
+    event ClaimUnpaused(address indexed caller);
 
     constructor(
         address _stakeToken,
@@ -113,24 +118,21 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
     }
 
     /**
-     * @dev withdraw by admin
+     * @dev Return funds directly transfered to this contract, will not affect the portion of the amount 
+     *      that participated in stake using `stake` function
      **/
-    function withdraw(address token, address to, uint256 amount) external onlyAdmin {
+    function withdrawExtraFunds(address token, address to, uint256 amount) external onlyAdmin {
+        if (token == STAKED_TOKEN) {
+            uint256 stakedBalance = IERC20(STAKED_TOKEN).balanceOf(address(this));
+            require(stakedBalance.sub(amount) >= totalStakedAmount, 'INSUFFICIENT_STAKED_BALANCE');
+        }
         if (token == REWARD_TOKEN) {
             uint256 rewardBalance = IERC20(REWARD_TOKEN).balanceOf(address(this));
             require(rewardBalance.sub(amount) >= totalRewardAmount, 'INSUFFICIENT_REWARD_BALANCE');
         }
         Helper.safeTransfer(token, to, amount);
 
-        emit Withdraw(token, to, amount);
-    }
-
-    function setBlackList(address blacklistAddress) external onlyAdmin {
-        _stakerInfos[blacklistAddress].inBlackList = true;
-    }
-
-    function removeBlackList(address blacklistAddress) external onlyAdmin {
-        _stakerInfos[blacklistAddress].inBlackList = false;
+        emit WithdrawExtraFunds(token, to, amount);
     }
     
     function getStakerInfo(address staker) 
@@ -146,31 +148,37 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
     function pauseStake() external onlyAdmin {
         require(!_stakePaused, 'STAKE_PAUSED');
         _stakePaused = true;
+        emit StakePaused(msg.sender);
     }
 
     function unpauseStake() external onlyAdmin {
         require(_stakePaused, 'STAKE_UNPAUSED');
         _stakePaused = false;
+        emit StakeUnpaused(msg.sender);
     }
 
     function pauseRedeem() external onlyAdmin {
         require(!_redeemPaused, 'REDEEM_PAUSED');
         _redeemPaused = true;
+        emit RedeemPaused(msg.sender);
     }
 
     function unpauseRedeem() external onlyAdmin {
         require(_redeemPaused, 'REDEEM_UNPAUSED');
         _redeemPaused = false;
+        emit RedeemUnpaused(msg.sender);
     }
     
     function pauseClaim() external onlyAdmin {
         require(!_claimPaused, 'CLAIM_PAUSED');
         _claimPaused = true;
+        emit ClaimPaused(msg.sender);
     }
 
     function unpauseClaim() external onlyAdmin {
         require(_claimPaused, 'CLAIM_UNPAUSED');
         _claimPaused = false;
+        emit ClaimUnpaused(msg.sender);
     }
 
     /**
@@ -180,7 +188,6 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
     function stake(uint256 amount) external beforeEndPeriod nonReentrant whenStakeNotPaused {
         require(amount > 0, 'INVALID_ZERO_AMOUNT');
         StakerInfo storage stakerInfo = _stakerInfos[msg.sender];
-        require(!stakerInfo.inBlackList, 'IN_BLACK_LIST');
 
         Helper.safeTransferFrom(
             STAKED_TOKEN,
@@ -213,7 +220,6 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
         require(block.number > START_BLOCK, "STAKE_NOT_STARTED");
 
         StakerInfo storage stakerInfo = _stakerInfos[msg.sender];
-        require(!stakerInfo.inBlackList, 'IN_BLACK_LIST');
         require(amount <= totalStakedAmount, 'INSUFFICIENT_TOTAL_STAKED_AMOUNT');
         require(amount <= stakerInfo.stakedAmount, 'INSUFFICIENT_STAKED_AMOUNT');
 
@@ -252,7 +258,6 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
         require(totalInterest > 0, 'INVALID_ZERO_TOTAL_INTEREST');
 
         StakerInfo storage stakerInfo = _stakerInfos[msg.sender];
-        require(!stakerInfo.inBlackList, 'IN_BLACK_LIST');
         require(stakerInfo.accInterest > 0, "INSUFFICIENT_ACCUMULATED_INTEREST");
 
         uint256 claimRewardAmount = totalRewardAmount.mul(stakerInfo.accInterest) / totalInterest;

@@ -25,7 +25,7 @@ contract Router is IRouter {
     }
 
     receive() external payable {
-        assert(msg.sender == WNativeCurrency); // only accept Native Currency via fallback from the WNativeCurrency contract
+        require(msg.sender == WNativeCurrency); // only accept Native Currency via fallback from the WNativeCurrency contract
     }
 
     function addLiquidity(
@@ -125,7 +125,7 @@ contract Router is IRouter {
         IWNativeCurrency(WNativeCurrency).deposit{
             value: amountNativeCurrency
         }();
-        assert(IERC20(WNativeCurrency).transfer(pair, amountNativeCurrency));
+        require(IERC20(WNativeCurrency).transfer(pair, amountNativeCurrency));
         liquidity = IPair(pair).mint(to);
         if (msg.value > amountNativeCurrency)
             Helper.safeTransferNativeCurrency(
@@ -244,7 +244,7 @@ contract Router is IRouter {
                     reserve1,
                     reserve0
                 );
-                assert(amount0Optimal <= amount0Desired);
+                require(amount0Optimal <= amount0Desired);
                 require(
                     amount0Optimal >= amount0Min,
                     "Router: INSUFFICIENT_0_AMOUNT"
@@ -387,7 +387,7 @@ contract Router is IRouter {
             "Router: INSUFFICIENT_OUTPUT_AMOUNT"
         );
         IWNativeCurrency(WNativeCurrency).deposit{value: amounts[0]}();
-        assert(
+        require(
             IERC20(WNativeCurrency).transfer(
                 Helper.pairFor(factory, path[0], path[1]),
                 amounts[0]
@@ -463,7 +463,7 @@ contract Router is IRouter {
         amounts = Helper.getAmountsIn(factory, amountOut, path);
         require(amounts[0] <= msg.value, "Router: EXCESSIVE_INPUT_AMOUNT");
         IWNativeCurrency(WNativeCurrency).deposit{value: amounts[0]}();
-        assert(
+        require(
             IERC20(WNativeCurrency).transfer(
                 Helper.pairFor(factory, path[0], path[1]),
                 amounts[0]
