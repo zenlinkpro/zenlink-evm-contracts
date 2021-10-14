@@ -53,31 +53,37 @@ contract Pair is IPair, ERC20 {
     function lockMint() external override {
         require(msg.sender == factory, "Only called by factory");
         mintUnlocked = 1;
+        emit MintLocked(msg.sender, address(this));
     }
 
     function unlockMint() external override {
         require(msg.sender == factory, "Only called by factory");
         mintUnlocked = 0;
+        emit MintUnlock(msg.sender, address(this));
     }
 
     function lockBurn() external override {
         require(msg.sender == factory, "Only called by factory");
         burnLocked = 1;
+        emit BurnLocked(msg.sender, address(this));
     }
 
     function unlockBurn() external override {
         require(msg.sender == factory, "Only called by factory");
         burnLocked = 0;
+        emit BurnUnlock(msg.sender, address(this));
     }
 
     function lockSwap() external override {
         require(msg.sender == factory, "Only called by factory");
         swapLocked = 1;
+        emit SwapLocked(msg.sender, address(this));
     }
 
     function unlockSwap() external override {
         require(msg.sender == factory, "Only called by factory");
         swapLocked = 0;
+        emit SwapUnlock(msg.sender, address(this));
     }
 
     function _safeTransfer(

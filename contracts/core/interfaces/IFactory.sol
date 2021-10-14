@@ -9,6 +9,17 @@ interface IFactory {
         address pair,
         uint256
     );
+    event PairCreateLocked(
+        address indexed caller
+    );
+    event PairCreateUnlock(
+        address indexed caller
+    );
+    event BootstrapSetted(
+        address indexed tokenA,
+        address indexed tokenB,
+        address indexed bootstrap
+    );
 
     function feeto() external view returns (address);
 
