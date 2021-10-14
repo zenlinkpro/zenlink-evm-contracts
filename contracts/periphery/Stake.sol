@@ -48,6 +48,12 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
     event Redeem(address indexed user, uint256 redeemAmount, uint256 interest);
     event RewardsClaimed(address indexed to, uint256 amount);
     event Withdraw(address indexed token, address indexed to, uint256 amount);
+    event StakePaused(address indexed caller);
+    event StakeUnpaused(address indexed caller);
+    event RedeemPaused(address indexed caller);
+    event RedeemUnpaused(address indexed caller);
+    event ClaimPaused(address indexed caller);
+    event ClaimUnpaused(address indexed caller);
 
     constructor(
         address _stakeToken,
@@ -146,31 +152,37 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
     function pauseStake() external onlyAdmin {
         require(!_stakePaused, 'STAKE_PAUSED');
         _stakePaused = true;
+        emit StakePaused(msg.sender);
     }
 
     function unpauseStake() external onlyAdmin {
         require(_stakePaused, 'STAKE_UNPAUSED');
         _stakePaused = false;
+        emit StakeUnpaused(msg.sender);
     }
 
     function pauseRedeem() external onlyAdmin {
         require(!_redeemPaused, 'REDEEM_PAUSED');
         _redeemPaused = true;
+        emit RedeemPaused(msg.sender);
     }
 
     function unpauseRedeem() external onlyAdmin {
         require(_redeemPaused, 'REDEEM_UNPAUSED');
         _redeemPaused = false;
+        emit RedeemUnpaused(msg.sender);
     }
     
     function pauseClaim() external onlyAdmin {
         require(!_claimPaused, 'CLAIM_PAUSED');
         _claimPaused = true;
+        emit ClaimPaused(msg.sender);
     }
 
     function unpauseClaim() external onlyAdmin {
         require(_claimPaused, 'CLAIM_UNPAUSED');
         _claimPaused = false;
+        emit ClaimUnpaused(msg.sender);
     }
 
     /**

@@ -12,7 +12,7 @@ interface IFactory {
     event PairCreateLocked(
         address indexed caller
     );
-    event PairCreateUnlock(
+    event PairCreateUnlocked(
         address indexed caller
     );
     event BootstrapSetted(

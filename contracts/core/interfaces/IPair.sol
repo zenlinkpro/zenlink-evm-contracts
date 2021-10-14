@@ -22,7 +22,7 @@ interface IPair {
         address indexed caller,
         address indexed pair
     );
-    event MintUnlock(
+    event MintUnlocked(
         address indexed caller,
         address indexed pair
     );
@@ -30,7 +30,7 @@ interface IPair {
         address indexed caller,
         address indexed pair
     );
-    event BurnUnlock(
+    event BurnUnlocked(
         address indexed caller,
         address indexed pair
     );
@@ -38,7 +38,7 @@ interface IPair {
         address indexed caller,
         address indexed pair
     );
-    event SwapUnlock(
+    event SwapUnlocked(
         address indexed caller,
         address indexed pair
     );

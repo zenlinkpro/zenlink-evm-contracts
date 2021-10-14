@@ -36,6 +36,8 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
     event LiquidityClaimed(address indexed to, uint256 amount);
     event Refund(address indexed to, uint256 amount0, uint256 amount1);
     event Withdraw(address indexed token, address indexed to, uint256 amount);
+    event MinumAmountUpdated(uint256 amount0, uint256 amount1);
+    event EndBlockUpdated(uint256 endBlock);
 
     constructor(
         address _factory,
@@ -104,6 +106,7 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
         onlyAdmin 
     {
         MINUM_AMOUNT0 = amount0;
+        emit MinumAmountUpdated(amount0, MINUM_AMOUNT1);
     }
 
     function setMinumAmount1(uint256 amount1) 
@@ -112,6 +115,7 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
         onlyAdmin 
     {
         MINUM_AMOUNT1 = amount1;
+        emit MinumAmountUpdated(MINUM_AMOUNT0, amount1);
     }
 
     function setEndBlock(uint256 endBlock) 
@@ -121,6 +125,7 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
     {
         require(endBlock > block.number, 'INVALID_END_BLOCK');
         END_BLOCK = endBlock;
+        emit EndBlockUpdated(endBlock);
     }
 
     function getUserInfo(address user) 

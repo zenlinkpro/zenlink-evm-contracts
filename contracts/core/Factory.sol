@@ -68,7 +68,7 @@ contract Factory is AdminUpgradeable, IFactory {
 
     function unlockPairCreate() external onlyAdmin {
         lockForPairCreate = false;
-        emit PairCreateUnlock(msg.sender);
+        emit PairCreateUnlocked(msg.sender);
     }
 
     function setFeeto(address _feeto) external onlyAdmin {
