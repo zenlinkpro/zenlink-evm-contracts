@@ -163,7 +163,7 @@ contract Router is IRouter {
         require(amounts[0] <= msg.value, "Router: EXCESSIVE_INPUT_AMOUNT");
         IWNativeCurrency(WNativeCurrency).deposit{value: amounts[0]}();
 
-        assert(
+        require(
             IERC20(WNativeCurrency).transfer(
                 Helper.pairFor(factory, path[0], path[1]),
                 amounts[0]
@@ -197,7 +197,7 @@ contract Router is IRouter {
             value: amountNativeCurrency
         }();
 
-        assert(IERC20(WNativeCurrency).transfer(pair, amountNativeCurrency));
+        require(IERC20(WNativeCurrency).transfer(pair, amountNativeCurrency));
 
         liquidity = IPair(pair).mint(to);
 
