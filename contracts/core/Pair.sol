@@ -24,10 +24,6 @@ contract Pair is IPair, ERC20 {
 
     uint8 private unlocked = 1;
 
-    uint8 private mintUnlocked = 0;
-    uint8 private burnLocked = 0;
-    uint8 private swapLocked = 0;
-
     modifier lock() {
         require(unlocked == 1, "LOCKED");
         unlocked = 0;
