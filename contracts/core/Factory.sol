@@ -81,34 +81,4 @@ contract Factory is AdminUpgradeable, IFactory {
         feeBasePoint = _basePoint;
         emit FeeBasePointUpdated(_basePoint);
     }
-
-    function lockPairMint(address tokenA, address tokenB) external onlyAdmin {
-        address pair = getPair[tokenA][tokenB];
-        IPair(pair).lockMint();
-    }
-
-    function unlockPairMint(address tokenA, address tokenB) external onlyAdmin {
-        address pair = getPair[tokenA][tokenB];
-        IPair(pair).unlockMint();
-    }
-
-    function lockPairBurn(address tokenA, address tokenB) external onlyAdmin {
-        address pair = getPair[tokenA][tokenB];
-        IPair(pair).lockBurn();
-    }
-
-    function unlockPairBurn(address tokenA, address tokenB) external onlyAdmin {
-        address pair = getPair[tokenA][tokenB];
-        IPair(pair).unlockBurn();
-    }
-
-    function lockPairSwap(address tokenA, address tokenB) external onlyAdmin {
-        address pair = getPair[tokenA][tokenB];
-        IPair(pair).lockSwap();
-    }
-
-    function unlockPairSwap(address tokenA, address tokenB) external onlyAdmin {
-        address pair = getPair[tokenA][tokenB];
-        IPair(pair).unlockSwap();
-    }
 }
