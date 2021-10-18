@@ -144,16 +144,6 @@ describe('Stake', () => {
         await expect(await stake.stake(stakeAmount, overrides))
             .to.emit(stake, "Staked")
             .withArgs(wallet.address, stakeAmount, stakeAmount.mul(stakePeriod))
-
-        await stake.pauseRedeem()
-        await expect(stake.connect(walletTo).unpauseRedeem(overrides)).to.be.revertedWith('not admin')
-        await stake.unpauseRedeem(overrides)
-        await expect(stake.redeem(stakeAmount, overrides)).to.be.revertedWith('STAKE_NOT_STARTED')
-
-        await stake.pauseClaim()
-        await expect(stake.connect(walletTo).unpauseClaim(overrides)).to.be.revertedWith('not admin')
-        await stake.unpauseClaim(overrides)
-        await expect(stake.claim(overrides)).to.be.revertedWith('STAKE_NOT_FINISHED')
     })
 
     it('1 account stake at different block', async() =>{

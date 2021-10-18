@@ -18,30 +18,6 @@ interface IPair {
         uint256 amount1Out,
         address indexed to
     );
-    event MintLocked(
-        address indexed caller,
-        address indexed pair
-    );
-    event MintUnlocked(
-        address indexed caller,
-        address indexed pair
-    );
-    event BurnLocked(
-        address indexed caller,
-        address indexed pair
-    );
-    event BurnUnlocked(
-        address indexed caller,
-        address indexed pair
-    );
-    event SwapLocked(
-        address indexed caller,
-        address indexed pair
-    );
-    event SwapUnlocked(
-        address indexed caller,
-        address indexed pair
-    );
 
     function MINIMUM_LIQUIDITY() external pure returns (uint256);
 
@@ -69,13 +45,4 @@ interface IPair {
     ) external;
 
     function initialize(address, address) external;
-
-    function lockMint() external;
-    function unlockMint() external;
-
-    function lockBurn() external; 
-    function unlockBurn() external;
-
-    function lockSwap() external;
-    function unlockSwap() external;
 }

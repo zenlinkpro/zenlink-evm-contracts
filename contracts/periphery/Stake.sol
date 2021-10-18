@@ -35,10 +35,6 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
 
     // Is stake paused
     bool private _stakePaused;
-    // Is redeem paused
-    bool private _redeemPaused;
-    // Is claim paused
-    bool private _claimPaused;
 
     // Info of each staker that stakes token
     mapping(address => StakerInfo) private _stakerInfos;
@@ -49,10 +45,6 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
     event WithdrawExtraFunds(address indexed token, address indexed to, uint256 amount);
     event StakePaused(address indexed caller);
     event StakeUnpaused(address indexed caller);
-    event RedeemPaused(address indexed caller);
-    event RedeemUnpaused(address indexed caller);
-    event ClaimPaused(address indexed caller);
-    event ClaimUnpaused(address indexed caller);
 
     constructor(
         address _stakeToken,
@@ -71,8 +63,6 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
         totalRewardAmount = IERC20(_rewardToken).balanceOf(address(this));
         
         _stakePaused = false;
-        _redeemPaused = false;
-        _claimPaused = false;
     }
 
     modifier beforeEndPeriod() {
@@ -82,16 +72,6 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
 
     modifier whenStakeNotPaused() {
         require(!_stakePaused, "STAKE_PAUSED");
-        _;
-    }
-
-    modifier whenRedeemNotPaused() {
-        require(!_redeemPaused, "REDEEM_PAUSED");
-        _;
-    }
-
-    modifier whenClaimNotPaused() {
-        require(!_claimPaused, "CLAIM_PAUSED");
         _;
     }
 
@@ -157,30 +137,6 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
         emit StakeUnpaused(msg.sender);
     }
 
-    function pauseRedeem() external onlyAdmin {
-        require(!_redeemPaused, 'REDEEM_PAUSED');
-        _redeemPaused = true;
-        emit RedeemPaused(msg.sender);
-    }
-
-    function unpauseRedeem() external onlyAdmin {
-        require(_redeemPaused, 'REDEEM_UNPAUSED');
-        _redeemPaused = false;
-        emit RedeemUnpaused(msg.sender);
-    }
-    
-    function pauseClaim() external onlyAdmin {
-        require(!_claimPaused, 'CLAIM_PAUSED');
-        _claimPaused = true;
-        emit ClaimPaused(msg.sender);
-    }
-
-    function unpauseClaim() external onlyAdmin {
-        require(_claimPaused, 'CLAIM_UNPAUSED');
-        _claimPaused = false;
-        emit ClaimUnpaused(msg.sender);
-    }
-
     /**
      * @dev Stakes tokens
      * @param amount Amount to stake
@@ -215,7 +171,7 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
      * @dev Redeems staked tokens
      * @param amount Amount to redeem
      **/
-    function redeem(uint256 amount) external nonReentrant whenRedeemNotPaused {
+    function redeem(uint256 amount) external nonReentrant {
         require(amount > 0, 'INVALID_ZERO_AMOUNT');
         require(block.number > START_BLOCK, "STAKE_NOT_STARTED");
 
@@ -253,7 +209,7 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
     /**
      * @dev Claims all amount of `REWARD_TOKEN` calculated from staker interest
      **/
-    function claim() external nonReentrant whenClaimNotPaused {
+    function claim() external nonReentrant {
         require(block.number > END_BLOCK, "STAKE_NOT_FINISHED");
         require(totalInterest > 0, 'INVALID_ZERO_TOTAL_INTEREST');
 

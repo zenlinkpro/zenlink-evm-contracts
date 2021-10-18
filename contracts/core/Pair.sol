@@ -35,57 +35,6 @@ contract Pair is IPair, ERC20 {
         unlocked = 1;
     }
 
-    modifier mintUnlock() {
-        require(mintUnlocked == 0, "mint locked");
-        _;
-    }
-
-    modifier burnUnlock() {
-        require(burnLocked == 0, "burn locked");
-        _;
-    }
-
-    modifier swapUnlock() {
-        require(swapLocked == 0, "swap locked");
-        _;
-    }
-
-    function lockMint() external override {
-        require(msg.sender == factory, "Only called by factory");
-        mintUnlocked = 1;
-        emit MintLocked(msg.sender, address(this));
-    }
-
-    function unlockMint() external override {
-        require(msg.sender == factory, "Only called by factory");
-        mintUnlocked = 0;
-        emit MintUnlocked(msg.sender, address(this));
-    }
-
-    function lockBurn() external override {
-        require(msg.sender == factory, "Only called by factory");
-        burnLocked = 1;
-        emit BurnLocked(msg.sender, address(this));
-    }
-
-    function unlockBurn() external override {
-        require(msg.sender == factory, "Only called by factory");
-        burnLocked = 0;
-        emit BurnUnlocked(msg.sender, address(this));
-    }
-
-    function lockSwap() external override {
-        require(msg.sender == factory, "Only called by factory");
-        swapLocked = 1;
-        emit SwapLocked(msg.sender, address(this));
-    }
-
-    function unlockSwap() external override {
-        require(msg.sender == factory, "Only called by factory");
-        swapLocked = 0;
-        emit SwapUnlocked(msg.sender, address(this));
-    }
-
     function _safeTransfer(
         address token,
         address to,
@@ -150,7 +99,6 @@ contract Pair is IPair, ERC20 {
         external
         override
         lock
-        mintUnlock
         returns (uint256 liquidity)
     {
         (uint112 _reserve0, uint112 _reserve1) = getReserves();
@@ -183,7 +131,6 @@ contract Pair is IPair, ERC20 {
         external
         override
         lock
-        burnUnlock
         returns (uint256 amount0, uint256 amount1)
     {
         (uint112 _reserve0, uint112 _reserve1) = getReserves();
@@ -213,7 +160,7 @@ contract Pair is IPair, ERC20 {
         uint256 amount0Out,
         uint256 amount1Out,
         address to
-    ) external override lock swapUnlock {
+    ) external override lock {
         require(amount0Out > 0 || amount1Out > 0, "INSUFFICIENT_OUTPUT_AMOUNT");
         (uint112 _reserve0, uint112 _reserve1) = getReserves();
         require(
