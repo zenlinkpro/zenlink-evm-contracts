@@ -4,12 +4,16 @@ pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../libraries/AdminUpgradeable.sol";
+import "../libraries/Math.sol";
 
 contract ZenlinkToken is ERC20, AdminUpgradeable {
+    using Math for uint256;
     // global transfer switch
     bool public transferable;
 
     uint8 private decimal;
+
+    uint256 private maxTotalSupply;
 
     // address map that can be transferred at any time.
     mapping(address => bool) public whitelistMap;
@@ -26,12 +30,15 @@ contract ZenlinkToken is ERC20, AdminUpgradeable {
         string memory setSymbol,
         string memory setName,
         uint8 setDecimal,
-        uint256 initialBalance
+        uint256 initialBalance,
+        uint256 maxMint
     ) ERC20(setName, setSymbol) {
+        require(maxMint >= initialBalance, "initialBalance bigger than max");
         _initializeAdmin(msg.sender);
         _mint(msg.sender, initialBalance);
         whitelistMap[msg.sender] = true;
         decimal = setDecimal;
+        maxTotalSupply = maxMint;
     }
 
     function decimals() public view virtual override returns (uint8) {
@@ -55,6 +62,7 @@ contract ZenlinkToken is ERC20, AdminUpgradeable {
     }
 
     function mint(uint256 mintAmount) external onlyAdmin {
+        require(totalSupply().add(mintAmount) <= maxTotalSupply, "can't mint");
         _mint(msg.sender, mintAmount);
     }
 

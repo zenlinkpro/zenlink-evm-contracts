@@ -28,6 +28,9 @@ describe('ZenlinkToken', () => {
         await expect(zenlinkToken.connect(wallet).mint(expandTo18Decimals(1), overrides))
             .to.emit(zenlinkToken, "Transfer")
             .withArgs(constants.AddressZero, wallet.address, expandTo18Decimals(1))
+
+        await expect(zenlinkToken.connect(wallet).mint('40000000000000000000000000', overrides))
+            .to.revertedWith("can't mint")
     })
 
     it("transfer only admin", async () => {

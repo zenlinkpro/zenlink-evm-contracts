@@ -121,6 +121,6 @@ interface ZenlinkTokenFixture {
 }
 
 export async function ZenlinkTokenFixture(wallet: Wallet): Promise<ZenlinkTokenFixture> {
-  const zenlinkToken = await deployContract(wallet, ZenlinkToken, ["ZLK", "zenlink token", 18, '30000000000000000000000000'], overrides)
+  const zenlinkToken = await deployContract(wallet, ZenlinkToken, ["ZLK", "zenlink token", 18, '30000000000000000000000000', '40000000000000000000000000'], overrides)
   return { zenlinkToken }
 }
