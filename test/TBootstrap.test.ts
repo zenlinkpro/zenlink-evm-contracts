@@ -46,8 +46,8 @@ describe('Bootstrap', () => {
         bootstrap = fixture.bootstrap
         factory = fixture.factory
 
-        await token0.transfer(walletTo.address, expandTo18Decimals(500), overrides)
-        await token1.transfer(walletTo.address, expandTo18Decimals(500), overrides)
+        await token0.transfer(walletTo.address, expandTo18Decimals(50000), overrides)
+        await token1.transfer(walletTo.address, expandTo18Decimals(50000), overrides)
         await token0.approve(bootstrap.address, constants.MaxUint256, overrides)
         await token1.approve(bootstrap.address, constants.MaxUint256, overrides)
         await token0.connect(walletTo).approve(bootstrap.address, constants.MaxUint256, overrides)
@@ -60,16 +60,28 @@ describe('Bootstrap', () => {
         const currentMinumAmount0 = await bootstrap.MINUM_AMOUNT0()
         const currentMinumAmount1 = await bootstrap.MINUM_AMOUNT1()
 
+        await bootstrap.setHardCapAmount0(BigNumber.from('20000'))
+        await bootstrap.setHardCapAmount1(BigNumber.from('40000'))
+        const currentCapAmount0 = await bootstrap.HARD_CAP_AMOUNT0()
+        const currentCapAmount1 = await bootstrap.HARD_CAP_AMOUNT1()
+
         const expectEndBlock = (await provider.getBlock('latest')).number + 200
         await bootstrap.setEndBlock(expectEndBlock)
         const newEndBlock = await bootstrap.END_BLOCK()
         expect(currentMinumAmount0).to.equal(BigNumber.from('10000'))
         expect(currentMinumAmount1).to.equal(BigNumber.from('20000'))
+        expect(currentCapAmount0).to.equal(BigNumber.from('20000'))
+        expect(currentCapAmount1).to.equal(BigNumber.from('40000'))
         expect(newEndBlock).to.equal(expectEndBlock)
-        await expect(
-            bootstrap.setEndBlock(BigNumber.from('1'))
-        )
+    })
+
+    it('set paramaters: fail', async () => {
+        await expect(bootstrap.setEndBlock(BigNumber.from('1')))
             .to.be.revertedWith('INVALID_END_BLOCK')
+        await expect(bootstrap.setHardCapAmount0(BigNumber.from('5000')))
+            .to.be.revertedWith('INVALID_AMOUNT0')
+        await expect(bootstrap.setHardCapAmount1(BigNumber.from('5000')))
+            .to.be.revertedWith('INVALID_AMOUNT1')
     })
 
     it('addProvision', async () => {
@@ -131,6 +143,39 @@ describe('Bootstrap', () => {
             )
         )
         .to.be.revertedWith('BOOTSTRAP_ENDED')
+    })
+
+    it('addPosition: over hard cap', async () => {
+        const [address0, address1] = getSortedAddress(token0.address, token1.address)
+        const firstAddedAmount0 = BigNumber.from('14000')
+        const firstAddedAmount1 = BigNumber.from('18000')
+        await bootstrap.addProvision(address0, address1, firstAddedAmount0, firstAddedAmount1)
+
+        const balance0AfterFirstAdded = await token0.balanceOf(wallet.address)
+        const balance1AfterFirstAdded = await token1.balanceOf(wallet.address)
+        await bootstrap.addProvision(address0, address1, '5000', '5000')
+        const balance0AfterSecondAdded = await token0.balanceOf(wallet.address)
+        const balance1AfterSecondAdded = await token1.balanceOf(wallet.address)
+
+        expect(balance0AfterFirstAdded.sub(balance0AfterSecondAdded)).to.equal(BigNumber.from('2000'))
+        expect(balance1AfterFirstAdded.sub(balance1AfterSecondAdded)).to.equal(BigNumber.from('1000'))
+
+        await expect(
+            bootstrap.addProvision(
+                address0,
+                address1,
+                '1',
+                '0'
+            )
+        ).to.be.revertedWith('AMOUNT0_CAPPED');
+        await expect(
+            bootstrap.addProvision(
+                address0,
+                address1,
+                '0',
+                '1'
+            )
+        ).to.be.revertedWith('AMOUNT1_CAPPED');
     })
 
     it('mintLiquidity', async () => {
