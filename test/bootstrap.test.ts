@@ -196,6 +196,56 @@ describe('Bootstrap', () => {
         expect(liquidtyBalance).to.equal(BigNumber.from('10000'))
     })
 
+    it('mintLiquidity and claim: between soft cap and hard cap', async () => {
+        const [address0, address1] = getSortedAddress(token0.address, token1.address)
+
+        await bootstrap.addProvision(address0, address1, '11000', '19000')
+        await Time.advanceBlockTo(endBlock)
+        await factory.setBootstrap(address0, address1, bootstrap.address)
+        await bootstrap.mintLiquidity(overrides)
+
+        const pairAddress = await factory.getPair(address0, address1)
+        const pair = new Contract(pairAddress, JSON.stringify(Pair.abi), provider).connect(wallet)
+        const liquidtyBalance = await pair.balanceOf(bootstrap.address)
+
+        // sqrt(11000 * 19000) - 1000
+        expect(liquidtyBalance).to.equal(BigNumber.from('13456'))
+        const expectLiquidity = await bootstrap.getExactLiquidity(wallet.address, overrides)
+
+        await bootstrap.claim(overrides)
+
+        const liquidityBalance = await pair.balanceOf(wallet.address)
+        expect(expectLiquidity).to.equal(liquidityBalance.sub('1000'))
+        const walletInfo = await bootstrap.getUserInfo(wallet.address)
+        expect(walletInfo.amount0).to.equal(BigNumber.from('0'))
+        expect(walletInfo.amount1).to.equal(BigNumber.from('0'))
+    })
+
+    it('mintLiquidity and claim: at hard cap', async () => {
+        const [address0, address1] = getSortedAddress(token0.address, token1.address)
+
+        await bootstrap.addProvision(address0, address1, '16000', '22000')
+        await Time.advanceBlockTo(endBlock)
+        await factory.setBootstrap(address0, address1, bootstrap.address)
+        await bootstrap.mintLiquidity(overrides)
+
+        const pairAddress = await factory.getPair(address0, address1)
+        const pair = new Contract(pairAddress, JSON.stringify(Pair.abi), provider).connect(wallet)
+        const liquidtyBalance = await pair.balanceOf(bootstrap.address)
+        
+        // sqrt(15000 * 20000) - 1000 (hard cap at 15000 and 20000)
+        expect(liquidtyBalance).to.equal(BigNumber.from('16320'))
+        const expectLiquidity = await bootstrap.getExactLiquidity(wallet.address, overrides)
+
+        await bootstrap.claim(overrides)
+        
+        const liquidityBalance = await pair.balanceOf(wallet.address)
+        expect(expectLiquidity).to.equal(liquidityBalance.sub('1000'))
+        const walletInfo = await bootstrap.getUserInfo(wallet.address)
+        expect(walletInfo.amount0).to.equal(BigNumber.from('0'))
+        expect(walletInfo.amount1).to.equal(BigNumber.from('0'))
+    })
+
     it('claim', async () => {
         const [address0, address1] = getSortedAddress(token0.address, token1.address)
         await bootstrap.addProvision(address0, address1, '5000', '6000')
@@ -212,16 +262,16 @@ describe('Bootstrap', () => {
         await bootstrap.mintLiquidity(overrides)
         const pairAddress = await factory.getPair(address0, address1)
         const pair = new Contract(pairAddress, JSON.stringify(Pair.abi), provider).connect(wallet)
-        const exceptWalletLp = await bootstrap.getExactLiquidity(wallet.address, overrides)
-        const exceptWalletToLp = await bootstrap.getExactLiquidity(walletTo.address, overrides)
+        const expectWalletLp = await bootstrap.getExactLiquidity(wallet.address, overrides)
+        const expectWalletToLp = await bootstrap.getExactLiquidity(walletTo.address, overrides)
         await bootstrap.claim(overrides)
         await bootstrap.connect(walletTo).claim(overrides)
         const walletLpBalance = await pair.balanceOf(wallet.address)
         const walletToLpBalance = await pair.balanceOf(walletTo.address)
         const liquidtyBalance = await pair.balanceOf(bootstrap.address)
         // minumLiquidity minted to factory deployer
-        expect(exceptWalletLp).to.equal(walletLpBalance.sub('1000'))
-        expect(exceptWalletToLp).to.equal(walletToLpBalance)
+        expect(expectWalletLp).to.equal(walletLpBalance.sub('1000'))
+        expect(expectWalletToLp).to.equal(walletToLpBalance)
         expect(liquidtyBalance).to.equal(BigNumber.from('2'))
 
         const walletInfo = await bootstrap.getUserInfo(wallet.address)
