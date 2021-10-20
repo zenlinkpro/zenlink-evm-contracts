@@ -1,12 +1,28 @@
 {
-  "name": "zenlink-evm",
+  "name": "@zenlinkpro/zenlink-evm",
   "version": "1.0.0",
-  "repository": "https://github.com/zenlinkpro/zenlink-evm.git",
-  "author": "byterui <shirui_yj133@163.com>",
   "license": "MIT",
+  "keywords": [
+    "zenlink",
+    "evm"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zenlinkpro/zenlink-evm.git"
+  },
+  "files": [
+    "build"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
   "scripts": {
     "test": "npx hardhat test",
-    "build": "npx hardhat compile"
+    "build": "npx hardhat compile",
+    "generate-merkle-root": "ts-node scripts/generate-merkle-root.ts",
+    "generate-merkle-root:example": "ts-node scripts/generate-merkle-root.ts --input scripts/merkle-distributor/example.json",
+    "verify-merkle-root": "ts-node scripts/verify-merkle-root.ts",
+    "verify-merkle-root:example": "ts-node scripts/verify-merkle-root.ts --input scripts/merkle-distributor/example_result.json"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
@@ -17,9 +33,11 @@
     "@typescript-eslint/eslint-plugin": "^2.30.0",
     "@typescript-eslint/parser": "^2.30.0",
     "chai": "^4.2.0",
+    "commander": "^8.2.0",
     "eslint": "^6.8.0",
     "eslint-plugin-import": "^2.20.2",
     "ethereum-waffle": "3.4.0",
+    "ethereumjs-util": "^7.1.3",
     "ethers": "^5.0.21",
     "hardhat": "2.5.0",
     "mocha": "^7.1.2",

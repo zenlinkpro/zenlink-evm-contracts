@@ -3,6 +3,7 @@ cache
 build
 dist
 .deps
+yarn-error.log
 artifacts
 .DS_Store
 */.DS_Store
