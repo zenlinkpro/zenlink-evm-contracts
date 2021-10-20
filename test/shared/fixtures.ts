@@ -95,20 +95,23 @@ export async function BootstrapFixture(wallet: Wallet, endBlock: number): Promis
   const token0 = await deployContract(
     wallet,
     BasicToken,
-    ["TokenA", "TA", expandTo18Decimals(1000)],
+    ["TokenA", "TA", expandTo18Decimals(100000)],
     overrides
   )
   const token1 = await deployContract(
     wallet,
     BasicToken,
-    ["TokenB", "TB", expandTo18Decimals(1000)],
+    ["TokenB", "TB", expandTo18Decimals(100000)],
     overrides
   )
-  await factory.setBootstrap(token0.address, token1.address, wallet.address)
+  const [token0Address, token1Address] = token0.address < token1.address
+    ? [token0.address, token1.address]
+    : [token1.address, token0.address]
+  await factory.setBootstrap(token0Address, token1Address, wallet.address)
   const bootstrap = await deployContract(
     wallet,
     Bootstrap,
-    [factory.address, token0.address, token1.address, 10000, 10000, endBlock],
+    [factory.address, token0Address, token1Address, 10000, 10000, 15000, 20000, endBlock],
     overrides
   )
 

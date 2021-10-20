@@ -25,6 +25,8 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
     uint256 public constant MINIMUM_LIQUIDITY = 10**3;
     uint256 public MINUM_AMOUNT0;
     uint256 public MINUM_AMOUNT1;
+    uint256 public HARD_CAP_AMOUNT0;
+    uint256 public HARD_CAP_AMOUNT1;
     uint256 public END_BLOCK;
 
     uint256 public totalAmount0;
@@ -37,6 +39,7 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
     event Refund(address indexed to, uint256 amount0, uint256 amount1);
     event WithdrawExtraFunds(address indexed token, address indexed to, uint256 amount);
     event MinumAmountUpdated(uint256 amount0, uint256 amount1);
+    event HardCapAmountUpdated(uint256 amount0, uint256 amount1);
     event EndBlockUpdated(uint256 endBlock);
 
     constructor(
@@ -45,9 +48,12 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
         address _tokenB,
         uint256 _minumAmountA,
         uint256 _minumAmountB,
+        uint256 _hardCapAmountA,
+        uint256 _hardCapAmountB,
         uint256 _endBlock
     ) {
         require(_endBlock > block.number, 'INVALID_END_BLOCK');
+        require(_hardCapAmountA > _minumAmountA && _hardCapAmountB > _minumAmountB, 'INVALID_HARD_CAP_AMOUNT');
         (address _token0, address _token1) = Helper.sortTokens(_tokenA, _tokenB);
         require(
             IFactory(_factory).getPair(_token0, _token1) == address(0), 
@@ -62,6 +68,8 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
         token1 = _token1;
         MINUM_AMOUNT0 = _token0 == _tokenA ? _minumAmountA : _minumAmountB;
         MINUM_AMOUNT1 = _token0 == _tokenA ? _minumAmountB : _minumAmountA;
+        HARD_CAP_AMOUNT0 = _token0 == _tokenA ? _hardCapAmountA : _hardCapAmountB;
+        HARD_CAP_AMOUNT1 =  _token0 == _tokenA ? _hardCapAmountB : _hardCapAmountA;
         END_BLOCK = _endBlock;
         _initializeAdmin(msg.sender);
     }
@@ -116,6 +124,26 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
     {
         MINUM_AMOUNT1 = amount1;
         emit MinumAmountUpdated(MINUM_AMOUNT0, amount1);
+    }
+
+    function setHardCapAmount0(uint256 amount0)
+        external
+        whenNotEnded
+        onlyAdmin
+    {
+        require(amount0 > MINUM_AMOUNT0, 'INVALID_AMOUNT0');
+        HARD_CAP_AMOUNT0 = amount0;
+        emit HardCapAmountUpdated(amount0, HARD_CAP_AMOUNT1);
+    }
+
+    function setHardCapAmount1(uint256 amount1)
+        external
+        whenNotEnded
+        onlyAdmin
+    {
+        require(amount1 > MINUM_AMOUNT1, 'INVALID_AMOUNT1');
+        HARD_CAP_AMOUNT1 = amount1;
+        emit HardCapAmountUpdated(HARD_CAP_AMOUNT0, amount1);
     }
 
     function setEndBlock(uint256 endBlock) 
@@ -189,6 +217,9 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
         require(_amount0 > 0 || _amount1 > 0, 'INVALID_ZERO_AMOUNT');
         UserInfo storage userInfo = _userInfos[msg.sender];
         if (_amount0 > 0) {
+            require(totalAmount0 < HARD_CAP_AMOUNT0, 'AMOUNT0_CAPPED');
+            uint256 remainingAmount0 = HARD_CAP_AMOUNT0.sub(totalAmount0);
+            _amount0 = _amount0 < remainingAmount0 ? _amount0 : remainingAmount0;
             totalAmount0 = totalAmount0.add(_amount0);
             userInfo.amount0 = userInfo.amount0.add(_amount0);
             Helper.safeTransferFrom(
@@ -199,6 +230,9 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
             );
         }
         if (_amount1 > 0) {
+            require(totalAmount1 < HARD_CAP_AMOUNT1, 'AMOUNT1_CAPPED');
+            uint256 remainingAmount1 = HARD_CAP_AMOUNT1.sub(totalAmount1);
+            _amount1 = _amount1 < remainingAmount1 ? _amount1 : remainingAmount1;
             totalAmount1 = totalAmount1.add(_amount1);
             userInfo.amount1 = userInfo.amount1.add(_amount1);
             Helper.safeTransferFrom(
