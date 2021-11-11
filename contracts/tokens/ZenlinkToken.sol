@@ -13,7 +13,7 @@ contract ZenlinkToken is ERC20, AdminUpgradeable {
 
     uint8 private decimal;
 
-    uint256 private maxTotalSupply;
+    uint256 public maxTotalSupply;
 
     // address map that can be transferred at any time.
     mapping(address => bool) public whitelistMap;
