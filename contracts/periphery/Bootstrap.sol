@@ -32,6 +32,11 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
     uint256 public totalAmount0;
     uint256 public totalAmount1;
 
+    address[] private rewardTokens;
+    address[] private limitTokens;
+    uint256[] private limitTokenAmounts;
+    uint256[] private rewardTokenAmounts;
+
     mapping(address => UserInfo) private _userInfos;
 
     event Provided(address indexed user, uint256 amount0, uint256 amount1);
@@ -41,6 +46,9 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
     event MinumAmountUpdated(uint256 amount0, uint256 amount1);
     event HardCapAmountUpdated(uint256 amount0, uint256 amount1);
     event EndBlockUpdated(uint256 endBlock);
+    event DistributeReward(address indexed provider, address[] rewardTokens, uint256[] rewardAmount);
+    event ChargeReward(address indexed sender, address[] rewardTokens, uint256[] totalAmount);
+    event SetRewardAndLimit(address[] rewards, address[] limits, uint256[] limitAmounts);
 
     constructor(
         address _factory,
@@ -210,6 +218,8 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
         uint256 amountA,
         uint256 amountB
     ) external whenNotEnded nonReentrant {
+        require(checkProviderLimit(msg.sender), 'CheckLimitFailed');
+
         (address _token0, address _token1) = Helper.sortTokens(tokenA, tokenB);
         require(_token0 == token0 && _token1 == token1, 'INVALID_TOKEN');
         uint256 _amount0 = _token0 == tokenA ? amountA : amountB;
@@ -281,6 +291,10 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
         address pair = Helper.pairFor(factory, token0, token1);
         Helper.safeTransfer(pair, msg.sender, exactLiquidity);
       
+        if (rewardTokens.length > 0){
+            distributeReward(msg.sender, exactLiquidity, getTotalLiquidity());
+        }
+
         emit LiquidityClaimed(msg.sender, exactLiquidity);
     }
 
@@ -330,5 +344,100 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
         Helper.safeTransfer(token, to, amount);
 
         emit WithdrawExtraFunds(token, to, amount);
+    }
+
+    function setRewardAndLimit(        
+        address[] memory _rewardTokens,
+        address[] memory _limitTokens,
+        uint256[] memory _limitAmounts
+    ) external onlyAdmin{
+        rewardTokens = _rewardTokens;
+        limitTokens  = _limitTokens;
+        limitTokenAmounts = _limitAmounts;
+
+        emit SetRewardAndLimit(_rewardTokens, _limitTokens, _limitAmounts);
+    }
+
+    function charge(
+        uint256[] memory _amounts
+    ) external {
+        require(_amounts.length == rewardTokens.length, 'INVALID_AMOUNTS');
+        for (uint256 i = 0; i < _amounts.length; i++) {
+            Helper.safeTransferFrom(
+                rewardTokens[i], 
+                msg.sender, 
+                address(this), 
+                _amounts[i]
+            );
+        }
+
+        if (rewardTokenAmounts.length == 0){
+           rewardTokenAmounts = _amounts;     
+        }else{
+            for(uint256 i = 0; i < _amounts.length; i++){
+                rewardTokenAmounts[i] = rewardTokenAmounts[i] + _amounts[i];
+            }
+        }
+
+        emit ChargeReward(msg.sender, rewardTokens, _amounts);
+    }
+
+    function withdrawReward(address recipient) external onlyAdmin{
+        for (uint256 i = 0; i < rewardTokens.length; i++) {
+            if (rewardTokenAmounts[i] == 0){
+                continue;
+            }
+            Helper.safeTransfer(
+                rewardTokens[i],  
+                recipient, 
+                rewardTokenAmounts[i]
+            );
+            rewardTokenAmounts[i] = 0;
+        }
+    }
+
+    function checkProviderLimit(address provider) public view returns(bool success){
+        success = true;
+        for (uint256 i = 0; i < limitTokenAmounts.length; i++){
+            uint256 balance =  IERC20(limitTokens[i]).balanceOf(provider);
+
+            if (balance < limitTokenAmounts[i]){
+                success = false;
+                break;
+            }
+        }
+    }
+
+    function distributeReward(address provider, uint256 providerLiquidity, uint256 totalLiquidity) private{
+        uint256[] memory rewardAmounts = new uint256[](rewardTokens.length);
+
+        for (uint256 i = 0; i < rewardTokens.length; i++){
+            uint256 distributeRewardAmount = providerLiquidity.mul(rewardTokenAmounts[i]) / totalLiquidity;
+
+            Helper.safeTransfer(
+                rewardTokens[i],
+                provider, 
+                distributeRewardAmount
+            );
+            rewardAmounts[i] = distributeRewardAmount;
+        }
+
+        emit DistributeReward(provider, rewardTokens, rewardAmounts);
+    }
+
+    function getRewardTokens() external view returns(address[] memory tokens){
+        tokens = rewardTokens;
+    }
+
+    function getLimitTokens() external view returns(address[] memory tokens){
+        tokens = limitTokens;
+    }
+
+    function getLimitAmounts() external view returns(uint256[] memory amounts){
+        amounts = limitTokenAmounts;
+    }
+
+    function getRewardTokenAmounts() external view returns(uint256[] memory amounts){
+        amounts = rewardTokenAmounts;
     }
 }
