@@ -363,8 +363,11 @@ describe('Bootstrap', () => {
             [limit0Token.address, limit1Token.address],
             [expandTo10Decimals(100), expandTo10Decimals(200)]
         )
+            
+        await limit0Token.transfer(walletTo.address, expandTo10Decimals(500))
+        await limit1Token.transfer(walletTo.address, expandTo10Decimals(500))
 
-        await expect(bootstrap.connect(walletTo).charge(
+        await expect(bootstrap.charge(
             [expandTo10Decimals(100), expandTo10Decimals(200)]
         )).to.be.revertedWith('TransferHelper::transferFrom: transferFrom failed')
 
@@ -374,7 +377,6 @@ describe('Bootstrap', () => {
         let reward1Balance = await reward1Token.balanceOf(bootstrap.address)
         expect(reward0Balance).to.equal(0)
         expect(reward1Balance).to.equal(0)
-
     })
 
     it('charge with sufficient account', async () => {
@@ -623,5 +625,50 @@ describe('Bootstrap', () => {
         let walletToReward1AmountAfterClaim = await reward1Token.balanceOf(walletTo.address)
         expect(walletToReward0AmountAfterClaim).to.equal(walletToGetReward0Amount)
         expect(walletToReward1AmountAfterClaim).to.equal(walletToGetReward1Amount)
+    })
+
+    it('estimate reward token amounts', async() =>{
+        let limit0Amount = expandTo10Decimals(100)
+        let limit1Amount = expandTo10Decimals(200)
+        await bootstrap.setRewardAndLimit(
+            [reward0Token.address, reward1Token.address],
+            [limit0Token.address, limit1Token.address],
+            [limit0Amount, limit1Amount]
+        )
+
+        let reward0Amount = expandTo10Decimals(100);
+        let reward1Amount = expandTo10Decimals(200);
+
+        await reward0Token.approve(bootstrap.address, reward0Amount)
+        await reward1Token.approve(bootstrap.address, reward1Amount)
+
+        await bootstrap.charge([reward0Amount, reward1Amount])
+
+        const [address0, address1] = getSortedAddress(token0.address, token1.address)
+        const firstAddedAmount0 = BigNumber.from('14000')
+        const firstAddedAmount1 = BigNumber.from('18000')
+
+        await bootstrap.addProvision(address0, address1, firstAddedAmount0, firstAddedAmount1)
+
+        await limit0Token.transfer(walletTo.address, limit0Amount)
+        await limit1Token.transfer(walletTo.address, limit1Amount)
+
+        const secondAddedAmount0 = BigNumber.from('1000')
+        const secondAddedAmount1 = BigNumber.from('2000')
+        await bootstrap.connect(walletTo).addProvision(address0, address1, secondAddedAmount0, secondAddedAmount1)
+
+
+        let estimateWalletRewards = await bootstrap.estimateRewardTokenAmounts(wallet.address)
+
+        const expectWalletLp = await bootstrap.getExactLiquidity(wallet.address, overrides)
+        const expectWalletToLp = await bootstrap.getExactLiquidity(walletTo.address, overrides)
+        const totalLiquidity = await bootstrap.getTotalLiquidity()
+        
+        expect(estimateWalletRewards[0]).to.equal(expectWalletLp.mul(reward0Amount).div(totalLiquidity))
+        expect(estimateWalletRewards[1]).to.equal(expectWalletLp.mul(reward1Amount).div(totalLiquidity))
+
+        let estimateWalletToRewards = await bootstrap.estimateRewardTokenAmounts(walletTo.address)
+        expect(estimateWalletToRewards[0]).to.equal(expectWalletToLp.mul(reward0Amount).div(totalLiquidity))
+        expect(estimateWalletToRewards[1]).to.equal(expectWalletToLp.mul(reward1Amount).div(totalLiquidity))
     })
 })

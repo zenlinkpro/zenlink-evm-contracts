@@ -360,22 +360,24 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
 
     function charge(
         uint256[] memory _amounts
-    ) external {
+    ) external onlyAdmin {
         require(_amounts.length == rewardTokens.length, 'INVALID_AMOUNTS');
         for (uint256 i = 0; i < _amounts.length; i++) {
-            Helper.safeTransferFrom(
-                rewardTokens[i], 
-                msg.sender, 
-                address(this), 
-                _amounts[i]
-            );
+            if ( _amounts[i] > 0 ){
+                 Helper.safeTransferFrom(
+                    rewardTokens[i], 
+                    msg.sender, 
+                    address(this), 
+                    _amounts[i]
+                );
+            }
         }
 
         if (rewardTokenAmounts.length == 0){
            rewardTokenAmounts = _amounts;     
         }else{
             for(uint256 i = 0; i < _amounts.length; i++){
-                rewardTokenAmounts[i] = rewardTokenAmounts[i] + _amounts[i];
+                rewardTokenAmounts[i] = rewardTokenAmounts[i].add(_amounts[i]);
             }
         }
 
@@ -413,12 +415,13 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
 
         for (uint256 i = 0; i < rewardTokens.length; i++){
             uint256 distributeRewardAmount = providerLiquidity.mul(rewardTokenAmounts[i]) / totalLiquidity;
-
-            Helper.safeTransfer(
-                rewardTokens[i],
-                provider, 
-                distributeRewardAmount
-            );
+            if (distributeRewardAmount > 0) {
+                Helper.safeTransfer(
+                    rewardTokens[i],
+                    provider, 
+                    distributeRewardAmount
+                );
+            }
             rewardAmounts[i] = distributeRewardAmount;
         }
 
@@ -439,5 +442,15 @@ contract Bootstrap is ReentrancyGuard, AdminUpgradeable {
 
     function getRewardTokenAmounts() external view returns(uint256[] memory amounts){
         amounts = rewardTokenAmounts;
+    }
+
+    function estimateRewardTokenAmounts(address who) external view returns(uint256[] memory amounts){
+        uint256 whoLiquidity = getExactLiquidity(who);
+        uint256 totalLiquidity = getTotalLiquidity();
+        amounts = new uint256[](rewardTokens.length);
+        
+        for (uint256 i = 0; i < rewardTokens.length; i++){
+            amounts[i] = whoLiquidity.mul(rewardTokenAmounts[i]) / totalLiquidity;
+        }
     }
 }
