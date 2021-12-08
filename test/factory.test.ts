@@ -1,7 +1,6 @@
 import { expect, use } from "chai";
-import { Contract, constants, BigNumber } from "ethers";
-const { waffle } = require("hardhat");
-const { solidity, wallet, walletTo } = waffle;
+import { Contract, BigNumber } from "ethers";
+import { solidity, MockProvider } from 'ethereum-waffle'
 import { factoryFixture } from './shared/fixtures'
 import { getCreate2Address } from './shared/utilities'
 
@@ -16,7 +15,13 @@ const TEST_ADDRESSES: [string, string] = [
 ]
 
 describe('Factory', () => {
-    let provider = waffle.provider;
+    const provider = new MockProvider({
+        ganacheOptions: {
+          hardfork: 'istanbul',
+          mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
+          gasLimit: 9999999,
+        },
+    })
 
     const [wallet, walletTo] = provider.getWallets();
 

@@ -1,7 +1,6 @@
-import { expect, use } from 'chai';
-import { deployContract, MockProvider } from 'ethereum-waffle';
+import chai, { expect } from 'chai';
+import { deployContract, MockProvider, solidity } from 'ethereum-waffle';
 import { BigNumber, constants, Contract } from 'ethers';
-import { waffle } from 'hardhat';
 import { BootstrapFixture } from './shared/fixtures';
 import { createTimeMachine } from './shared/time';
 import { expandTo10Decimals, expandTo18Decimals } from './shared/utilities';
@@ -9,7 +8,7 @@ import { expandTo10Decimals, expandTo18Decimals } from './shared/utilities';
 import BasicToken from '../build/contracts/test/BasicToken.sol/BasicToken.json'
 import Pair from '../build/contracts/core/Pair.sol/Pair.json'
 
-use(waffle.solidity);
+chai.use(solidity)
 
 async function advanceEndBlock(
     provider: MockProvider,
@@ -29,7 +28,13 @@ const overrides = { gasLimit: 4100000 }
 let endBlock = 100
 
 describe('Bootstrap', () => {
-    const provider: MockProvider = waffle.provider
+    const provider = new MockProvider({
+        ganacheOptions: {
+          hardfork: 'istanbul',
+          mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
+          gasLimit: 9999999,
+        },
+    })
     const Time = createTimeMachine(provider)
     const [wallet, walletTo] = provider.getWallets()
 
@@ -44,7 +49,7 @@ describe('Bootstrap', () => {
     let reward1Token: Contract
 
     beforeEach(async () => {
-        endBlock = await advanceEndBlock(provider, 100)
+        endBlock = await advanceEndBlock(provider, 50)
         const fixture = await BootstrapFixture(wallet, endBlock)
         token0 = fixture.token0
         token1 = fixture.token1
@@ -58,10 +63,10 @@ describe('Bootstrap', () => {
         await token0.connect(walletTo).approve(bootstrap.address, constants.MaxUint256, overrides)
         await token1.connect(walletTo).approve(bootstrap.address, constants.MaxUint256, overrides)
 
-        limit0Token = await deployContract(wallet, BasicToken, ["Limit Token 0", "LT0", expandTo10Decimals(500)], overrides)
-        limit1Token = await deployContract(wallet, BasicToken, ["Limit Token 1", "LT1", expandTo10Decimals(500)], overrides)
-        reward0Token = await deployContract(wallet, BasicToken, ["Reward Token 0", "RT0", expandTo10Decimals(500)], overrides)
-        reward1Token = await deployContract(wallet, BasicToken, ["Reward Token 1", "RT1", expandTo10Decimals(500)], overrides)
+        limit0Token = await deployContract(wallet, BasicToken, ["Limit Token 0", "LT0", 18, expandTo10Decimals(500)], overrides)
+        limit1Token = await deployContract(wallet, BasicToken, ["Limit Token 1", "LT1", 18, expandTo10Decimals(500)], overrides)
+        reward0Token = await deployContract(wallet, BasicToken, ["Reward Token 0", "RT0", 18, expandTo10Decimals(500)], overrides)
+        reward1Token = await deployContract(wallet, BasicToken, ["Reward Token 1", "RT1", 18, expandTo10Decimals(500)], overrides)
     })
 
     it('set paramaters', async () => {
@@ -114,9 +119,9 @@ describe('Bootstrap', () => {
 
     it('addProvision: fail', async () => {
         const otherToken = await deployContract(
-            wallet,
-            BasicToken,
-            ["other Token", "OT", expandTo10Decimals(500)],
+            wallet, 
+            BasicToken, 
+            ["other Token", "OT", 18, expandTo10Decimals(500)], 
             overrides
         )
         const [_address0, _address1] = getSortedAddress(token0.address, otherToken.address)
@@ -167,8 +172,8 @@ describe('Bootstrap', () => {
         const balance0AfterSecondAdded = await token0.balanceOf(wallet.address)
         const balance1AfterSecondAdded = await token1.balanceOf(wallet.address)
 
-        expect(balance0AfterFirstAdded.sub(balance0AfterSecondAdded)).to.equal(BigNumber.from('1000'))
-        expect(balance1AfterFirstAdded.sub(balance1AfterSecondAdded)).to.equal(BigNumber.from('2000'))
+        expect(balance0AfterFirstAdded.sub(balance0AfterSecondAdded)).to.equal(BigNumber.from('2000'))
+        expect(balance1AfterFirstAdded.sub(balance1AfterSecondAdded)).to.equal(BigNumber.from('1000'))
 
         await expect(
             bootstrap.addProvision(
@@ -316,9 +321,9 @@ describe('Bootstrap', () => {
 
     it('withdrawExtraFunds', async () => {
         const otherToken = await deployContract(
-            wallet,
-            BasicToken,
-            ["other Token", "OT", expandTo10Decimals(500)],
+            wallet, 
+            BasicToken, 
+            ["other Token", "OT", 18, expandTo10Decimals(500)], 
             overrides
         )
         const transferAmount = expandTo10Decimals(200)

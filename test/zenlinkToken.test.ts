@@ -1,9 +1,8 @@
 import { expect, use } from "chai";
-import { Contract, constants, BigNumber } from "ethers";
-const { waffle } = require("hardhat");
-const { solidity, wallet, walletTo } = waffle;
+import { Contract, constants } from "ethers";
+import { MockProvider, solidity } from "ethereum-waffle";
 import { ZenlinkTokenFixture } from './shared/fixtures'
-import { expandTo18Decimals, mineBlockWithTimestamp } from './shared/utilities'
+import { expandTo18Decimals } from './shared/utilities'
 
 use(solidity);
 
@@ -12,7 +11,13 @@ const overrides = {
 }
 
 describe('ZenlinkToken', () => {
-    let provider = waffle.provider;
+    const provider = new MockProvider({
+        ganacheOptions: {
+          hardfork: 'istanbul',
+          mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
+          gasLimit: 9999999,
+        },
+    })
     const [wallet, walletTo] = provider.getWallets();
 
     let zenlinkToken: Contract

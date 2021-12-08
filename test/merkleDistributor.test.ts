@@ -29,7 +29,7 @@ describe('MerkleDistributor', () => {
 
   let token: Contract
   beforeEach('deploy token', async () => {
-    token = await deployContract(wallet0, TestERC20, ['Token', 'TKN', 0], overrides)
+    token = await deployContract(wallet0, TestERC20, ['Token', 'TKN', 18, 0], overrides)
   })
 
   describe('token', () => {
