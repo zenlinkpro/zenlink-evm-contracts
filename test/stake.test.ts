@@ -216,11 +216,11 @@ describe('Stake', () => {
         const rewardBalanceAfterWallet = await rewardToken.balanceOf(wallet.address)
         const rewardBalanceAfterWalletTo = await rewardToken.balanceOf(walletTo.address)
 
-        //walletInterest = (10000000000 × 10000 − (10000000000) / 2 × (10000 − 2000));
+        //walletInterest = (10000000000 × 1000 − (10000000000) / 2 × (1000 − 200));
         const walletInterest = BigNumber.from(6000000000000);
 
-        // walletToInterest =  (10000000000 × (10000 − 1000) − 10000000000 /2 × (10000 − 6000))
-        const walletToInterest = BigNumber.from(7000000000000);
+        // walletToInterest =  (10000000000 × (1000 − 100) − 10000000000 / 2 × (1000 − 400))
+        const walletToInterest = BigNumber.from(6000000000000);
         expect(rewardBalanceAfterWallet - rewardBalanceBeforeWallet)
             .equal(walletInterest.mul(totalReward).div(walletInterest.add(walletToInterest)));
 
@@ -268,11 +268,11 @@ describe('Stake', () => {
         const rewardBalanceAfterWallet = await rewardToken.balanceOf(wallet.address)
         const rewardBalanceAfterWalletTo = await rewardToken.balanceOf(walletTo.address)
 
-        //walletInterest = (10000000000 × 10000 − (10000000000) / 2 × (10000 − 2000));
+        //walletInterest = (10000000000 × 1000 − (10000000000) / 2 × (10000 − 200));
         const walletInterest = BigNumber.from(6000000000000);
 
-        // walletToInterest =  (10000000000 × (10000 − 1000) − 10000000000 /2 × (10000 − 6000))
-        const walletToInterest = BigNumber.from(7000000000000);
+        // walletToInterest =  (10000000000 × (1000 − 100) − 10000000000 / 2 × (10000 − 400))
+        const walletToInterest = BigNumber.from(6000000000000);
         expect(rewardBalanceAfterWallet - rewardBalanceBeforeWallet)
             .equal(walletInterest.mul(totalReward).div(walletInterest.add(walletToInterest)));
 

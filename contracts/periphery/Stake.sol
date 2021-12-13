@@ -152,7 +152,7 @@ contract Stake is ReentrancyGuard, AdminUpgradeable {
             amount
         );
 
-        stakerInfo.lastUpdatedBlock = stakerInfo.lastUpdatedBlock < START_BLOCK
+        stakerInfo.lastUpdatedBlock = block.number < START_BLOCK
             ? START_BLOCK
             : block.number;
 
