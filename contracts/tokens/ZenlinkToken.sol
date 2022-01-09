@@ -83,4 +83,8 @@ contract ZenlinkToken is ERC20, AdminUpgradeable {
     ) public virtual override canTransfer returns (bool) {
         return ERC20.transferFrom(sender, recipient, amount);
     }
+
+    function burn(uint256 amount) public virtual canTransfer{
+        ERC20._burn(msg.sender, amount);
+    }
 }
