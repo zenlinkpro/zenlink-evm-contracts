@@ -4,8 +4,9 @@ pragma solidity >=0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "./interfaces/IMerkleDistributor.sol";
+import "../libraries/AdminUpgradeable.sol";
 
-contract MerkleDistributor is IMerkleDistributor {
+contract MerkleDistributor is IMerkleDistributor, AdminUpgradeable {
     address public immutable override token;
     bytes32 public immutable override merkleRoot;
 
@@ -15,6 +16,7 @@ contract MerkleDistributor is IMerkleDistributor {
     constructor(address token_, bytes32 merkleRoot_) {
         token = token_;
         merkleRoot = merkleRoot_;
+        _initializeAdmin(msg.sender);
     }
 
     function isClaimed(uint256 index) public view override returns (bool) {
@@ -43,5 +45,9 @@ contract MerkleDistributor is IMerkleDistributor {
         require(IERC20(token).transfer(account, amount), 'MerkleDistributor: Transfer failed.');
 
         emit Claimed(index, account, amount);
+    }
+
+    function withdraw(uint256 amount) external override onlyAdmin {
+        IERC20(token).transfer(msg.sender, amount);
     }
 }
