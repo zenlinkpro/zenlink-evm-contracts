@@ -93,7 +93,9 @@ library StableSwapStorage {
                 require(amounts[i] > 0, "initialDepositRequireAllTokens");
             }
             // get real transfer in amount
-            newBalances[i] += _doTransferIn(self.pooledTokens[i], amounts[i]);
+            if (amounts[i] > 0) {
+                newBalances[i] += _doTransferIn(self.pooledTokens[i], amounts[i]);
+            }
         }
 
         uint256 D1 = _getD(_xp(newBalances, self.tokenMultipliers), amp);
