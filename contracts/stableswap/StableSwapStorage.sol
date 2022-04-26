@@ -139,7 +139,7 @@ library StableSwapStorage {
         require(amountsOut.length == nCoins, "invalidAmountsLength");
         {
             uint256 tokenSupply = self.lpToken.totalSupply();
-            require(tokenSupply > 0, "flashloan should after initialDeposit");
+            require(tokenSupply > 0, "insufficientLiquidity");
         }
         uint256[] memory fees = new uint256[](nCoins);
         uint256 _fee = _feePerToken(self);
