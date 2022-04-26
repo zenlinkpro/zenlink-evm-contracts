@@ -13,6 +13,12 @@ interface IStableSwap {
         uint256 tokenSupply
     );
 
+    event FlashLoan(
+        address indexed caller,
+        address indexed receiver,
+        uint256[] amounts_out
+    );
+
     event TokenExchange(
         address indexed buyer,
         uint256 soldId,
@@ -93,6 +99,13 @@ interface IStableSwap {
         uint256 minDy,
         uint256 deadline
     ) external returns (uint256);
+
+    function flashLoan(
+        uint256[] memory amountsOut,
+        address to,
+        bytes calldata data,
+        uint256 deadline
+    ) external;
 
     function addLiquidity(
         uint256[] calldata amounts,

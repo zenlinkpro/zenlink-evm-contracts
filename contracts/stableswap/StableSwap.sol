@@ -87,6 +87,15 @@ contract StableSwap is OwnerPausable, ReentrancyGuard, Initializable, IStableSwa
         return swapStorage.addLiquidity(amounts, minMintAmount);
     }
 
+    function flashLoan(
+        uint256[] memory amountsOut,
+        address to,
+        bytes calldata data,
+        uint256 deadline
+    ) external override whenNotPaused nonReentrant deadlineCheck(deadline) {
+        swapStorage.flashLoan(amountsOut, to, data);
+    }
+
     function swap(
         uint8 fromIndex,
         uint8 toIndex,
