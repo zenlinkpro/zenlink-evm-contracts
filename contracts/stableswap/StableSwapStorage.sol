@@ -161,9 +161,8 @@ library StableSwapStorage {
         uint256[] memory newBalances = self.balances;
         for (uint256 i = 0; i < nCoins; i++) {
             if (amountsOut[i] > 0) {
-                self.pooledTokens[i].safeTransferFrom(to, address(this), amountsOut[i] + fees[i]);
+                newBalances[i] += (_doTransferIn(self.pooledTokens[i], amountsOut[i] + fees[i]) - amountsOut[i]);
             }
-            newBalances[i] += fees[i];
         }
 
         uint256 D1 = _getD(_xp(newBalances, self.tokenMultipliers), amp);
@@ -174,7 +173,6 @@ library StableSwapStorage {
             diff = _distance((D1 * self.balances[i]) / D0, newBalances[i]);
             fees[i] = (_fee * diff) / FEE_DENOMINATOR;
             self.balances[i] = newBalances[i] - ((fees[i] * self.adminFee) / FEE_DENOMINATOR);
-            newBalances[i] -= fees[i];
         }
 
         emit FlashLoan(msg.sender, to, amountsOut);
