@@ -3,6 +3,7 @@ pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "./interfaces/IStableSwapCallee.sol";
 import "./LPToken.sol";
 
 /**
@@ -17,6 +18,12 @@ library StableSwapStorage {
         uint256[] fees,
         uint256 invariant,
         uint256 token_supply
+    );
+
+    event FlashLoan(
+        address indexed caller,
+        address indexed receiver,
+        uint256[] amounts_out
     );
 
     event TokenExchange(
@@ -40,12 +47,10 @@ library StableSwapStorage {
     );
 
     uint256 public constant FEE_DENOMINATOR = 1e10;
-    // uint256 public constant PRECISION = 1e18;
-
     /// @dev protect from division loss when run approximation loop. We cannot divide at the end because of overflow,
     /// so we add some (small) PRECISION when divide in each iteration
     uint256 public constant A_PRECISION = 100;
-    /// @dev max iteration of converge calccuate
+    /// @dev max iteration of converge calculate
     uint256 internal constant MAX_ITERATION = 256;
     uint256 public constant POOL_TOKEN_COMMON_DECIMALS = 18;
 
@@ -120,6 +125,61 @@ library StableSwapStorage {
 
         self.lpToken.mint(msg.sender, mintAmount);
         emit AddLiquidity(msg.sender, amounts, fees, D1, mintAmount);
+    }
+
+    function flashLoan(
+        SwapStorage storage self,
+        uint256[] memory amountsOut,
+        address to,
+        bytes calldata data
+    ) external {
+        uint256 nCoins = self.pooledTokens.length;
+        require(amountsOut.length == nCoins, "invalidAmountsLength");
+        {
+            uint256 tokenSupply = self.lpToken.totalSupply();
+            require(tokenSupply > 0, "insufficientLiquidity");
+        }
+        uint256[] memory fees = new uint256[](nCoins);
+        uint256 _fee = _feePerToken(self);
+        uint256 amp = _getAPrecise(self);
+        uint256 D0 = _getD(_xp(self.balances, self.tokenMultipliers), amp);
+
+        for (uint256 i = 0; i < nCoins; i++) {
+            if (amountsOut[i] > 0) {
+                require(amountsOut[i] < self.balances[i], "insufficientBalance");
+                fees[i] = (_fee * amountsOut[i]) / FEE_DENOMINATOR;
+                self.pooledTokens[i].safeTransfer(to, amountsOut[i]);
+            }
+        }
+
+        if (data.length > 0) {
+            IStableSwapCallee(to).zenlinkStableSwapCall(
+                msg.sender, 
+                self.pooledTokens,
+                amountsOut, 
+                fees, 
+                data
+            );
+        }
+
+        uint256[] memory newBalances = self.balances;
+        for (uint256 i = 0; i < nCoins; i++) {
+            if (amountsOut[i] > 0) {
+                newBalances[i] += (_doTransferIn(self.pooledTokens[i], amountsOut[i] + fees[i]) - amountsOut[i]);
+            }
+        }
+
+        uint256 D1 = _getD(_xp(newBalances, self.tokenMultipliers), amp);
+        assert(D1 > D0);
+
+        uint256 diff = 0;
+        for (uint256 i = 0; i < nCoins; i++) {
+            diff = _distance((D1 * self.balances[i]) / D0, newBalances[i]);
+            fees[i] = (_fee * diff) / FEE_DENOMINATOR;
+            self.balances[i] = newBalances[i] - ((fees[i] * self.adminFee) / FEE_DENOMINATOR);
+        }
+
+        emit FlashLoan(msg.sender, to, amountsOut);
     }
 
     function swap(

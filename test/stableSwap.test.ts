@@ -6,6 +6,7 @@ import { ethers } from 'hardhat'
 import TestERC20 from '../build/contracts/test/BasicToken.sol/BasicToken.json'
 import StableSwap from '../build/contracts/stableswap/StableSwap.sol/StableSwap.json'
 import StableSwapStorage from '../build/contracts/stableswap/StableSwapStorage.sol/StableSwapStorage.json'
+import MockStableSwapBorrower from '../build/contracts/test/MockStableSwapBorrower.sol/MockStableSwapBorrower.json'
 import { 
   asyncForEach, 
   forceAdvanceOneBlock, 
@@ -31,7 +32,6 @@ describe('StableSwap', async () => {
   let owner: Wallet
   let user1: Wallet
   let user2: Wallet
-  let ownerAddress: string
   let user1Address: string
   let user2Address: string
   let swapStorage: {
@@ -64,7 +64,6 @@ describe('StableSwap', async () => {
     owner = signers[0]
     user1 = signers[1]
     user2 = signers[2]
-    ownerAddress = owner.address
     user1Address = user1.address
     user2Address = user2.address
 
@@ -974,6 +973,43 @@ describe('StableSwap', async () => {
           .connect(user1)
           .removeLiquidityOneToken(currentUser1Balance, 0, 0, MAX_UINT256),
       ).to.emit(swap.connect(user1), "RemoveLiquidityOne")
+    })
+  })
+
+  describe("flashLoan", () => {
+    let borrower: Contract
+
+    beforeEach(async () => {
+      borrower = await deployContract(owner, MockStableSwapBorrower)
+    })
+
+    it("should revert when contract is paused", async () => {
+      await swap.pause()
+      await expect(swap.flashLoan(['1', '1'], borrower.address, '0x12', MAX_UINT256))
+        .to.be.reverted
+    })
+
+    it("should revert if nothing borrowed", async () => {
+      await expect(swap.flashLoan(['0', '0'], borrower.address, '0x12', MAX_UINT256))
+        .to.be.reverted
+    })
+
+    it("should revert if payback failed", async () => {
+      await expect(swap.flashLoan(['10000', '10000'], borrower.address, '0x12', MAX_UINT256))
+        .to.be.reverted
+    })
+    
+    it("should work if payback funds with fees", async () => {
+      await firstToken.approve(borrower.address, MAX_UINT256)
+      await secondToken.approve(borrower.address, MAX_UINT256)
+
+      const prevBalances = await swap.getTokenBalances()
+
+      await swap.flashLoan(['100000', '100000'], borrower.address, '0x12', MAX_UINT256)
+
+      const afterBalances = await swap.getTokenBalances()
+      expect(afterBalances.map((ab: BigNumber, i: number) => ab.sub(prevBalances[i])))
+        .to.deep.eq([BigNumber.from('50'), BigNumber.from('50')])
     })
   })
 
@@ -2057,4 +2093,3 @@ describe('StableSwap', async () => {
     })
   })
 })
-
