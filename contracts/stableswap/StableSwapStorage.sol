@@ -155,7 +155,13 @@ library StableSwapStorage {
         }
 
         if (data.length > 0) {
-            IStableSwapCallee(to).zenlinkStableSwapCall(msg.sender, amountsOut, fees, data);
+            IStableSwapCallee(to).zenlinkStableSwapCall(
+                msg.sender, 
+                self.pooledTokens,
+                amountsOut, 
+                fees, 
+                data
+            );
         }
 
         uint256[] memory newBalances = self.balances;
