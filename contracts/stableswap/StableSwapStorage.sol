@@ -23,8 +23,7 @@ library StableSwapStorage {
     event FlashLoan(
         address indexed caller,
         address indexed receiver,
-        uint256[] amounts_out,
-        uint256[] fees
+        uint256[] amounts_out
     );
 
     event TokenExchange(
@@ -48,12 +47,10 @@ library StableSwapStorage {
     );
 
     uint256 public constant FEE_DENOMINATOR = 1e10;
-    // uint256 public constant PRECISION = 1e18;
-
     /// @dev protect from division loss when run approximation loop. We cannot divide at the end because of overflow,
     /// so we add some (small) PRECISION when divide in each iteration
     uint256 public constant A_PRECISION = 100;
-    /// @dev max iteration of converge calccuate
+    /// @dev max iteration of converge calculate
     uint256 internal constant MAX_ITERATION = 256;
     uint256 public constant POOL_TOKEN_COMMON_DECIMALS = 18;
 
@@ -182,7 +179,7 @@ library StableSwapStorage {
             self.balances[i] = newBalances[i] - ((fees[i] * self.adminFee) / FEE_DENOMINATOR);
         }
 
-        emit FlashLoan(msg.sender, to, amountsOut, fees);
+        emit FlashLoan(msg.sender, to, amountsOut);
     }
 
     function swap(

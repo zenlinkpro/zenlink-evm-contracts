@@ -16,8 +16,7 @@ interface IStableSwap {
     event FlashLoan(
         address indexed caller,
         address indexed receiver,
-        uint256[] amounts_out,
-        uint256[] fees
+        uint256[] amounts_out
     );
 
     event TokenExchange(
