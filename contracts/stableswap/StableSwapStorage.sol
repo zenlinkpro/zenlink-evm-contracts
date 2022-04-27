@@ -23,7 +23,8 @@ library StableSwapStorage {
     event FlashLoan(
         address indexed caller,
         address indexed receiver,
-        uint256[] amounts_out
+        uint256[] amounts_out,
+        uint256[] fees
     );
 
     event TokenExchange(
@@ -181,7 +182,7 @@ library StableSwapStorage {
             self.balances[i] = newBalances[i] - ((fees[i] * self.adminFee) / FEE_DENOMINATOR);
         }
 
-        emit FlashLoan(msg.sender, to, amountsOut);
+        emit FlashLoan(msg.sender, to, amountsOut, fees);
     }
 
     function swap(
