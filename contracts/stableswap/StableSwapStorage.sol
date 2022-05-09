@@ -196,7 +196,7 @@ library StableSwapStorage {
         uint256 x = normalizedBalances[i] + (inAmount * self.tokenMultipliers[i]);
         uint256 y = _getY(self, i, j, x, normalizedBalances);
 
-        uint256 dy = normalizedBalances[j] - y - 1; // iliminate rouding errors
+        uint256 dy = normalizedBalances[j] - y - 1; // just in case there were some rounding errors
         uint256 dy_fee = (dy * self.fee) / FEE_DENOMINATOR;
 
         dy = (dy - dy_fee) / self.tokenMultipliers[j]; // denormalize
@@ -299,6 +299,7 @@ library StableSwapStorage {
         D1 = _getD(_xp(newBalances, self.tokenMultipliers), amp);
         burnAmount = ((D0 - D1) * totalSupply) / D0;
         assert(burnAmount > 0);
+        burnAmount += 1; // in case of rounding errors
         require(burnAmount <= maxBurnAmount, "> slippage");
 
         self.lpToken.burnFrom(msg.sender, burnAmount);
