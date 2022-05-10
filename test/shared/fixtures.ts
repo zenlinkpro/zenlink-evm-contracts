@@ -35,8 +35,8 @@ interface PairFixture extends FactoryFixture {
 export async function pairFixture(wallet: Wallet): Promise<PairFixture> {
   const { factory } = await factoryFixture(wallet)
 
-  const tokenA = await deployContract(wallet, BasicToken, ["TokenA", "TA", '1549903311500105273839447'], overrides)
-  const tokenB = await deployContract(wallet, BasicToken, ["TokenB", "TB", '1403957892781062528318836'], overrides)
+  const tokenA = await deployContract(wallet, BasicToken, ["TokenA", "TA", 18, '1549903311500105273839447'], overrides)
+  const tokenB = await deployContract(wallet, BasicToken, ["TokenB", "TB", 18, '1403957892781062528318836'], overrides)
 
   await factory.createPair(tokenA.address, tokenB.address, overrides)
   const pairAddress = await factory.getPair(tokenA.address, tokenB.address)
@@ -64,8 +64,8 @@ export async function routerFixture(wallet: Wallet): Promise<RouterFixture> {
 
   const router = await deployContract(wallet, Router, [factory.address, nativeCurrency.address], overrides)
 
-  let token0 = await deployContract(wallet, BasicToken, ["TokenA", "TA", '1549903311500105273839447'], overrides)
-  let token1 = await deployContract(wallet, BasicToken, ["TokenB", "TB", '1403957892781062528318836'], overrides)
+  let token0 = await deployContract(wallet, BasicToken, ["TokenA", "TA", 18, '1549903311500105273839447'], overrides)
+  let token1 = await deployContract(wallet, BasicToken, ["TokenB", "TB", 18, '1403957892781062528318836'], overrides)
 
   return { token0, token1, factory, router, nativeCurrency }
 }
@@ -77,7 +77,7 @@ interface StakeFixture extends PairFixture {
 
 export async function StakeFixture(wallet: Wallet, stakeStartBlock: number, endStartBlock: number): Promise<StakeFixture> {
   const { factory, token0, token1, pair } = await pairFixture(wallet)
-  let rewardToken = await deployContract(wallet, BasicToken, ["stake reward", "SR", expandTo10Decimals(1)], overrides)
+  let rewardToken = await deployContract(wallet, BasicToken, ["stake reward", "SR", 18, expandTo10Decimals(1)], overrides)
   let stake = await deployContract(wallet, Stake, [pair.address, rewardToken.address, stakeStartBlock, endStartBlock], overrides)
 
   return { factory, token0, token1, pair, stake, rewardToken }
@@ -95,20 +95,23 @@ export async function BootstrapFixture(wallet: Wallet, endBlock: number): Promis
   const token0 = await deployContract(
     wallet,
     BasicToken,
-    ["TokenA", "TA", expandTo18Decimals(1000)],
+    ["TokenA", "TA", 18, expandTo18Decimals(100000)],
     overrides
   )
   const token1 = await deployContract(
     wallet,
     BasicToken,
-    ["TokenB", "TB", expandTo18Decimals(1000)],
+    ["TokenB", "TB", 18, expandTo18Decimals(100000)],
     overrides
   )
-  await factory.setBootstrap(token0.address, token1.address, wallet.address)
+  const [token0Address, token1Address] = token0.address < token1.address
+    ? [token0.address, token1.address]
+    : [token1.address, token0.address]
+  await factory.setBootstrap(token0Address, token1Address, wallet.address)
   const bootstrap = await deployContract(
     wallet,
     Bootstrap,
-    [factory.address, token0.address, token1.address, 10000, 10000, endBlock],
+    [factory.address, token0Address, token1Address, 10000, 10000, 15000, 20000, endBlock],
     overrides
   )
 

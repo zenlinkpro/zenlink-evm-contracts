@@ -1,6 +1,5 @@
 import { expect, use } from "chai";
-const { waffle } = require("hardhat");
-const { solidity, deployContract, wallet, walletTo } = waffle;
+import { solidity, MockProvider, deployContract } from 'ethereum-waffle'
 
 import BasicToken from '../build/contracts/test/BasicToken.sol/BasicToken.json'
 
@@ -12,12 +11,18 @@ const overrides = {
 }
 
 describe('BaseToken', () => {
-    let provider = waffle.provider;
-    const [wallet, walletTo] = provider.getWallets();
+    const provider = new MockProvider({
+        ganacheOptions: {
+          hardfork: 'istanbul',
+          mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
+          gasLimit: 9999999,
+        },
+    })
+    const [wallet] = provider.getWallets();
     let token: any;
 
     beforeEach(async () => {
-        token = await deployContract(wallet, BasicToken, ["Basic", 'BSC', 1000]);
+        token = await deployContract(wallet, BasicToken, ["Basic", 'BSC', 18, 1000]);
     });
 
     it('Assigns initial balance', async () => {

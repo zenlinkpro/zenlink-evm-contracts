@@ -1,14 +1,13 @@
 import { expect, use } from "chai";
-import { deployContract, MockProvider } from "ethereum-waffle";
+import { deployContract, MockProvider, solidity } from "ethereum-waffle";
 import { Contract, constants, BigNumber } from "ethers";
-import { waffle } from "hardhat";
 import { StakeFixture } from "./shared/fixtures"
 import { createTimeMachine } from "./shared/time";
 import { expandTo10Decimals } from './shared/utilities';
 
 import BasicToken from '../build/contracts/test/BasicToken.sol/BasicToken.json'
 
-use(waffle.solidity);
+use(solidity);
 
 async function advanceStartBlock (
     provider: MockProvider, 
@@ -30,7 +29,13 @@ let endBlock = 2000
 let stakePeriod = 1000
 
 describe('Stake', () => {
-    const provider: MockProvider = waffle.provider;
+    const provider = new MockProvider({
+        ganacheOptions: {
+          hardfork: 'istanbul',
+          mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
+          gasLimit: 9999999,
+        },
+    })
     const time = createTimeMachine(provider);
 
     const [wallet, walletTo] = provider.getWallets();
@@ -96,7 +101,7 @@ describe('Stake', () => {
         const otherToken = await deployContract(
             wallet, 
             BasicToken, 
-            ["other Token", "OT", expandTo10Decimals(500)], 
+            ["other Token", "OT", 18, expandTo10Decimals(500)], 
             overrides
         )
         const transferAmount = expandTo10Decimals(200)

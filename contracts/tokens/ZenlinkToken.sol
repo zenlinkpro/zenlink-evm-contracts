@@ -13,7 +13,7 @@ contract ZenlinkToken is ERC20, AdminUpgradeable {
 
     uint8 private decimal;
 
-    uint256 private maxTotalSupply;
+    uint256 public maxTotalSupply;
 
     // address map that can be transferred at any time.
     mapping(address => bool) public whitelistMap;
@@ -82,5 +82,9 @@ contract ZenlinkToken is ERC20, AdminUpgradeable {
         uint256 amount
     ) public virtual override canTransfer returns (bool) {
         return ERC20.transferFrom(sender, recipient, amount);
+    }
+
+    function burn(uint256 amount) public virtual canTransfer{
+        ERC20._burn(msg.sender, amount);
     }
 }

@@ -1,9 +1,7 @@
 import { expect, use } from "chai";
 import { Contract, constants, BigNumber } from "ethers";
-const { waffle } = require("hardhat");
-const { solidity, wallet, walletTo } = waffle;
-import { pairFixture, routerFixture } from './shared/fixtures'
-
+import { MockProvider, solidity } from 'ethereum-waffle'
+import { routerFixture } from './shared/fixtures'
 import { getCreate2Address, expandTo18Decimals } from './shared/utilities'
 import Pair from '../build/contracts/core/Pair.sol/Pair.json'
 
@@ -17,8 +15,14 @@ const MINIMUM_LIQUIDITY = BigNumber.from(10).pow(3)
 
 
 describe('Router', () => {
-    let provider = waffle.provider;
-    const [wallet, walletTo] = provider.getWallets();
+    const provider = new MockProvider({
+        ganacheOptions: {
+          hardfork: 'istanbul',
+          mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
+          gasLimit: 9999999,
+        },
+    })
+    const [wallet] = provider.getWallets();
 
     let factory: Contract;
     let token0: Contract;

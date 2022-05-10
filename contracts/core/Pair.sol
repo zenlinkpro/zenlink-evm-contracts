@@ -203,5 +203,6 @@ contract Pair is IPair, ERC20 {
         );
         reserve0 = uint112(balance0);
         reserve1 = uint112(balance1);
+        emit Sync(reserve0, reserve1);
     }
 }

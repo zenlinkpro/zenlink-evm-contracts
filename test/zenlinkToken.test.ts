@@ -1,9 +1,9 @@
 import { expect, use } from "chai";
-import { Contract, constants, BigNumber } from "ethers";
-const { waffle } = require("hardhat");
-const { solidity, wallet, walletTo } = waffle;
+import { Contract, constants } from "ethers";
+import { MockProvider, solidity } from "ethereum-waffle";
 import { ZenlinkTokenFixture } from './shared/fixtures'
-import { expandTo18Decimals, mineBlockWithTimestamp } from './shared/utilities'
+import { expandTo18Decimals } from './shared/utilities'
+import { Address } from "ethereumjs-util";
 
 use(solidity);
 
@@ -12,7 +12,13 @@ const overrides = {
 }
 
 describe('ZenlinkToken', () => {
-    let provider = waffle.provider;
+    const provider = new MockProvider({
+        ganacheOptions: {
+          hardfork: 'istanbul',
+          mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
+          gasLimit: 9999999,
+        },
+    })
     const [wallet, walletTo] = provider.getWallets();
 
     let zenlinkToken: Contract
@@ -99,5 +105,21 @@ describe('ZenlinkToken', () => {
             .to.be.revertedWith(`can't transfer`)
         await expect(zenlinkToken.connect(walletTo).transfer(wallet.address, expandTo18Decimals(1), overrides))
             .to.be.revertedWith(`can't transfer`)
+    })
+
+    it('burn', async() =>{
+        await zenlinkToken.enableTransfer(overrides)
+
+        let totalSupplyBeforeBurn = await zenlinkToken.totalSupply();
+
+        await expect(zenlinkToken.burn("15000000000000000000000000"))
+            .to.emit(zenlinkToken, "Transfer")
+            .withArgs(wallet.address, Address.zero().toString(), "15000000000000000000000000");
+        
+        let totalSupplyAfterBurn = await zenlinkToken.totalSupply();
+        let balanceAfterBurn = await zenlinkToken.balanceOf(wallet.address);
+
+        expect(totalSupplyBeforeBurn - totalSupplyAfterBurn).to.be.equals(15000000000000000000000000);
+        expect(balanceAfterBurn).to.be.equal("14999998000000000000000000");
     })
 })

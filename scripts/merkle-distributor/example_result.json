@@ -1,0 +1,5 @@
+{
+  "merkleRoot": "0xfd4fa832d8b3f10ef79cc865858aaeb34b3f8275bb260e48819db8f287ad7b93",
+  "tokenTotal": "0x0100",
+  "claims": { "0xf24FF3a9CF04c71Dbc94D0b566f7A27B94566cac": { "index": 0, "amount": "0x0100", "proof": [] } }
+}
