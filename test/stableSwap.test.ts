@@ -20,6 +20,7 @@ import {
   TIME, 
   ZERO_ADDRESS 
 } from './shared/utilities'
+import snapshotGasCost from './shared/snapshotGasCost'
 
 chai.use(solidity)
 
@@ -302,13 +303,13 @@ describe('StableSwap', async () => {
       const calculatedPoolTokenAmountWithPositiveSlippage =
         calculatedPoolTokenAmount.mul(1001).div(1000)
 
-      await swap
-        .connect(user1)
-        .addLiquidity(
+      await snapshotGasCost(
+        swap.connect(user1).addLiquidity(
           [String(1e18), String(3e18)],
           calculatedPoolTokenAmountWithNegativeSlippage,
           MAX_UINT256,
         )
+      )
 
       const actualPoolTokenAmount = await swapToken.balanceOf(user1Address)
 
