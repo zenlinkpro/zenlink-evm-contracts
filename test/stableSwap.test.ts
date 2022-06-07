@@ -24,6 +24,10 @@ import snapshotGasCost from './shared/snapshotGasCost'
 
 chai.use(solidity)
 
+const overrides = {
+  gasLimit: 6100000
+}
+
 describe('StableSwap', async () => {
   let signers: Array<Wallet>
   let swap: Contract
@@ -308,6 +312,7 @@ describe('StableSwap', async () => {
           [String(1e18), String(3e18)],
           calculatedPoolTokenAmountWithNegativeSlippage,
           MAX_UINT256,
+          overrides
         )
       )
 
@@ -665,7 +670,7 @@ describe('StableSwap', async () => {
         .removeLiquidityImbalance(
           [String(1e18), String(1e16)],
           maxPoolTokenAmountToBeBurnedNegativeSlippage,
-          MAX_UINT256,
+          MAX_UINT256
         )
 
       const [

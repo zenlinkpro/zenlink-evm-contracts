@@ -3,6 +3,6 @@
 exports[`StableSwap addLiquidity Succeeds with actual pool token amount being within ±0.1% range of calculated pool token 1`] = `
 Object {
   "calldataByteLength": 196,
-  "gasUsed": 189011,
+  "gasUsed": 189105,
 }
 `;

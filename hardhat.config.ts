@@ -14,6 +14,12 @@ const config: HardhatUserConfig = {
         sources: "./contracts",
         artifacts: "./build"
     },
+    networks: {
+        hardhat: {
+          gas: 120000000,
+          blockGasLimit: 0x1fffffffffffff,
+        }
+    },
     solidity: {
         compilers: [
             {

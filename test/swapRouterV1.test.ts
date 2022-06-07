@@ -16,6 +16,10 @@ import {
 } from './shared/utilities'
 import { factoryFixture } from './shared/fixtures'
 
+const overrides = {
+  gasLimit: 6100000
+}
+
 chai.use(solidity)
 
 describe('SwapRouterV1', async () => {
@@ -241,7 +245,8 @@ describe('SwapRouterV1', async () => {
       0,
       [firstToken.address, secondToken.address],
       owner.address,
-      MAX_UINT256
+      MAX_UINT256,
+      overrides
     )
 
     expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('96990000000000000000'))
@@ -258,7 +263,8 @@ describe('SwapRouterV1', async () => {
       MAX_UINT256,
       [firstToken.address, secondToken.address],
       owner.address,
-      MAX_UINT256
+      MAX_UINT256,
+      overrides
     )
 
     expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('96989868595686048043'))
@@ -275,7 +281,7 @@ describe('SwapRouterV1', async () => {
       [wNativeCurrency.address, firstToken.address],
       owner.address,
       MAX_UINT256,
-      { value: String(1e16) }
+      { ...overrides, value: String(1e16) }
     )
 
     expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('97009871580343970612'))
@@ -291,7 +297,8 @@ describe('SwapRouterV1', async () => {
       MAX_UINT256,
       [firstToken.address, wNativeCurrency.address],
       owner.address,
-      MAX_UINT256
+      MAX_UINT256,
+      overrides
     )
 
     expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('96989868595686048043'))
@@ -307,7 +314,8 @@ describe('SwapRouterV1', async () => {
       0,
       [firstToken.address, wNativeCurrency.address],
       owner.address,
-      MAX_UINT256
+      MAX_UINT256,
+      overrides
     )
 
     expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('96990000000000000000'))
@@ -323,7 +331,7 @@ describe('SwapRouterV1', async () => {
       [wNativeCurrency.address, firstToken.address],
       owner.address,
       MAX_UINT256,
-      { value: String(1e18) }
+      { ...overrides, value: String(1e18) }
     )
 
     expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('97010000000000000000'))
@@ -341,7 +349,8 @@ describe('SwapRouterV1', async () => {
       String(1e16),
       0,
       owner.address,
-      MAX_UINT256
+      MAX_UINT256,
+      overrides
     )
 
     expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('96990000000000000000'))
@@ -363,7 +372,8 @@ describe('SwapRouterV1', async () => {
       String(1e16),
       0,
       owner.address,
-      MAX_UINT256
+      MAX_UINT256,
+      overrides
     )
 
     expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('97000000000000000000'))
@@ -389,7 +399,8 @@ describe('SwapRouterV1', async () => {
       String(1e4),
       0,
       owner.address,
-      MAX_UINT256
+      MAX_UINT256,
+      overrides
     )
 
     expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('97000000000000000000'))
@@ -432,7 +443,8 @@ describe('SwapRouterV1', async () => {
         MAX_UINT256,
         routes,
         owner.address,
-        MAX_UINT256
+        MAX_UINT256,
+        overrides
       )).to.be.revertedWith("SwapRouterV1: INSUFFICIENT_OUTPUT_AMOUNT")
     })
 
@@ -461,7 +473,8 @@ describe('SwapRouterV1', async () => {
         0,
         routes,
         owner.address,
-        MAX_UINT256
+        MAX_UINT256,
+        overrides
       )
   
       expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('97000000000000000000'))
@@ -505,7 +518,7 @@ describe('SwapRouterV1', async () => {
         routes,
         owner.address,
         MAX_UINT256,
-        { value: String(1e16) }
+        { ...overrides, value: String(1e16) }
       )).to.be.revertedWith("SwapRouterV1: INVALID_ROUTES")
     })
 
@@ -534,7 +547,7 @@ describe('SwapRouterV1', async () => {
         routes,
         owner.address,
         MAX_UINT256,
-        { value: String(1e16) }
+        { ...overrides, value: String(1e16) }
       )).to.be.revertedWith("SwapRouterV1: INVALID_ROUTES")
     })
 
@@ -563,7 +576,7 @@ describe('SwapRouterV1', async () => {
         routes,
         owner.address,
         MAX_UINT256,
-        { value: String(1e16) }
+        { ...overrides, value: String(1e16) }
       )).to.be.revertedWith("SwapRouterV1: INSUFFICIENT_OUTPUT_AMOUNT")
     })
 
@@ -592,7 +605,7 @@ describe('SwapRouterV1', async () => {
         routes,
         owner.address,
         MAX_UINT256,
-        { value: String(1e16) }
+        { ...overrides, value: String(1e16) }
       )
 
       expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('97000000000000000000'))
@@ -636,7 +649,8 @@ describe('SwapRouterV1', async () => {
         0,
         routes,
         owner.address,
-        MAX_UINT256
+        MAX_UINT256,
+        overrides
       )).to.be.revertedWith("SwapRouterV1: INVALID_ROUTES")
     })
 
@@ -665,7 +679,8 @@ describe('SwapRouterV1', async () => {
         0,
         routes,
         owner.address,
-        MAX_UINT256
+        MAX_UINT256,
+        overrides
       )).to.be.revertedWith("SwapRouterV1: INVALID_ROUTES")
     })
 
@@ -694,7 +709,8 @@ describe('SwapRouterV1', async () => {
         MAX_UINT256,
         routes,
         owner.address,
-        MAX_UINT256
+        MAX_UINT256,
+        overrides
       )).to.be.revertedWith("SwapRouterV1: INSUFFICIENT_OUTPUT_AMOUNT")
     })
 
@@ -723,7 +739,8 @@ describe('SwapRouterV1', async () => {
         0,
         routes,
         owner.address,
-        MAX_UINT256
+        MAX_UINT256,
+        overrides
       )
 
       expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('97000000000000000000'))
