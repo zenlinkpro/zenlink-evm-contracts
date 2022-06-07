@@ -323,7 +323,8 @@ contract Router is IRouter {
             IPair(Helper.pairFor(factory, input, output)).swap(
                 amount0Out,
                 amount1Out,
-                to
+                to,
+                new bytes(0)
             );
         }
     }

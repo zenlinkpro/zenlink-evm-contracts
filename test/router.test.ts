@@ -100,10 +100,6 @@ describe('Router', () => {
         await token0.approve(router.address, constants.MaxUint256)
         await token1.approve(router.address, constants.MaxUint256)
 
-        const bytecode = Pair.bytecode
-        const create2Address = getCreate2Address(factory.address, [token0.address, token1.address], bytecode)
-        const pair = new Contract(create2Address, JSON.stringify(Pair.abi), wallet)
-
         await addLiquidityWithString(tokens[0], tokens[1], amounts[0], amounts[1])
 
         await router.addLiquiditySingleToken(
@@ -113,7 +109,9 @@ describe('Router', () => {
             '50072014029053536754',
             '0',
             wallet.address,
-            constants.MaxUint256)
+            constants.MaxUint256,
+            overrides
+        )   
     })
 
     it('addLiquiditySingleNativeCurrency', async () => {

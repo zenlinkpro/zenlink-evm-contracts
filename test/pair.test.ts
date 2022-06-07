@@ -83,10 +83,10 @@ describe('Pair', () => {
             const [swapAmount, token0Amount, token1Amount, expectedOutputAmount] = swapTestCase
             await addLiquidity(token0Amount, token1Amount)
             await token0.transfer(pair.address, swapAmount)
-            await expect(pair.swap(0, expectedOutputAmount.add(1), wallet.address, overrides)).to.be.revertedWith(
+            await expect(pair.swap(0, expectedOutputAmount.add(1), wallet.address, '0x', overrides)).to.be.revertedWith(
                 'Pair: K'
             )
-            await pair.swap(0, expectedOutputAmount, wallet.address, overrides)
+            await pair.swap(0, expectedOutputAmount, wallet.address, '0x', overrides)
         })
     });
 
@@ -101,10 +101,10 @@ describe('Pair', () => {
             const [outputAmount, token0Amount, token1Amount, inputAmount] = optimisticTestCase
             await addLiquidity(token0Amount, token1Amount)
             await token0.transfer(pair.address, inputAmount)
-            await expect(pair.swap(outputAmount.add(1), 0, wallet.address, overrides)).to.be.revertedWith(
+            await expect(pair.swap(outputAmount.add(1), 0, wallet.address, '0x', overrides)).to.be.revertedWith(
                 'Pair: K'
             )
-            await pair.swap(outputAmount, 0, wallet.address, overrides)
+            await pair.swap(outputAmount, 0, wallet.address, '0x', overrides)
         })
     })
 
@@ -116,7 +116,7 @@ describe('Pair', () => {
         const swapAmount = expandTo18Decimals(1)
         const expectedOutputAmount = BigNumber.from('1662497915624478906')
         await token0.transfer(pair.address, swapAmount)
-        await expect(pair.swap(0, expectedOutputAmount, wallet.address, overrides))
+        await expect(pair.swap(0, expectedOutputAmount, wallet.address, '0x', overrides))
             .to.emit(token1, 'Transfer')
             .withArgs(pair.address, wallet.address, expectedOutputAmount)
             .to.emit(pair, 'Swap')
@@ -141,7 +141,7 @@ describe('Pair', () => {
         const swapAmount = expandTo18Decimals(1)
         const expectedOutputAmount = BigNumber.from('453305446940074565')
         await token1.transfer(pair.address, swapAmount)
-        await expect(pair.swap(expectedOutputAmount, 0, wallet.address, overrides))
+        await expect(pair.swap(expectedOutputAmount, 0, wallet.address, '0x', overrides))
             .to.emit(token0, 'Transfer')
             .withArgs(pair.address, wallet.address, expectedOutputAmount)
             .to.emit(pair, 'Swap')
@@ -191,7 +191,7 @@ describe('Pair', () => {
         const swapAmount = expandTo18Decimals(1)
         const expectedOutputAmount = BigNumber.from('996006981039903216')
         await token1.transfer(pair.address, swapAmount)
-        await pair.swap(expectedOutputAmount, 0, wallet.address, overrides)
+        await pair.swap(expectedOutputAmount, 0, wallet.address, '0x', overrides)
 
         const expectedLiquidity = expandTo18Decimals(1000)
         await pair.transfer(pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
@@ -210,7 +210,7 @@ describe('Pair', () => {
         const swapAmount = expandTo18Decimals(1)
         const expectedOutputAmount = BigNumber.from('996006981039903216')
         await token1.transfer(pair.address, swapAmount)
-        await pair.swap(expectedOutputAmount, 0, wallet.address, overrides)
+        await pair.swap(expectedOutputAmount, 0, wallet.address, '0x', overrides)
 
         const expectedLiquidity = expandTo18Decimals(1000)
         await pair.transfer(pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
@@ -235,7 +235,7 @@ describe('Pair', () => {
         const swapAmount = expandTo18Decimals(1)
         const expectedOutputAmount = BigNumber.from('996006981039903216')
         await token1.transfer(pair.address, swapAmount)
-        await pair.swap(expectedOutputAmount, 0, wallet.address, overrides)
+        await pair.swap(expectedOutputAmount, 0, wallet.address, '0x', overrides)
 
         const expectedLiquidity = expandTo18Decimals(1000)
         await pair.transfer(pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))

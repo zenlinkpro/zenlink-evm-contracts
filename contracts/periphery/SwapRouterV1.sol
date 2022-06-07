@@ -56,7 +56,8 @@ contract SwapRouterV1 is ISwapRouterV1 {
             IPair(Helper.pairFor(factory, input, output)).swap(
                 amount0Out,
                 amount1Out,
-                to
+                to,
+                new bytes(0)
             );
         }
     }
