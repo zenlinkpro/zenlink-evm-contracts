@@ -102,8 +102,7 @@ export function getCreate2Address(
 }
 
 export async function mineBlockWithTimestamp(provider: MockProvider, timestamp: number): Promise<void> {
-  await provider.send('evm_setNextBlockTimestamp', [timestamp]);
-  await provider.send('evm_mine', []);
+  await provider.send('evm_mine', [timestamp]);
 }
 
 export async function asyncForEach<T>(
@@ -138,4 +137,8 @@ export function linkBytecode(
   }
 
   return bytecode
+}
+
+export function encodePrice(reserve0: BigNumber, reserve1: BigNumber) {
+  return [reserve1.mul(BigNumber.from(2).pow(112)).div(reserve0), reserve0.mul(BigNumber.from(2).pow(112)).div(reserve1)]
 }

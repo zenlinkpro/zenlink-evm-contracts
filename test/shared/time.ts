@@ -20,8 +20,7 @@ export const createTimeMachine = (provider: MockProvider): TimeSetters => {
     },
 
     setAndMine: async (timestamp: number) => {
-      await provider.send('evm_setNextBlockTimestamp', [timestamp])
-      await provider.send('evm_mine', [])
+      await provider.send('evm_mine', [timestamp])
     },
 
     advanceBlockTo: async (targetBlock: number) => {
