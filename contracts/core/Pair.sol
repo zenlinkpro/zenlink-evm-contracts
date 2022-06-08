@@ -2,14 +2,14 @@
 
 pragma solidity >=0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./ZenlinkERC20.sol";
 import "./interfaces/IPair.sol";
 import "./interfaces/IFactory.sol";
 import './interfaces/IZenlinkCallee.sol';
 import "../libraries/Math.sol";
 import "../libraries/UQ112x112.sol";
 
-contract Pair is IPair, ERC20 {
+contract Pair is IPair, ZenlinkERC20 {
     using Math for uint256;
     using UQ112x112 for uint224;
 
@@ -63,7 +63,7 @@ contract Pair is IPair, ERC20 {
         _blockTimestampLast = blockTimestampLast;
     }
 
-    constructor() ERC20("Zenlink LP Token", "ZLK-LP") {
+    constructor() {
         factory = msg.sender;
     }
 
