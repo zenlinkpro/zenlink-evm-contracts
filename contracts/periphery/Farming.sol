@@ -364,12 +364,13 @@ contract Farming is AdminUpgradeable {
     function emergencyWithdraw(uint256 _pid) external {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
-        Helper.safeTransfer(pool.farmingToken, msg.sender, user.amount);
-        emit EmergencyWithdraw(msg.sender, _pid, user.amount);
-        pool.amount = pool.amount.sub(user.amount);
+        uint256 amount = user.amount;
+        pool.amount = pool.amount.sub(amount);
         user.amount = 0;
         user.pending = new uint256[](pool.accRewardPerShare.length);
         user.rewardDebt = new uint256[](pool.accRewardPerShare.length);
         user.nextClaimableBlock = 0;
+        Helper.safeTransfer(pool.farmingToken, msg.sender, amount);
+        emit EmergencyWithdraw(msg.sender, _pid, amount);
     }
 }
