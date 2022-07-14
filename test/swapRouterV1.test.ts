@@ -9,9 +9,9 @@ import StableSwapStorage from '../build/contracts/stableswap/StableSwapStorage.s
 import SwapRouter from '../build/contracts/periphery/SwapRouterV1.sol/SwapRouterV1.json'
 import Router from '../build/contracts/periphery/Router.sol/Router.json'
 import NativeCurrency from '../build/contracts/test/NativeCurrency.sol/NativeCurrency.json'
-import { 
+import {
   asyncForEach,
-  linkBytecode, 
+  linkBytecode,
   MAX_UINT256
 } from './shared/utilities'
 import { factoryFixture } from './shared/fixtures'
@@ -39,8 +39,6 @@ describe('SwapRouterV1', async () => {
   let user1: Wallet
   let user2: Wallet
   let ownerAddress: string
-  let user1Address: string
-  let user2Address: string
   let swapStorage: {
     initialA: BigNumber
     futureA: BigNumber
@@ -65,7 +63,7 @@ describe('SwapRouterV1', async () => {
   const ADMIN_FEE = 0
   const LP_TOKEN_NAME = "Test LP Token Name"
   const LP_TOKEN_SYMBOL = "TESTLP"
-  
+
   const provider = new MockProvider({
     ganacheOptions: {
       hardfork: 'istanbul',
@@ -80,8 +78,6 @@ describe('SwapRouterV1', async () => {
     user1 = signers[1]
     user2 = signers[2]
     ownerAddress = owner.address
-    user1Address = user1.address
-    user2Address = user2.address
 
     firstToken = await deployContract(
       owner,
@@ -322,7 +318,7 @@ describe('SwapRouterV1', async () => {
 
     asyncForEach([firstToken, wNativeCurrency], async (token) => {
       expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
-    }) 
+    })
   })
 
   it('swapNativeCurrencyForExactTokens', async () => {
@@ -338,7 +334,7 @@ describe('SwapRouterV1', async () => {
 
     asyncForEach([firstToken, wNativeCurrency], async (token) => {
       expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
-    }) 
+    })
   })
 
   it('swapPool', async () => {
@@ -360,7 +356,7 @@ describe('SwapRouterV1', async () => {
     asyncForEach([firstToken, secondToken, thirdToken], async (token) => {
       expect(await token.allowance(swapRouter.address, swap.address)).to.eq(String(0))
       expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
-    }) 
+    })
   })
 
   it('swapPoolFromBase', async () => {
@@ -387,7 +383,7 @@ describe('SwapRouterV1', async () => {
       expect(await token.allowance(swapRouter.address, swap.address)).to.eq(String(0))
       expect(await token.allowance(swapRouter.address, secondSwap.address)).to.eq(String(0))
       expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
-    }) 
+    })
   })
 
   it('swapPoolToBase', async () => {
@@ -414,13 +410,13 @@ describe('SwapRouterV1', async () => {
       expect(await token.allowance(swapRouter.address, swap.address)).to.eq(String(0))
       expect(await token.allowance(swapRouter.address, secondSwap.address)).to.eq(String(0))
       expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
-    }) 
+    })
   })
 
   describe('swapExactTokensForTokensThroughStablePool', async () => {
     it('revert with "INSUFFICIENT_OUTPUT_AMOUNT"', async () => {
       const ammPath = ethers.utils.defaultAbiCoder.encode(
-        ["address[]"], 
+        ["address[]"],
         [[secondToken.address, firstToken.address]]
       )
       const stableRoute = ethers.utils.defaultAbiCoder.encode(
@@ -437,7 +433,7 @@ describe('SwapRouterV1', async () => {
         { stable: false, callData: ammPath },
         { stable: true, callData: stableRoute }
       ]
-  
+
       await expect(swapRouter.swapExactTokensForTokensThroughStablePool(
         String(1e16),
         MAX_UINT256,
@@ -448,9 +444,9 @@ describe('SwapRouterV1', async () => {
       )).to.be.revertedWith("SwapRouterV1: INSUFFICIENT_OUTPUT_AMOUNT")
     })
 
-    it ('second -> first -> fourth', async () => {
+    it('second -> first -> fourth', async () => {
       const ammPath = ethers.utils.defaultAbiCoder.encode(
-        ["address[]"], 
+        ["address[]"],
         [[secondToken.address, firstToken.address]]
       )
       const stableRoute = ethers.utils.defaultAbiCoder.encode(
@@ -467,7 +463,7 @@ describe('SwapRouterV1', async () => {
         { stable: false, callData: ammPath },
         { stable: true, callData: stableRoute }
       ]
-  
+
       await swapRouter.swapExactTokensForTokensThroughStablePool(
         String(1e16),
         0,
@@ -476,26 +472,26 @@ describe('SwapRouterV1', async () => {
         MAX_UINT256,
         overrides
       )
-  
+
       expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('97000000000000000000'))
       expect(await secondToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('97990000000000000000'))
       expect(await thirdToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99000000'))
       expect(await fourthToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99009854'))
       expect(await swapToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('2000000000000000000'))
       expect(await secondSwapToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('2000000000000000000'))
-  
+
       asyncForEach([firstToken, secondToken, thirdToken, fourthToken, swapToken, secondSwapToken], async (token) => {
         expect(await token.allowance(swapRouter.address, swap.address)).to.eq(String(0))
         expect(await token.allowance(swapRouter.address, secondSwap.address)).to.eq(String(0))
         expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
-      }) 
+      })
     })
   })
 
   describe('swapExactNativeCurrencyForTokensThroughStablePool', async () => {
     it('revert with "SwapRouterV1: INVALID_ROUTES": 01', async () => {
       const ammPath = ethers.utils.defaultAbiCoder.encode(
-        ["address[]"], 
+        ["address[]"],
         [[secondToken.address, firstToken.address]]
       )
       const stableRoute = ethers.utils.defaultAbiCoder.encode(
@@ -524,7 +520,7 @@ describe('SwapRouterV1', async () => {
 
     it('revert with "SwapRouterV1: INVALID_ROUTES": 02', async () => {
       const ammPath = ethers.utils.defaultAbiCoder.encode(
-        ["address[]"], 
+        ["address[]"],
         [[secondToken.address, firstToken.address]]
       )
       const stableRoute = ethers.utils.defaultAbiCoder.encode(
@@ -553,7 +549,7 @@ describe('SwapRouterV1', async () => {
 
     it('revert with "SwapRouterV1: INSUFFICIENT_OUTPUT_AMOUNT"', async () => {
       const ammPath = ethers.utils.defaultAbiCoder.encode(
-        ["address[]"], 
+        ["address[]"],
         [[wNativeCurrency.address, firstToken.address]]
       )
       const stableRoute = ethers.utils.defaultAbiCoder.encode(
@@ -582,7 +578,7 @@ describe('SwapRouterV1', async () => {
 
     it('wNativeCurrency -> first -> fourth', async () => {
       const ammPath = ethers.utils.defaultAbiCoder.encode(
-        ["address[]"], 
+        ["address[]"],
         [[wNativeCurrency.address, firstToken.address]]
       )
       const stableRoute = ethers.utils.defaultAbiCoder.encode(
@@ -614,19 +610,19 @@ describe('SwapRouterV1', async () => {
       expect(await fourthToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99009854'))
       expect(await swapToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('2000000000000000000'))
       expect(await secondSwapToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('2000000000000000000'))
-  
+
       asyncForEach([firstToken, secondToken, thirdToken, fourthToken, swapToken, secondSwapToken], async (token) => {
         expect(await token.allowance(swapRouter.address, swap.address)).to.eq(String(0))
         expect(await token.allowance(swapRouter.address, secondSwap.address)).to.eq(String(0))
         expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
-      }) 
+      })
     })
   })
 
   describe('swapExactTokensForNativeCurrencyThroughStablePool', async () => {
     it('revert with "SwapRouterV1: INVALID_ROUTES": 01', async () => {
       const ammPath = ethers.utils.defaultAbiCoder.encode(
-        ["address[]"], 
+        ["address[]"],
         [[wNativeCurrency.address, firstToken.address]]
       )
       const stableRoute = ethers.utils.defaultAbiCoder.encode(
@@ -656,7 +652,7 @@ describe('SwapRouterV1', async () => {
 
     it('revert with "SwapRouterV1: INVALID_ROUTES": 02', async () => {
       const ammPath = ethers.utils.defaultAbiCoder.encode(
-        ["address[]"], 
+        ["address[]"],
         [[wNativeCurrency.address, firstToken.address]]
       )
       const stableRoute = ethers.utils.defaultAbiCoder.encode(
@@ -686,7 +682,7 @@ describe('SwapRouterV1', async () => {
 
     it('revert with "SwapRouterV1: INVALID_ROUTES": 02', async () => {
       const ammPath = ethers.utils.defaultAbiCoder.encode(
-        ["address[]"], 
+        ["address[]"],
         [[firstToken.address, wNativeCurrency.address]]
       )
       const stableRoute = ethers.utils.defaultAbiCoder.encode(
@@ -716,7 +712,7 @@ describe('SwapRouterV1', async () => {
 
     it('foutrh -> first -> wNativeCurrency', async () => {
       const ammPath = ethers.utils.defaultAbiCoder.encode(
-        ["address[]"], 
+        ["address[]"],
         [[firstToken.address, wNativeCurrency.address]]
       )
       const stableRoute = ethers.utils.defaultAbiCoder.encode(
@@ -749,12 +745,12 @@ describe('SwapRouterV1', async () => {
       expect(await fourthToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98990000'))
       expect(await swapToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('2000000000000000000'))
       expect(await secondSwapToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('2000000000000000000'))
-  
+
       asyncForEach([firstToken, secondToken, thirdToken, fourthToken, swapToken, secondSwapToken], async (token) => {
         expect(await token.allowance(swapRouter.address, swap.address)).to.eq(String(0))
         expect(await token.allowance(swapRouter.address, secondSwap.address)).to.eq(String(0))
         expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
-      }) 
+      })
     })
   })
 })

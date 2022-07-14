@@ -7,6 +7,7 @@ import { defaultAbiCoder, solidityPack, keccak256, toUtf8Bytes, getAddress } fro
 
 export const MAX_UINT256 = ethers.constants.MaxUint256
 export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+export const MINIMUM_LIQUIDITY = BigNumber.from(10).pow(3)
 
 export enum TIME {
   SECONDS = 1,

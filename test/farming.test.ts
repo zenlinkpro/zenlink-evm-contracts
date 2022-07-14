@@ -33,7 +33,7 @@ interface UserInfo {
 }
 
 function parsePoolInfo({
-  farmingToken, 
+  farmingToken,
   amount,
   rewardTokens,
   rewardPerBlock,
@@ -43,7 +43,7 @@ function parsePoolInfo({
   claimableInterval
 }: MaybeInfo): PoolInfo {
   return {
-    farmingToken, 
+    farmingToken,
     amount,
     rewardTokens,
     rewardPerBlock,
@@ -51,7 +51,7 @@ function parsePoolInfo({
     lastRewardBlock,
     startBlock,
     claimableInterval
-  } 
+  }
 }
 
 function parseUserInfo({
@@ -81,9 +81,9 @@ describe('Farming', () => {
   const wallets = provider.getWallets()
   const [wallet0, wallet1] = wallets
 
-  let tokenA: Contract, 
-      tokenB: Contract, 
-      tokenC: Contract
+  let tokenA: Contract,
+    tokenB: Contract,
+    tokenC: Contract
   beforeEach('deploy token', async () => {
     tokenA = await deployContract(wallet0, TestERC20, ['TokenA', 'TA', 18, 0], overrides)
     tokenB = await deployContract(wallet0, TestERC20, ['TokenB', 'TB', 18, 0], overrides)
@@ -201,7 +201,7 @@ describe('Farming', () => {
         })
       })
     })
-    
+
     describe('charge', () => {
       let farming: Contract
       beforeEach('deploy', async () => {
@@ -310,166 +310,166 @@ describe('Farming', () => {
           lastRewardBlock: BigNumber.from(112),
           startBlock: BigNumber.from(90),
           claimableInterval: BigNumber.from(10)
-        }) 
+        })
       })
     })
   }),
 
-  describe('stake', () => {
-    it('fails for wrong farimgToken address', async () => {
-      const farming = await deployContract(wallet0, Farming, [], overrides)
-      await tokenA.setBalance(wallet0.address, 1000)
-      await tokenA.approve(farming.address, constants.MaxUint256)
-      await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
-      await expect(farming.stake(0, tokenB.address, 200)).to.be.revertedWith('FARMING_TOKEN_SAFETY_CHECK')
-    })
-
-    describe('one account', () => {
-      let farming: Contract
-      beforeEach('deploy', async () => {
-        farming = await deployContract(wallet0, Farming, [], overrides)
+    describe('stake', () => {
+      it('fails for wrong farimgToken address', async () => {
+        const farming = await deployContract(wallet0, Farming, [], overrides)
         await tokenA.setBalance(wallet0.address, 1000)
-        await tokenA.approve(farming.address, constants.MaxUint256, overrides)
-        await tokenB.setBalance(farming.address, 10000)
-        await tokenC.setBalance(farming.address, 20000)
+        await tokenA.approve(farming.address, constants.MaxUint256)
+        await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
+        await expect(farming.stake(0, tokenB.address, 200)).to.be.revertedWith('FARMING_TOKEN_SAFETY_CHECK')
       })
 
-      it('init userInfo when first stake', async () => {
-        await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
-        const userInfoBeforeStake = parseUserInfo(await farming.getUserInfo(0, wallet0.address))
-        expect(userInfoBeforeStake).to.deep.eq({
-          amount: BigNumber.from(0),
-          rewardDebt: [],
-          pending: [],
-          nextClaimableBlock: BigNumber.from(0)
+      describe('one account', () => {
+        let farming: Contract
+        beforeEach('deploy', async () => {
+          farming = await deployContract(wallet0, Farming, [], overrides)
+          await tokenA.setBalance(wallet0.address, 1000)
+          await tokenA.approve(farming.address, constants.MaxUint256, overrides)
+          await tokenB.setBalance(farming.address, 10000)
+          await tokenC.setBalance(farming.address, 20000)
         })
-        // current BlockNumber: 126
-        await expect(farming.stake(0, tokenA.address, 200))
-          .to.be.emit(farming, 'Stake')
-          .withArgs(wallet0.address, 0, 200)
-        const userInfoAfterStake = parseUserInfo(await farming.getUserInfo(0, wallet0.address))
-        const poolInfo = parsePoolInfo(await farming.getPoolInfo(0))
-        const expectRewardDebt = poolInfo.accRewardPerShare.map(
-          share => share.mul(BigNumber.from(200)).div(1e12)
-        )
-        expect(userInfoAfterStake).to.deep.eq({
-          amount: BigNumber.from(200),
-          rewardDebt: expectRewardDebt,
-          pending: [BigNumber.from(0), BigNumber.from(0)],
-          // (126 - 90 / 10 + 1) * 10 + 90 = 130
-          nextClaimableBlock: BigNumber.from(130)
+
+        it('init userInfo when first stake', async () => {
+          await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
+          const userInfoBeforeStake = parseUserInfo(await farming.getUserInfo(0, wallet0.address))
+          expect(userInfoBeforeStake).to.deep.eq({
+            amount: BigNumber.from(0),
+            rewardDebt: [],
+            pending: [],
+            nextClaimableBlock: BigNumber.from(0)
+          })
+          // current BlockNumber: 126
+          await expect(farming.stake(0, tokenA.address, 200))
+            .to.be.emit(farming, 'Stake')
+            .withArgs(wallet0.address, 0, 200)
+          const userInfoAfterStake = parseUserInfo(await farming.getUserInfo(0, wallet0.address))
+          const poolInfo = parsePoolInfo(await farming.getPoolInfo(0))
+          const expectRewardDebt = poolInfo.accRewardPerShare.map(
+            share => share.mul(BigNumber.from(200)).div(1e12)
+          )
+          expect(userInfoAfterStake).to.deep.eq({
+            amount: BigNumber.from(200),
+            rewardDebt: expectRewardDebt,
+            pending: [BigNumber.from(0), BigNumber.from(0)],
+            // (126 - 90 / 10 + 1) * 10 + 90 = 130
+            nextClaimableBlock: BigNumber.from(130)
+          })
+        })
+
+        it('correctly update pending and rewardDebt', async () => {
+          await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
+          // current BlockNumber: 136
+          await Time.advanceBlockTo(140)
+          await farming.stake(0, tokenA.address, 300)
+          const userInfoFirstStake = parseUserInfo(await farming.getUserInfo(0, wallet0.address))
+          const poolInfoFirstStake = parsePoolInfo(await farming.getPoolInfo(0))
+          const expectRewardDebtAfterFirstStake = poolInfoFirstStake.accRewardPerShare.map(
+            share => share.mul(BigNumber.from(300)).div(1e12)
+          )
+          expect(userInfoFirstStake).to.deep.eq({
+            amount: BigNumber.from(300),
+            rewardDebt: expectRewardDebtAfterFirstStake,
+            pending: [BigNumber.from(0), BigNumber.from(0)],
+            // (141 - 90 / 10 + 1) * 10 + 90 = 150
+            nextClaimableBlock: BigNumber.from(150)
+          })
+          // current BlockNumber: 141
+          await farming.stake(0, tokenA.address, 400)
+          const userInfoSecondStake = parseUserInfo(await farming.getUserInfo(0, wallet0.address))
+          const poolInfoSecondStake = parsePoolInfo(await farming.getPoolInfo(0))
+          // [(100 * 10^12) / 300, (200 * 10^12) / 300] = [333_333_333_333, 666_666_666_666]
+          expect(poolInfoSecondStake.accRewardPerShare)
+            .to.be.deep.eq([BigNumber.from(333_333_333_333), BigNumber.from(666_666_666_666)])
+          const expectRewardDebtAfterSecondStake = poolInfoSecondStake.accRewardPerShare.map(
+            share => share.mul(BigNumber.from(700)).div(1e12)
+          )
+          const expectPendingAfterSecondStake = poolInfoSecondStake.accRewardPerShare.map(
+            (share, i) => BigNumber.from(300).mul(share).div(1e12).sub(expectRewardDebtAfterFirstStake[i])
+          )
+          // only one person should take all rewards: (142 - 141) * [100, 200] => [99, 199]
+          expect(userInfoSecondStake.pending)
+            .to.be.deep.eq([BigNumber.from(99), BigNumber.from(199)])
+          expect(userInfoSecondStake).to.deep.eq({
+            amount: BigNumber.from(700),
+            rewardDebt: expectRewardDebtAfterSecondStake,
+            pending: expectPendingAfterSecondStake,
+            nextClaimableBlock: BigNumber.from(150)
+          })
         })
       })
 
-      it('correctly update pending and rewardDebt', async () => {
-        await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
-        // current BlockNumber: 136
-        await Time.advanceBlockTo(140)
-        await farming.stake(0, tokenA.address, 300)
-        const userInfoFirstStake = parseUserInfo(await farming.getUserInfo(0, wallet0.address))
-        const poolInfoFirstStake = parsePoolInfo(await farming.getPoolInfo(0))
-        const expectRewardDebtAfterFirstStake = poolInfoFirstStake.accRewardPerShare.map(
-          share => share.mul(BigNumber.from(300)).div(1e12)
-        )
-        expect(userInfoFirstStake).to.deep.eq({
-          amount: BigNumber.from(300),
-          rewardDebt: expectRewardDebtAfterFirstStake,
-          pending: [BigNumber.from(0), BigNumber.from(0)],
-          // (141 - 90 / 10 + 1) * 10 + 90 = 150
-          nextClaimableBlock: BigNumber.from(150)
+      describe('two accounts', () => {
+        let farming: Contract
+        beforeEach('deploy', async () => {
+          farming = await deployContract(wallet0, Farming, [], overrides)
+          await tokenA.setBalance(wallet0.address, 1000)
+          await tokenA.approve(farming.address, constants.MaxUint256, overrides)
+          await tokenA.setBalance(wallet1.address, 1000)
+          await tokenA.connect(wallet1).approve(farming.address, constants.MaxUint256, overrides)
+          await tokenB.setBalance(farming.address, 10000)
+          await tokenC.setBalance(farming.address, 20000)
         })
-        // current BlockNumber: 141
-        await farming.stake(0, tokenA.address, 400)
-        const userInfoSecondStake = parseUserInfo(await farming.getUserInfo(0, wallet0.address))
-        const poolInfoSecondStake = parsePoolInfo(await farming.getPoolInfo(0))
-        // [(100 * 10^12) / 300, (200 * 10^12) / 300] = [333_333_333_333, 666_666_666_666]
-        expect(poolInfoSecondStake.accRewardPerShare)
-          .to.be.deep.eq([BigNumber.from(333_333_333_333), BigNumber.from(666_666_666_666)])
-        const expectRewardDebtAfterSecondStake = poolInfoSecondStake.accRewardPerShare.map(
-          share => share.mul(BigNumber.from(700)).div(1e12)
-        )
-        const expectPendingAfterSecondStake = poolInfoSecondStake.accRewardPerShare.map(
-          (share, i) => BigNumber.from(300).mul(share).div(1e12).sub(expectRewardDebtAfterFirstStake[i])
-        )
-        // only one person should take all rewards: (142 - 141) * [100, 200] => [99, 199]
-        expect(userInfoSecondStake.pending)
-          .to.be.deep.eq([BigNumber.from(99), BigNumber.from(199)])
-        expect(userInfoSecondStake).to.deep.eq({
-          amount: BigNumber.from(700),
-          rewardDebt: expectRewardDebtAfterSecondStake,
-          pending: expectPendingAfterSecondStake,
-          nextClaimableBlock: BigNumber.from(150)
+
+        it('one account stakes once and another stakes continuously', async () => {
+          await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
+          // current BlockNumber: 153
+          await farming.stake(0, tokenA.address, 200)
+          await Time.advanceBlockTo(160)
+          await farming.connect(wallet1).stake(0, tokenA.address, 200)
+          const pending0Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
+          // 100 * 7 = 700, 200 * 7 = 1400
+          expect(pending0Wallet0).to.deep.eq([BigNumber.from(700), BigNumber.from(1400)])
+          await Time.advanceBlockTo(163)
+          const pending1Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
+          const pending1Wallet1 = (await farming.pendingRewards(0, wallet1.address)).rewards
+          // 700 + 50 * 2 = 800, 1400 + 100 * 2 = 1600
+          expect(pending1Wallet0).to.deep.eq([BigNumber.from(800), BigNumber.from(1600)])
+          // 50 * 2 = 100, 100 * 2 = 200
+          expect(pending1Wallet1).to.deep.eq([BigNumber.from(100), BigNumber.from(200)])
+          await farming.connect(wallet1).stake(0, tokenA.address, 400)
+          await Time.advanceBlockTo(167)
+          const pending2Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
+          const pending2Wallet1 = (await farming.pendingRewards(0, wallet1.address)).rewards
+          // 800 + 50 * 1 + 25 * 3 = 925, 1600 + 100 * 1 + 50 * 3 = 1850
+          expect(pending2Wallet0).to.deep.eq([BigNumber.from(925), BigNumber.from(1850)])
+          // 100 + 50 * 1 + 75 * 3 = 375, 200 + 100 * 1 + 150 * 3 = 750
+          expect(pending2Wallet1).to.deep.eq([BigNumber.from(375), BigNumber.from(750)])
+        })
+
+        it('two accounts stake continuously', async () => {
+          await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
+          // current BlockNumber: 178
+          await farming.stake(0, tokenA.address, 200)
+          await Time.advanceBlockTo(185)
+          await farming.connect(wallet1).stake(0, tokenA.address, 400)
+          const pending0Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
+          // 100 * 7 = 700, 200 * 7 = 1400
+          expect(pending0Wallet0).to.deep.eq([BigNumber.from(700), BigNumber.from(1400)])
+          await Time.advanceBlockTo(190)
+          const pending1Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
+          const pending1Wallet1 = (await farming.pendingRewards(0, wallet1.address)).rewards
+          // 700 + 33.3 * 4 = 833, 1400 + 66.6 * 4 = 1666
+          expect(pending1Wallet0).to.deep.eq([BigNumber.from(833), BigNumber.from(1666)])
+          // 66.6 * 4 = 266, 133.28 * 4 = 533
+          expect(pending1Wallet1).to.deep.eq([BigNumber.from(266), BigNumber.from(533)])
+          await farming.stake(0, tokenA.address, 200) // [400, 400]
+          await Time.advanceBlockTo(195)
+          await farming.connect(wallet1).stake(0, tokenA.address, 200) // [400, 600]
+          await Time.advanceBlockTo(200)
+          const pending2Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
+          const pending2Wallet1 = (await farming.pendingRewards(0, wallet1.address)).rewards
+          // 833 + 33.3 * 1 + 50 * 5 + 40 * 4 = 1276, 1666.6 + 66.6 * 1 + 100 * 5 + 80 * 4 = 2553
+          expect(pending2Wallet0).to.deep.eq([BigNumber.from(1276), BigNumber.from(2553)])
+          // 266 + 66.6 * 1 + 50 * 5 + 60 * 4 = 823, 533 + 133.28 * 1 + 100 * 5 + 120 * 4 = 1646
+          expect(pending2Wallet1).to.deep.eq([BigNumber.from(823), BigNumber.from(1646)])
         })
       })
     })
-
-    describe('two accounts', () => {
-      let farming: Contract
-      beforeEach('deploy', async () => {
-        farming = await deployContract(wallet0, Farming, [], overrides)
-        await tokenA.setBalance(wallet0.address, 1000)
-        await tokenA.approve(farming.address, constants.MaxUint256, overrides)
-        await tokenA.setBalance(wallet1.address, 1000)
-        await tokenA.connect(wallet1).approve(farming.address, constants.MaxUint256, overrides)
-        await tokenB.setBalance(farming.address, 10000)
-        await tokenC.setBalance(farming.address, 20000)
-      })
-
-      it('one account stakes once and another stakes continuously', async () => {
-        await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
-        // current BlockNumber: 153
-        await farming.stake(0, tokenA.address, 200)
-        await Time.advanceBlockTo(160)
-        await farming.connect(wallet1).stake(0, tokenA.address, 200)
-        const pending0Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
-        // 100 * 7 = 700, 200 * 7 = 1400
-        expect(pending0Wallet0).to.deep.eq([BigNumber.from(700), BigNumber.from(1400)])
-        await Time.advanceBlockTo(163)
-        const pending1Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
-        const pending1Wallet1 = (await farming.pendingRewards(0, wallet1.address)).rewards
-        // 700 + 50 * 2 = 800, 1400 + 100 * 2 = 1600
-        expect(pending1Wallet0).to.deep.eq([BigNumber.from(800), BigNumber.from(1600)])
-        // 50 * 2 = 100, 100 * 2 = 200
-        expect(pending1Wallet1).to.deep.eq([BigNumber.from(100), BigNumber.from(200)])
-        await farming.connect(wallet1).stake(0, tokenA.address, 400)
-        await Time.advanceBlockTo(167)
-        const pending2Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
-        const pending2Wallet1 = (await farming.pendingRewards(0, wallet1.address)).rewards
-        // 800 + 50 * 1 + 25 * 3 = 925, 1600 + 100 * 1 + 50 * 3 = 1850
-        expect(pending2Wallet0).to.deep.eq([BigNumber.from(925), BigNumber.from(1850)])
-        // 100 + 50 * 1 + 75 * 3 = 375, 200 + 100 * 1 + 150 * 3 = 750
-        expect(pending2Wallet1).to.deep.eq([BigNumber.from(375), BigNumber.from(750)])
-      })
-
-      it('two accounts stake continuously', async () => {
-        await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
-        // current BlockNumber: 178
-        await farming.stake(0, tokenA.address, 200)
-        await Time.advanceBlockTo(185)
-        await farming.connect(wallet1).stake(0, tokenA.address, 400)
-        const pending0Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
-        // 100 * 7 = 700, 200 * 7 = 1400
-        expect(pending0Wallet0).to.deep.eq([BigNumber.from(700), BigNumber.from(1400)])
-        await Time.advanceBlockTo(190)
-        const pending1Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
-        const pending1Wallet1 = (await farming.pendingRewards(0, wallet1.address)).rewards
-        // 700 + 33.3 * 4 = 833, 1400 + 66.6 * 4 = 1666
-        expect(pending1Wallet0).to.deep.eq([BigNumber.from(833), BigNumber.from(1666)])
-        // 66.6 * 4 = 266, 133.28 * 4 = 533
-        expect(pending1Wallet1).to.deep.eq([BigNumber.from(266), BigNumber.from(533)])
-        await farming.stake(0, tokenA.address, 200) // [400, 400]
-        await Time.advanceBlockTo(195)
-        await farming.connect(wallet1).stake(0, tokenA.address, 200) // [400, 600]
-        await Time.advanceBlockTo(200)
-        const pending2Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
-        const pending2Wallet1 = (await farming.pendingRewards(0, wallet1.address)).rewards
-        // 833 + 33.3 * 1 + 50 * 5 + 40 * 4 = 1276, 1666.6 + 66.6 * 1 + 100 * 5 + 80 * 4 = 2553
-        expect(pending2Wallet0).to.deep.eq([BigNumber.from(1276), BigNumber.from(2553)])
-        // 266 + 66.6 * 1 + 50 * 5 + 60 * 4 = 823, 533 + 133.28 * 1 + 100 * 5 + 120 * 4 = 1646
-        expect(pending2Wallet1).to.deep.eq([BigNumber.from(823), BigNumber.from(1646)])
-      })
-    })
-  })
 
   describe('redeem', () => {
     it('fails for wrong farimgToken address', async () => {
