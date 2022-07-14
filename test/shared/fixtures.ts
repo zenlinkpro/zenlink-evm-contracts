@@ -1,7 +1,6 @@
-import { BigNumber, Contract, Wallet } from 'ethers'
+import { Contract, Wallet } from 'ethers'
 import { waffle } from "hardhat";
-const { deployContract } = waffle;
-
+import { MockProvider } from "ethereum-waffle"
 import { expandTo10Decimals, expandTo18Decimals } from './utilities'
 
 import BasicToken from '../../build/contracts/test/BasicToken.sol/BasicToken.json'
@@ -12,24 +11,63 @@ import NativeCurrency from '../../build/contracts/test/NativeCurrency.sol/Native
 import Stake from '../../build/contracts/periphery/Stake.sol/Stake.json'
 import Bootstrap from '../../build/contracts/periphery/Bootstrap.sol/Bootstrap.json'
 import ZenlinkToken from '../../build/contracts/tokens/ZenlinkToken.sol/ZenlinkToken.json'
+import Migrator from '../../build/contracts/periphery/Migrator.sol/Migrator.json'
+
+const { deployContract } = waffle;
 
 interface FactoryFixture {
   factory: Contract
-}
-
-const overrides = {
-  gasLimit: 6100000
-}
-
-export async function factoryFixture(wallet: Wallet,): Promise<FactoryFixture> {
-  const factory = await deployContract(wallet, Factory, [wallet.address], overrides)
-  return { factory }
 }
 
 interface PairFixture extends FactoryFixture {
   token0: Contract
   token1: Contract
   pair: Contract
+}
+
+interface RouterFixture extends FactoryFixture {
+  token0: Contract
+  token1: Contract
+  factory: Contract
+  router: Contract
+  nativeCurrency: Contract
+}
+
+interface StakeFixture extends PairFixture {
+  stake: Contract
+  rewardToken: Contract
+}
+
+interface BootstrapFixture {
+  factory: Contract
+  token0: Contract
+  token1: Contract
+  bootstrap: Contract
+}
+
+interface ZenlinkTokenFixture {
+  zenlinkToken: Contract
+}
+
+interface MigratorFixture {
+  token0: Contract
+  token1: Contract
+  factoryV1: Contract
+  factoryV2: Contract
+  router01: Contract
+  router02: Contract
+  migrator: Contract
+  pair: Contract
+  newPair: Contract
+}
+
+const overrides = {
+  gasLimit: 6100000
+}
+
+export async function factoryFixture(wallet: Wallet): Promise<FactoryFixture> {
+  const factory = await deployContract(wallet, Factory, [wallet.address], overrides)
+  return { factory }
 }
 
 export async function pairFixture(wallet: Wallet): Promise<PairFixture> {
@@ -49,14 +87,6 @@ export async function pairFixture(wallet: Wallet): Promise<PairFixture> {
   return { factory, token0, token1, pair }
 }
 
-interface RouterFixture extends FactoryFixture {
-  token0: Contract
-  token1: Contract
-  factory: Contract
-  router: Contract
-  nativeCurrency: Contract
-}
-
 export async function routerFixture(wallet: Wallet): Promise<RouterFixture> {
   const { factory } = await factoryFixture(wallet)
 
@@ -70,24 +100,12 @@ export async function routerFixture(wallet: Wallet): Promise<RouterFixture> {
   return { token0, token1, factory, router, nativeCurrency }
 }
 
-interface StakeFixture extends PairFixture {
-  stake: Contract
-  rewardToken: Contract
-}
-
 export async function StakeFixture(wallet: Wallet, stakeStartBlock: number, endStartBlock: number): Promise<StakeFixture> {
   const { factory, token0, token1, pair } = await pairFixture(wallet)
   let rewardToken = await deployContract(wallet, BasicToken, ["stake reward", "SR", 18, expandTo10Decimals(1)], overrides)
   let stake = await deployContract(wallet, Stake, [pair.address, rewardToken.address, stakeStartBlock, endStartBlock], overrides)
 
   return { factory, token0, token1, pair, stake, rewardToken }
-}
-
-interface BootstrapFixture {
-  factory: Contract
-  token0: Contract
-  token1: Contract
-  bootstrap: Contract
 }
 
 export async function BootstrapFixture(wallet: Wallet, endBlock: number): Promise<BootstrapFixture> {
@@ -118,12 +136,44 @@ export async function BootstrapFixture(wallet: Wallet, endBlock: number): Promis
   return { factory, token0, token1, bootstrap }
 }
 
-
-interface ZenlinkTokenFixture {
-  zenlinkToken: Contract
-}
-
 export async function ZenlinkTokenFixture(wallet: Wallet): Promise<ZenlinkTokenFixture> {
   const zenlinkToken = await deployContract(wallet, ZenlinkToken, ["ZLK", "zenlink token", 18, '30000000000000000000000000', '40000000000000000000000000'], overrides)
   return { zenlinkToken }
+}
+
+export async function migratorFixture([wallet]: Wallet[], provider: MockProvider): Promise<MigratorFixture> {
+  const tokenA = await deployContract(wallet, BasicToken, ["tokenA", "tokenA", 18, expandTo18Decimals(10000)], overrides)
+  const tokenB = await deployContract(wallet, BasicToken, ["tokenB", "tokenB", 18, expandTo18Decimals(10000)], overrides)
+  const wnative = await deployContract(wallet, NativeCurrency, ["wnative", "wnative"], overrides)
+
+  const { factory: factoryV1 } = await factoryFixture(wallet)
+  const { factory: factoryV2 } = await factoryFixture(wallet)
+
+  const router01 = await deployContract(wallet, Router, [factoryV1.address, wnative.address], overrides)
+  const router02 = await deployContract(wallet, Router, [factoryV2.address, wnative.address], overrides)
+  const migrator = await deployContract(wallet, Migrator, [factoryV1.address, router02.address, wnative.address], overrides)
+
+  await factoryV1.createPair(tokenA.address, tokenB.address)
+  const pairAddress = await factoryV1.getPair(tokenA.address, tokenB.address)
+  const pair = new Contract(pairAddress, JSON.stringify(Pair.abi), provider).connect(wallet)
+
+  const token0Address = await pair.token0()
+  const token0 = tokenA.address === token0Address ? tokenA : tokenB
+  const token1 = tokenA.address === token0Address ? tokenB : tokenA
+
+  await factoryV2.createPair(tokenA.address, tokenB.address)
+  const newPairAddress = await factoryV2.getPair(tokenA.address, tokenB.address)
+  const newPair = new Contract(newPairAddress, JSON.stringify(Pair.abi), provider).connect(wallet)
+
+  return {
+    token0,
+    token1,
+    factoryV1,
+    factoryV2,
+    router01,
+    router02,
+    migrator,
+    pair,
+    newPair
+  }
 }

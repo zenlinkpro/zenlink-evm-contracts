@@ -7,18 +7,18 @@ import TestERC20 from '../build/contracts/test/BasicToken.sol/BasicToken.json'
 import StableSwap from '../build/contracts/stableswap/StableSwap.sol/StableSwap.json'
 import StableSwapStorage from '../build/contracts/stableswap/StableSwapStorage.sol/StableSwapStorage.json'
 import MockStableSwapBorrower from '../build/contracts/test/MockStableSwapBorrower.sol/MockStableSwapBorrower.json'
-import { 
-  asyncForEach, 
-  forceAdvanceOneBlock, 
-  getCurrentBlockTimestamp, 
-  getUserTokenBalance, 
-  getUserTokenBalances, 
-  linkBytecode, 
-  MAX_UINT256, 
-  setNextTimestamp, 
-  setTimestamp, 
-  TIME, 
-  ZERO_ADDRESS 
+import {
+  asyncForEach,
+  forceAdvanceOneBlock,
+  getCurrentBlockTimestamp,
+  getUserTokenBalance,
+  getUserTokenBalances,
+  linkBytecode,
+  MAX_UINT256,
+  setNextTimestamp,
+  setTimestamp,
+  TIME,
+  ZERO_ADDRESS
 } from './shared/utilities'
 import snapshotGasCost from './shared/snapshotGasCost'
 
@@ -1004,7 +1004,7 @@ describe('StableSwap', async () => {
       await expect(swap.flashLoan(['10000', '10000'], borrower.address, '0x12', MAX_UINT256))
         .to.be.reverted
     })
-    
+
     it("should work if payback funds with fees", async () => {
       await firstToken.approve(borrower.address, MAX_UINT256)
       await secondToken.approve(borrower.address, MAX_UINT256)
@@ -1690,7 +1690,7 @@ describe('StableSwap', async () => {
 
       describe(
         "When tokens are priced equally: " +
-          "attacker creates massive imbalance prior to A change, and resolves it after",
+        "attacker creates massive imbalance prior to A change, and resolves it after",
         () => {
           it("Attack fails with 900 seconds between blocks", async () => {
             // Swap 1e18 of firstToken to secondToken, causing massive imbalance in the pool
@@ -1772,7 +1772,7 @@ describe('StableSwap', async () => {
 
       describe(
         "When token price is unequal: " +
-          "attacker 'resolves' the imbalance prior to A change, then recreates the imbalance.",
+        "attacker 'resolves' the imbalance prior to A change, then recreates the imbalance.",
         () => {
           beforeEach(async () => {
             // Set up pool to be imbalanced prior to the attack
@@ -1910,7 +1910,7 @@ describe('StableSwap', async () => {
 
       describe(
         "When tokens are priced equally: " +
-          "attacker creates massive imbalance prior to A change, and resolves it after",
+        "attacker creates massive imbalance prior to A change, and resolves it after",
         () => {
           // This attack is achieved by creating imbalance in the first block then
           // trading in reverse direction in the second block.
@@ -1995,7 +1995,7 @@ describe('StableSwap', async () => {
 
       describe(
         "When token price is unequal: " +
-          "attacker 'resolves' the imbalance prior to A change, then recreates the imbalance.",
+        "attacker 'resolves' the imbalance prior to A change, then recreates the imbalance.",
         () => {
           beforeEach(async () => {
             // Set up pool to be imbalanced prior to the attack
