@@ -16,7 +16,7 @@ const config: HardhatUserConfig = {
     },
     networks: {
         hardhat: {
-          gas: 120000000,
+          gas: 1200000000,
           blockGasLimit: 0x1fffffffffffff,
         }
     },
@@ -25,8 +25,7 @@ const config: HardhatUserConfig = {
             {
                 version: '0.8.7',
                 settings: {
-                    optimizer: { enabled: true, runs: 200 },
-                    evmVersion: 'istanbul',
+                    optimizer: { enabled: true, runs: 200 }
                 },
             }
         ],
