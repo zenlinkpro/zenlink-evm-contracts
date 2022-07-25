@@ -2,14 +2,17 @@
 
 pragma solidity >=0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./ZenlinkERC20.sol";
 import "./interfaces/IPair.sol";
 import "./interfaces/IFactory.sol";
+import './interfaces/IZenlinkCallee.sol';
 import "../libraries/Math.sol";
 import "../libraries/UQ112x112.sol";
 
-contract Pair is IPair, ERC20 {
+contract Pair is IPair, ZenlinkERC20 {
     using Math for uint256;
+    using UQ112x112 for uint224;
+
     uint256 public constant override MINIMUM_LIQUIDITY = 10**3;
     bytes4 private constant SELECTOR =
         bytes4(keccak256(bytes("transfer(address,uint256)")));
@@ -18,9 +21,13 @@ contract Pair is IPair, ERC20 {
     address public override token0;
     address public override token1;
 
-    uint112 private reserve0;
-    uint112 private reserve1;
-    uint256 public kLast;
+    uint112 private reserve0;           // uses single storage slot, accessible via getReserves
+    uint112 private reserve1;           // uses single storage slot, accessible via getReserves
+    uint32  private blockTimestampLast; // uses single storage slot, accessible via getReserves
+
+    uint256 public override price0CumulativeLast;
+    uint256 public override price1CumulativeLast;
+    uint256 public override kLast; // reserve0 * reserve1, as of immediately after the most recent liquidity event
 
     uint8 private unlocked = 1;
 
@@ -49,13 +56,14 @@ contract Pair is IPair, ERC20 {
         public
         view
         override
-        returns (uint112 _reserve0, uint112 _reserve1)
+        returns (uint112 _reserve0, uint112 _reserve1, uint32 _blockTimestampLast)
     {
         _reserve0 = reserve0;
         _reserve1 = reserve1;
+        _blockTimestampLast = blockTimestampLast;
     }
 
-    constructor() ERC20("Zenlink LP Token", "ZLK-LP") {
+    constructor() {
         factory = msg.sender;
     }
 
@@ -97,7 +105,7 @@ contract Pair is IPair, ERC20 {
         lock
         returns (uint256 liquidity)
     {
-        (uint112 _reserve0, uint112 _reserve1) = getReserves();
+        (uint112 _reserve0, uint112 _reserve1, ) = getReserves();
         uint256 balance0 = IERC20(token0).balanceOf(address(this));
         uint256 balance1 = IERC20(token1).balanceOf(address(this));
         uint256 amount0 = balance0.sub(_reserve0);
@@ -118,7 +126,7 @@ contract Pair is IPair, ERC20 {
         require(liquidity > 0, "INSUFFICIENT_LIQUIDITY_MINTED");
         _mint(to, liquidity);
 
-        _update(balance0, balance1);
+        _update(balance0, balance1, _reserve0, _reserve1);
         if (feeBasePoint > 0) kLast = uint256(reserve0).mul(reserve1);
         emit Mint(msg.sender, amount0, amount1);
     }
@@ -129,7 +137,7 @@ contract Pair is IPair, ERC20 {
         lock
         returns (uint256 amount0, uint256 amount1)
     {
-        (uint112 _reserve0, uint112 _reserve1) = getReserves();
+        (uint112 _reserve0, uint112 _reserve1, ) = getReserves();
         address _token0 = token0;
         address _token1 = token1;
         uint256 balance0 = IERC20(_token0).balanceOf(address(this));
@@ -147,7 +155,7 @@ contract Pair is IPair, ERC20 {
         balance0 = IERC20(_token0).balanceOf(address(this));
         balance1 = IERC20(_token1).balanceOf(address(this));
 
-        _update(balance0, balance1);
+        _update(balance0, balance1, _reserve0, _reserve1);
         if (feeBasePoint > 0) kLast = uint256(reserve0).mul(reserve1);
         emit Burn(msg.sender, amount0, amount1, to);
     }
@@ -155,10 +163,11 @@ contract Pair is IPair, ERC20 {
     function swap(
         uint256 amount0Out,
         uint256 amount1Out,
-        address to
+        address to,
+        bytes calldata data
     ) external override lock {
         require(amount0Out > 0 || amount1Out > 0, "INSUFFICIENT_OUTPUT_AMOUNT");
-        (uint112 _reserve0, uint112 _reserve1) = getReserves();
+        (uint112 _reserve0, uint112 _reserve1, ) = getReserves();
         require(
             amount0Out < _reserve0 && amount1Out < _reserve1,
             "INSUFFICIENT_LIQUIDITY"
@@ -172,6 +181,7 @@ contract Pair is IPair, ERC20 {
             require(to != _token0 && to != _token1, "INVALID_TO");
             if (amount0Out > 0) _safeTransfer(_token0, to, amount0Out);
             if (amount1Out > 0) _safeTransfer(_token1, to, amount1Out);
+            if (data.length > 0) IZenlinkCallee(to).zenlinkCall(msg.sender, amount0Out, amount1Out, data);
             balance0 = IERC20(_token0).balanceOf(address(this));
             balance1 = IERC20(_token1).balanceOf(address(this));
         }
@@ -192,17 +202,38 @@ contract Pair is IPair, ERC20 {
             );
         }
 
-        _update(balance0, balance1);
+        _update(balance0, balance1, _reserve0, _reserve1);
         emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
     }
 
-    function _update(uint256 balance0, uint256 balance1) private {
+    function _update(uint256 balance0, uint256 balance1, uint112 _reserve0, uint112 _reserve1) private {
         require(
             balance0 <= type(uint112).max && balance1 <= type(uint112).max,
             "OVERFLOW"
         );
+        uint32 blockTimestamp = uint32(block.timestamp % 2**32);
+        uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
+        if (timeElapsed > 0 && _reserve0 != 0 && _reserve1 != 0) {
+            // * never overflows, and + overflow is desired
+            price0CumulativeLast += uint256(UQ112x112.encode(_reserve1).uqdiv(_reserve0)) * timeElapsed;
+            price1CumulativeLast += uint256(UQ112x112.encode(_reserve0).uqdiv(_reserve1)) * timeElapsed;
+        }
         reserve0 = uint112(balance0);
         reserve1 = uint112(balance1);
+        blockTimestampLast = blockTimestamp;
         emit Sync(reserve0, reserve1);
+    }
+
+    // force balances to match reserves
+    function skim(address to) external override lock {
+        address _token0 = token0; // gas savings
+        address _token1 = token1; // gas savings
+        _safeTransfer(_token0, to, IERC20(_token0).balanceOf(address(this)).sub(reserve0));
+        _safeTransfer(_token1, to, IERC20(_token1).balanceOf(address(this)).sub(reserve1));
+    }
+
+    // force reserves to match balances
+    function sync() external override lock {
+        _update(IERC20(token0).balanceOf(address(this)), IERC20(token1).balanceOf(address(this)), reserve0, reserve1);
     }
 }

@@ -14,13 +14,18 @@ const config: HardhatUserConfig = {
         sources: "./contracts",
         artifacts: "./build"
     },
+    networks: {
+        hardhat: {
+          gas: 1200000000,
+          blockGasLimit: 0x1fffffffffffff,
+        }
+    },
     solidity: {
         compilers: [
             {
-                version: '0.8.4',
+                version: '0.8.7',
                 settings: {
-                    optimizer: { enabled: true, runs: 200 },
-                    evmVersion: 'istanbul',
+                    optimizer: { enabled: true, runs: 200 }
                 },
             }
         ],

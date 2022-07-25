@@ -45,7 +45,7 @@ library Helper {
         address tokenB
     ) internal view returns (uint256 reserveA, uint256 reserveB) {
         (address token0, ) = sortTokens(tokenA, tokenB);
-        (uint256 reserve0, uint256 reserve1) = IPair(
+        (uint256 reserve0, uint256 reserve1, ) = IPair(
             pairFor(factory, tokenA, tokenB)
         ).getReserves();
         (reserveA, reserveB) = tokenA == token0

@@ -1,23 +1,28 @@
-# development environment
-## Start 
+# Zenlink EVM Contracts
+[![Actions Status](https://github.com/zenlinkpro/zenlink-evm-contracts/workflows/CI/badge.svg)](https://github.com/zenlinkpro/zenlink-evm-contracts/actions)
 
-### Node
-#### Cmd
-    git clone https://github.com/AcalaNetwork/Acala.git
-    cargo run --features with-mandala-runtime --features with-ethereum-compatibility -- --dev -lruntime=debug -levm=debug 
-#### Docker
-    docker run -p 9944:9944 acala/acala-node:latest --name "calling_home_from_a_docker_container" --rpc-external --ws-external --rpc-cors=all --dev
-#### Types
-    polkadot js types: ./acala-polkadot-js-type.json
+This repository contains all smart contracts(core, periphery, tool) for the Zenlink Protocol.
 
-### Evm ui
-    https://evm.acala.network/#/upload
+## Audits
+[evm-version](https://github.com/zenlinkpro/zenlink-security-audit/tree/master/evm)
 
+## SDK
+[dex-sdk](https://github.com/zenlinkpro/dex-sdk)
 
-## Build
-    yarn
-    yarn build
+## Install Dependencies
 
-## Test
-    yarn test
+```
+yarn
+```
 
+## Compile Contracts
+
+```
+yarn build
+```
+
+## Run Tests
+
+```
+yarn test
+```

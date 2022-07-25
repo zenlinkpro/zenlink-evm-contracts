@@ -24,6 +24,10 @@ contract Factory is AdminUpgradeable, IFactory {
         return allPairs.length;
     }
 
+    function pairCodeHash() external pure returns (bytes32) {
+        return keccak256(type(Pair).creationCode);
+    }
+
     function createPair(address tokenA, address tokenB)
         external
         override
