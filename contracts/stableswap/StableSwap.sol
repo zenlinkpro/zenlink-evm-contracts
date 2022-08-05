@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./OwnerPausable.sol";
@@ -49,7 +49,7 @@ contract StableSwap is OwnerPausable, ReentrancyGuard, Initializable, IStableSwa
         uint256 _fee,
         uint256 _adminFee,
         address _feeDistributor
-    ) external onlyAdmin initializer {
+    ) public virtual onlyAdmin initializer {
         require(_coins.length == _decimals.length, "coinsLength != decimalsLength");
         require(_feeDistributor != address(0), "feeDistributor = empty");
         uint256 numberOfCoins = _coins.length;
@@ -83,7 +83,7 @@ contract StableSwap is OwnerPausable, ReentrancyGuard, Initializable, IStableSwa
         uint256[] memory amounts,
         uint256 minMintAmount,
         uint256 deadline
-    ) external override whenNotPaused nonReentrant deadlineCheck(deadline) returns (uint256) {
+    ) external virtual override whenNotPaused nonReentrant deadlineCheck(deadline) returns (uint256) {
         return swapStorage.addLiquidity(amounts, minMintAmount);
     }
 
@@ -92,7 +92,7 @@ contract StableSwap is OwnerPausable, ReentrancyGuard, Initializable, IStableSwa
         address to,
         bytes calldata data,
         uint256 deadline
-    ) external override whenNotPaused nonReentrant deadlineCheck(deadline) {
+    ) external virtual override whenNotPaused nonReentrant deadlineCheck(deadline) {
         swapStorage.flashLoan(amountsOut, to, data);
     }
 
@@ -102,7 +102,7 @@ contract StableSwap is OwnerPausable, ReentrancyGuard, Initializable, IStableSwa
         uint256 inAmount,
         uint256 minOutAmount,
         uint256 deadline
-    ) external override whenNotPaused nonReentrant deadlineCheck(deadline) returns (uint256) {
+    ) external virtual override whenNotPaused nonReentrant deadlineCheck(deadline) returns (uint256) {
         return swapStorage.swap(fromIndex, toIndex, inAmount, minOutAmount);
     }
 
@@ -110,7 +110,7 @@ contract StableSwap is OwnerPausable, ReentrancyGuard, Initializable, IStableSwa
         uint256 lpAmount,
         uint256[] memory minAmounts,
         uint256 deadline
-    ) external override nonReentrant deadlineCheck(deadline) returns (uint256[] memory) {
+    ) external virtual override nonReentrant deadlineCheck(deadline) returns (uint256[] memory) {
         return swapStorage.removeLiquidity(lpAmount, minAmounts);
     }
 
@@ -119,7 +119,7 @@ contract StableSwap is OwnerPausable, ReentrancyGuard, Initializable, IStableSwa
         uint8 index,
         uint256 minAmount,
         uint256 deadline
-    ) external override nonReentrant whenNotPaused deadlineCheck(deadline) returns (uint256) {
+    ) external virtual override nonReentrant whenNotPaused deadlineCheck(deadline) returns (uint256) {
         return swapStorage.removeLiquidityOneToken(lpAmount, index, minAmount);
     }
 
@@ -127,58 +127,58 @@ contract StableSwap is OwnerPausable, ReentrancyGuard, Initializable, IStableSwa
         uint256[] memory amounts,
         uint256 maxBurnAmount,
         uint256 deadline
-    ) external override nonReentrant whenNotPaused deadlineCheck(deadline) returns (uint256) {
+    ) external virtual override nonReentrant whenNotPaused deadlineCheck(deadline) returns (uint256) {
         return swapStorage.removeLiquidityImbalance(amounts, maxBurnAmount);
     }
 
     /// VIEW FUNCTIONS
 
-    function getVirtualPrice() external view override returns (uint256) {
+    function getVirtualPrice() external virtual view override returns (uint256) {
         return swapStorage.getVirtualPrice();
     }
 
-    function getA() external view override returns (uint256) {
+    function getA() external virtual view override returns (uint256) {
         return swapStorage.getA();
     }
 
-    function getAPrecise() external view override returns (uint256) {
+    function getAPrecise() external virtual view override returns (uint256) {
         return swapStorage.getAPrecise();
     }
 
-    function getTokens() external view override returns (IERC20[] memory) {
+    function getTokens() external virtual view override returns (IERC20[] memory) {
         return swapStorage.pooledTokens;
     }
 
-    function getToken(uint8 index) external view override returns (IERC20) {
+    function getToken(uint8 index) external virtual view override returns (IERC20) {
         return swapStorage.pooledTokens[index];
     }
 
-    function getLpToken() external view override returns (IERC20) {
+    function getLpToken() external virtual view override returns (IERC20) {
         return swapStorage.lpToken;
     }
 
-    function getTokenIndex(address token) external view override returns (uint8 index) {
+    function getTokenIndex(address token) external virtual view override returns (uint8 index) {
         index = tokenIndexes[token];
         require(address(swapStorage.pooledTokens[index]) == token, "tokenNotFound");
     }
 
-    function getTokenPrecisionMultipliers() external view returns (uint256[] memory) {
+    function getTokenPrecisionMultipliers() external virtual view returns (uint256[] memory) {
         return swapStorage.tokenMultipliers;
     }
 
-    function getTokenBalances() external view override returns (uint256[] memory) {
+    function getTokenBalances() external virtual view override returns (uint256[] memory) {
         return swapStorage.balances;
     }
 
-    function getTokenBalance(uint8 index) external view override returns (uint256) {
+    function getTokenBalance(uint8 index) external virtual view override returns (uint256) {
         return swapStorage.balances[index];
     }
 
-    function getNumberOfTokens() external view override returns (uint256) {
+    function getNumberOfTokens() external virtual view override returns (uint256) {
         return swapStorage.pooledTokens.length;
     }
 
-    function getAdminBalances() external view override returns (uint256[] memory adminBalances) {
+    function getAdminBalances() external virtual view override returns (uint256[] memory adminBalances) {
         uint256 length = swapStorage.pooledTokens.length;
         adminBalances = new uint256[](length);
         for (uint256 i = 0; i < length; i++) {
@@ -186,11 +186,11 @@ contract StableSwap is OwnerPausable, ReentrancyGuard, Initializable, IStableSwa
         }
     }
 
-    function getAdminBalance(uint8 index) external view override returns (uint256) {
+    function getAdminBalance(uint8 index) external virtual view override returns (uint256) {
         return swapStorage.getAdminBalance((index));
     }
 
-    function calculateTokenAmount(uint256[] calldata amounts, bool deposit) external view override returns (uint256) {
+    function calculateTokenAmount(uint256[] calldata amounts, bool deposit) external virtual view override returns (uint256) {
         return swapStorage.calculateTokenAmount(amounts, deposit);
     }
 
@@ -198,15 +198,15 @@ contract StableSwap is OwnerPausable, ReentrancyGuard, Initializable, IStableSwa
         uint8 inIndex,
         uint8 outIndex,
         uint256 inAmount
-    ) external view override returns (uint256) {
+    ) external virtual view override returns (uint256) {
         return swapStorage.calculateSwap(inIndex, outIndex, inAmount);
     }
 
-    function calculateRemoveLiquidity(uint256 amount) external view override returns (uint256[] memory) {
+    function calculateRemoveLiquidity(uint256 amount) external virtual view override returns (uint256[] memory) {
         return swapStorage.calculateRemoveLiquidity(amount);
     }
 
-    function calculateRemoveLiquidityOneToken(uint256 amount, uint8 index) external view override returns (uint256) {
+    function calculateRemoveLiquidityOneToken(uint256 amount, uint8 index) external virtual view override returns (uint256) {
         return swapStorage.calculateRemoveLiquidityOneToken(amount, index);
     }
 
