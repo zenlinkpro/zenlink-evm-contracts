@@ -21,7 +21,7 @@ contract StableSwap is OwnerPausable, ReentrancyGuard, Initializable, IStableSwa
     uint256 public constant MAX_SWAP_FEE = 1e8; // 1%
 
     /// STATE VARS
-    StableSwapStorage.SwapStorage public swapStorage;
+    StableSwapStorage.SwapStorage public override swapStorage;
     address public feeDistributor;
     address public feeController;
     mapping(address => uint8) public tokenIndexes;
