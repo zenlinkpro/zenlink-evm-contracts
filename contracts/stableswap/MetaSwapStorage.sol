@@ -461,7 +461,7 @@ library MetaSwapStorage {
             uint256 feePerToken = _feePerToken(self);
             for (uint256 i = 0; i < pooledTokens.length; i++) {
                 uint256 idealBalance = (v.D1 * self.balances[i]) / v.D0;
-                fees[i] = (feePerToken * (_distance(idealBalance, v.newBalances[i]))) / FEE_DENOMINATOR;
+                fees[i] = (feePerToken * _distance(idealBalance, v.newBalances[i])) / FEE_DENOMINATOR;
                 self.balances[i] = v.newBalances[i] - ((fees[i] * self.adminFee) / FEE_DENOMINATOR);
                 v.newBalances[i] -= fees[i];
             }
