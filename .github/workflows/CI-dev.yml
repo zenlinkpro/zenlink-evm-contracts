@@ -14,8 +14,6 @@ jobs:
   build:
     name: CI:build
     runs-on: ubuntu-latest
-    env:
-      NODE_OPTIONS: '--max_old_space_size=4096'
 
     steps:
       - uses: actions/checkout@v2
@@ -42,6 +40,8 @@ jobs:
   test:
     name: CI:test
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: '--max_old_space_size=4096'
 
     steps:
       - uses: actions/checkout@v2
