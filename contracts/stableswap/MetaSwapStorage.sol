@@ -859,6 +859,9 @@ library MetaSwapStorage {
             D1 = _getD(_xp(balances1, tokenPrecisionMultipliers, baseVirtualPrice), amp);
         }
         uint256 totalSupply = self.lpToken.totalSupply();
+        if (totalSupply == 0) {
+            return D1; // first depositor take it all
+        }
         if (deposit) {
             return ((D1 - D0) * totalSupply) / D0;
         } else {
