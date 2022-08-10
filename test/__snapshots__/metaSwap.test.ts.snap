@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`MetaSwap swapUnderlying Succeeds with expected swap amounts From 18 decimal token (meta) to 18 decimal token (base) 1`] = `
+Object {
+  "calldataByteLength": 164,
+  "gasUsed": 228389,
+}
+`;

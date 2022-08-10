@@ -41,9 +41,19 @@ library MetaSwapStorage {
         uint128 boughtId
     );
 
-    event RemoveLiquidity(address indexed provider, uint256[] token_amounts, uint256[] fees, uint256 token_supply);
+    event RemoveLiquidity(
+        address indexed provider, 
+        uint256[] token_amounts, 
+        uint256[] fees, 
+        uint256 token_supply
+    );
 
-    event RemoveLiquidityOne(address indexed provider, uint256 index, uint256 token_amount, uint256 coin_amount);
+    event RemoveLiquidityOne(
+        address indexed provider, 
+        uint256 index, 
+        uint256 token_amount, 
+        uint256 coin_amount
+    );
 
     event RemoveLiquidityImbalance(
         address indexed provider,
@@ -236,6 +246,15 @@ library MetaSwapStorage {
         } else {
             v.tokenFrom = v.baseTokens[tokenIndexFrom - baseLPTokenIndex];
             v.metaIndexFrom = baseLPTokenIndex;
+        }
+
+        // Find the address of the token swapping to and the index in MetaSwap's token list
+        if (tokenIndexTo < baseLPTokenIndex) {
+            v.tokenTo = self.pooledTokens[tokenIndexTo];
+            v.metaIndexTo = tokenIndexTo;
+        } else {
+            v.tokenTo = v.baseTokens[tokenIndexTo - baseLPTokenIndex];
+            v.metaIndexTo = baseLPTokenIndex;
         }
 
         v.dx = _doTransferIn(v.tokenFrom, dx);
@@ -1028,11 +1047,16 @@ library MetaSwapStorage {
         uint256[] memory balances, 
         uint256[] memory rates
     ) internal pure returns (uint256[] memory) {
+        require(
+            balances.length == rates.length,
+            "Balances must match rates"
+        );
+        uint256[] memory xp = new uint256[](balances.length);
         for (uint256 i = 0; i < balances.length; i++) {
-            rates[i] = (rates[i] * balances[i]);
+            xp[i] = (rates[i] * balances[i]);
         }
 
-        return rates;
+        return xp;
     }
 
     function _xp(

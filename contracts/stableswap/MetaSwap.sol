@@ -17,6 +17,16 @@ contract MetaSwap is StableSwap {
 
     MetaSwapStorage.MetaSwap public metaSwapStorage;
 
+    // events replicated from SwapStorage to make the ABI easier for dumb
+    // clients
+    event TokenSwapUnderlying(
+        address indexed buyer,
+        uint256 tokensSold,
+        uint256 tokensBought,
+        uint128 soldId,
+        uint128 boughtId
+    );
+
     /**
      * @notice Get the virtual price, to help calculate profit
      * @return the virtual price, scaled to the POOL_PRECISION_DECIMALS
