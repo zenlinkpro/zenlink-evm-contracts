@@ -25,10 +25,13 @@ contract vxZenlinkToken is ERC4626, AdminUpgradeable {
         circulationHelper = helper;
     }
 
+    function getZenlinkTokenWithdrawFeeRatio() public view returns (uint256) {
+        return ICirculationHelper(circulationHelper).getZenlinkTokenWithdrawFeeRatio();
+    }
+
     function previewRedeem(uint256 shares) public view virtual override returns (uint256) {
         uint256 assets = _convertToAssets(shares, Math.Rounding.Down);
-        uint256 feeRatio = 
-            ICirculationHelper(circulationHelper).getZenlinkTokenWithdrawFeeRatio();
+        uint256 feeRatio = getZenlinkTokenWithdrawFeeRatio();
         uint256 withdrawFeeAmount = Math.mulDiv(assets, feeRatio, 10**18);
         return assets - withdrawFeeAmount;
     }
@@ -41,8 +44,7 @@ contract vxZenlinkToken is ERC4626, AdminUpgradeable {
         require(assets <= maxWithdraw(owner), "ERC4626: withdraw more than max");
 
         uint256 shares = previewWithdraw(assets);
-        uint256 feeRatio = 
-            ICirculationHelper(circulationHelper).getZenlinkTokenWithdrawFeeRatio();
+        uint256 feeRatio = getZenlinkTokenWithdrawFeeRatio();
         uint256 withdrawFeeAmount = Math.mulDiv(assets, feeRatio, 10**18);
         _withdraw(_msgSender(), receiver, owner, assets - withdrawFeeAmount, shares);
 
