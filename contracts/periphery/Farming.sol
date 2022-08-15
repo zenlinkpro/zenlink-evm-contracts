@@ -236,7 +236,7 @@ contract Farming is AdminUpgradeable {
         returns(uint256 periods) 
     {
         PoolInfo memory pool = poolInfo[_pid];
-        if (block.number <= pool.startBlock) return 0;
+        if (block.number <= pool.startBlock || pool.claimableInterval == 0) return 0;
         uint256 blocksSinceStart = block.number.sub(pool.startBlock);
         periods = (blocksSinceStart / pool.claimableInterval).add(1);
         if (blocksSinceStart % pool.claimableInterval == 0) {
