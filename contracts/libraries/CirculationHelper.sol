@@ -56,10 +56,10 @@ contract CirculationHelper is AdminUpgradeable {
             10**18,
             zenlinkCirculation
         );
-        ratio = geRatioValue(x);
+        ratio = getRatioValue(x);
     }
 
-    function geRatioValue(uint256 input) public pure returns (uint256) {
+    function getRatioValue(uint256 input) public pure returns (uint256) {
         // y = 15% (x < 0.1)
         // y = 5% (x > 0.5)
         // y = 0.175 - 0.25 * x

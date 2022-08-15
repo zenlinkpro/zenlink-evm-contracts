@@ -13,7 +13,7 @@ import { ICirculationHelper } from "../libraries/interfaces/ICirculationHelper.s
 contract vxZenlinkToken is ERC4626, AdminUpgradeable {
     address public circulationHelper;
 
-    event WithdrawVxZLK(
+    event WithdrawVXZLK(
         address indexed caller,
         address indexed receiver,
         address indexed owner,
@@ -59,7 +59,7 @@ contract vxZenlinkToken is ERC4626, AdminUpgradeable {
         (uint256 zlkReceive, uint256 withdrawFeeAmount) = getWithdrawResult(assets);
         _withdraw(_msgSender(), receiver, owner, zlkReceive, shares);
 
-        emit WithdrawVxZLK(_msgSender(), receiver, owner, zlkReceive, withdrawFeeAmount, shares);
+        emit WithdrawVXZLK(_msgSender(), receiver, owner, zlkReceive, withdrawFeeAmount, shares);
         return shares;
     }
 
@@ -74,7 +74,7 @@ contract vxZenlinkToken is ERC4626, AdminUpgradeable {
         (uint256 zlkReceive, uint256 withdrawFeeAmount) = getWithdrawResult(assets);
         _withdraw(_msgSender(), receiver, owner, zlkReceive, shares);
 
-        emit WithdrawVxZLK(_msgSender(), receiver, owner, zlkReceive, withdrawFeeAmount, shares);
+        emit WithdrawVXZLK(_msgSender(), receiver, owner, zlkReceive, withdrawFeeAmount, shares);
         return assets;
     }
 }
