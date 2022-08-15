@@ -13,6 +13,15 @@ import { ICirculationHelper } from "../libraries/interfaces/ICirculationHelper.s
 contract vxZenlinkToken is ERC4626, AdminUpgradeable {
     address public circulationHelper;
 
+    event WithdrawVxZLK(
+        address indexed caller,
+        address indexed receiver,
+        address indexed owner,
+        uint256 assets,
+        uint256 fee,
+        uint256 shares
+    );
+
     constructor(
         IERC20Metadata _zlk,
         string memory _name,
@@ -29,11 +38,14 @@ contract vxZenlinkToken is ERC4626, AdminUpgradeable {
         return ICirculationHelper(circulationHelper).getZenlinkTokenWithdrawFeeRatio();
     }
 
-    function previewRedeem(uint256 shares) public view virtual override returns (uint256) {
-        uint256 assets = _convertToAssets(shares, Math.Rounding.Down);
+    function getWithdrawResult(uint256 assets) 
+        public 
+        view 
+        returns (uint256 zlkReceive, uint256 withdrawFeeAmount) 
+    {
         uint256 feeRatio = getZenlinkTokenWithdrawFeeRatio();
-        uint256 withdrawFeeAmount = Math.mulDiv(assets, feeRatio, 10**18);
-        return assets - withdrawFeeAmount;
+        withdrawFeeAmount = Math.mulDiv(assets, feeRatio, 10**18);
+        zlkReceive = assets - withdrawFeeAmount;
     }
 
     function withdraw(
@@ -44,10 +56,25 @@ contract vxZenlinkToken is ERC4626, AdminUpgradeable {
         require(assets <= maxWithdraw(owner), "ERC4626: withdraw more than max");
 
         uint256 shares = previewWithdraw(assets);
-        uint256 feeRatio = getZenlinkTokenWithdrawFeeRatio();
-        uint256 withdrawFeeAmount = Math.mulDiv(assets, feeRatio, 10**18);
-        _withdraw(_msgSender(), receiver, owner, assets - withdrawFeeAmount, shares);
+        (uint256 zlkReceive, uint256 withdrawFeeAmount) = getWithdrawResult(assets);
+        _withdraw(_msgSender(), receiver, owner, zlkReceive, shares);
 
+        emit WithdrawVxZLK(_msgSender(), receiver, owner, zlkReceive, withdrawFeeAmount, shares);
         return shares;
+    }
+
+    function redeem(
+        uint256 shares,
+        address receiver,
+        address owner
+    ) public virtual override returns (uint256) {
+        require(shares <= maxRedeem(owner), "ERC4626: redeem more than max");
+
+        uint256 assets = previewRedeem(shares);
+        (uint256 zlkReceive, uint256 withdrawFeeAmount) = getWithdrawResult(assets);
+        _withdraw(_msgSender(), receiver, owner, zlkReceive, shares);
+
+        emit WithdrawVxZLK(_msgSender(), receiver, owner, zlkReceive, withdrawFeeAmount, shares);
+        return assets;
     }
 }
