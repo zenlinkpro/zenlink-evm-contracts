@@ -90,7 +90,7 @@ contract CirculationHelper is AdminUpgradeable {
     function getRatioValue(uint256 input) public view returns (uint256) {
         // y = maxPenaltyRatio (x < 0.1)
         // y = minPenaltyRatio (x > 0.5)
-        // y = maxPenaltyRatio - (input - minPenaltyRatio) * step
+        // y = maxPenaltyRatio - (input - 0.1) * step
         if (input < 1e17) {
             return maxPenaltyRatio;
         } else if (input > 5e17) {
