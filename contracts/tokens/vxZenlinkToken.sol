@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
-import { 
-    ERC4626, 
-    IERC20Metadata,
-    ERC20,
-    Math
-} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import {ERC4626, IERC20Metadata, ERC20, Math} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import {AdminUpgradeable} from "../libraries/AdminUpgradeable.sol";
 import {ICirculationHelper} from "../libraries/interfaces/ICirculationHelper.sol";
 
@@ -44,7 +39,7 @@ contract vxZenlinkToken is ERC4626, AdminUpgradeable {
         returns (uint256 zlkReceive, uint256 withdrawFeeAmount) 
     {
         uint256 feeRatio = getZenlinkTokenWithdrawFeeRatio();
-        withdrawFeeAmount = Math.mulDiv(assets, feeRatio, 10**18);
+        withdrawFeeAmount = Math.mulDiv(assets, feeRatio, 1e18);
         zlkReceive = assets - withdrawFeeAmount;
     }
 

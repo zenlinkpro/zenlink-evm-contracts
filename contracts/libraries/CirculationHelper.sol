@@ -11,17 +11,27 @@ contract CirculationHelper is AdminUpgradeable {
 
     address immutable vxZenlinkToken;
     address immutable zenlinkToken;
+    uint256 public minPenaltyRatio;
+    uint256 public maxPenaltyRatio;
 
     EnumerableSet.AddressSet private _lockedContracts;
 
-    uint256 public immutable MIN_PENALTY_RATIO = 5 * 10**16; // 5%
-    uint256 public immutable MAX_PENALTY_RATIO = 15 * 10**16; // 15%
-
     error ZeroAddress();
+    error MaxPenaltyRatioTooLarge();
+    error InvalidPenaltyRatio();
 
-    constructor(address _vxZenlinkToken, address _zenlinkToken) {
+    constructor(
+        address _vxZenlinkToken, 
+        address _zenlinkToken,
+        uint256 _minPenaltyRatio,
+        uint256 _maxPenaltyRatio
+    ) {
         vxZenlinkToken = _vxZenlinkToken;
         zenlinkToken = _zenlinkToken;
+        if (_maxPenaltyRatio > 50e16) revert MaxPenaltyRatioTooLarge();
+        if (_minPenaltyRatio >= _maxPenaltyRatio) revert InvalidPenaltyRatio();
+        minPenaltyRatio = _minPenaltyRatio;
+        maxPenaltyRatio = _maxPenaltyRatio;
         _initializeAdmin(msg.sender);
     }
 
@@ -46,8 +56,7 @@ contract CirculationHelper is AdminUpgradeable {
     function getCirculation() public view returns (uint256 circulation) {
         circulation = IERC20(zenlinkToken).totalSupply();
         address[] memory contracts = _lockedContracts.values();
-        uint256 len = _lockedContracts.length();
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < _lockedContracts.length(); i++) {
             circulation -= IERC20(zenlinkToken).balanceOf(contracts[i]);
         }
     }
@@ -56,22 +65,27 @@ contract CirculationHelper is AdminUpgradeable {
         uint256 zenlinkCirculation = getCirculation();
         uint256 x = Math.mulDiv(
             IERC20(zenlinkToken).balanceOf(vxZenlinkToken),
-            10**18,
+            1e18,
             zenlinkCirculation
         );
         ratio = getRatioValue(x);
     }
 
-    function getRatioValue(uint256 input) public pure returns (uint256) {
-        // y = 15% (x < 0.1)
-        // y = 5% (x > 0.5)
-        // y = 0.175 - 0.25 * x
-        if (input < 10**17) {
-            return MAX_PENALTY_RATIO;
-        } else if (input > 5 * 10**17) {
-            return MIN_PENALTY_RATIO;
+    function getRatioValue(uint256 input) public view returns (uint256) {
+        // y = maxPenaltyRatio (x < 0.1)
+        // y = minPenaltyRatio (x > 0.5)
+        // y = maxPenaltyRatio - (input - minPenaltyRatio) * step
+        if (input < 1e17) {
+            return maxPenaltyRatio;
+        } else if (input > 5e17) {
+            return minPenaltyRatio;
         } else {
-            return 175 * 10**15 - Math.mulDiv(input, 25 * 10**16, 10**18);
+            uint256 step = Math.mulDiv(
+                maxPenaltyRatio - minPenaltyRatio,
+                1e18,
+                4e17
+            );
+            return maxPenaltyRatio - Math.mulDiv(input - minPenaltyRatio, step, 1e18);
         }
     }
 }
