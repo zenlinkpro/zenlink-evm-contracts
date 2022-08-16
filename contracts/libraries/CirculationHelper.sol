@@ -101,7 +101,7 @@ contract CirculationHelper is AdminUpgradeable {
                 1e18,
                 4e17
             );
-            return maxPenaltyRatio - Math.mulDiv(input - minPenaltyRatio, step, 1e18);
+            return maxPenaltyRatio - Math.mulDiv(input - 1e17, step, 1e18);
         }
     }
 }
