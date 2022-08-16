@@ -7,8 +7,8 @@ import {
     ERC20,
     Math
 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-import { AdminUpgradeable } from "../libraries/AdminUpgradeable.sol";
-import { ICirculationHelper } from "../libraries/interfaces/ICirculationHelper.sol";
+import {AdminUpgradeable} from "../libraries/AdminUpgradeable.sol";
+import {ICirculationHelper} from "../libraries/interfaces/ICirculationHelper.sol";
 
 contract vxZenlinkToken is ERC4626, AdminUpgradeable {
     address public circulationHelper;

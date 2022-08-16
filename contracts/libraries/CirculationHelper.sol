@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
-import { AdminUpgradeable } from "./AdminUpgradeable.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import {AdminUpgradeable} from "./AdminUpgradeable.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 contract CirculationHelper is AdminUpgradeable {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
     address immutable vxZenlinkToken;
     address immutable zenlinkToken;
-    address[] lockedContracts;
+
+    EnumerableSet.AddressSet private _lockedContracts;
 
     uint256 public immutable MIN_PENALTY_RATIO = 5 * 10**16; // 5%
     uint256 public immutable MAX_PENALTY_RATIO = 15 * 10**16; // 15%
@@ -21,41 +25,30 @@ contract CirculationHelper is AdminUpgradeable {
         _initializeAdmin(msg.sender);
     }
 
+    function lockedContracts() external view returns (address[] memory) {
+        return _lockedContracts.values();
+    }
+
     function addLockedContract(address lockedContract) external onlyAdmin {
         if (lockedContract == address(0)) revert ZeroAddress();
-        bool finded;
-        for (uint256 i = 0; i < lockedContracts.length; i++) {
-            if (lockedContract == lockedContracts[i]) {
-                finded = true;
-            }
-        }
-        if (!finded) {
-            lockedContracts.push(lockedContract);
+        if (!_lockedContracts.contains(lockedContract)) {
+            _lockedContracts.add(lockedContract);
         }
     }
 
     function removeLockedContract(address lockedContract) external onlyAdmin {
         if (lockedContract == address(0)) revert ZeroAddress();
-        address[] memory _lockedContracts = lockedContracts;
-        uint256 len = _lockedContracts.length;
-        bool finded;
-        for (uint256 i = 0; i < len; i++) {
-            if (_lockedContracts[i] == lockedContract) {
-                _lockedContracts[i] = _lockedContracts[len - 1];
-                finded = true;
-                break;
-            }
-        }
-        if (finded) {
-            lockedContracts = _lockedContracts;
-            lockedContracts.pop();
+        if (_lockedContracts.contains(lockedContract)) {
+            _lockedContracts.remove(lockedContract);
         }
     }
 
     function getCirculation() public view returns (uint256 circulation) {
         circulation = IERC20(zenlinkToken).totalSupply();
-        for (uint256 i = 0; i < lockedContracts.length; i++) {
-            circulation -= IERC20(zenlinkToken).balanceOf(lockedContracts[i]);
+        address[] memory contracts = _lockedContracts.values();
+        uint256 len = _lockedContracts.length();
+        for (uint256 i = 0; i < len; i++) {
+            circulation -= IERC20(zenlinkToken).balanceOf(contracts[i]);
         }
     }
 
