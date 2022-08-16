@@ -23,23 +23,33 @@ contract CirculationHelper is AdminUpgradeable {
 
     function addLockedContract(address lockedContract) external onlyAdmin {
         if (lockedContract == address(0)) revert ZeroAddress();
-        lockedContracts.push(lockedContract);
+        bool finded;
+        for (uint256 i = 0; i < lockedContracts.length; i++) {
+            if (lockedContract == lockedContracts[i]) {
+                finded = true;
+            }
+        }
+        if (!finded) {
+            lockedContracts.push(lockedContract);
+        }
     }
 
     function removeLockedContract(address lockedContract) external onlyAdmin {
         if (lockedContract == address(0)) revert ZeroAddress();
         address[] memory _lockedContracts = lockedContracts;
         uint256 len = _lockedContracts.length;
-        
+        bool finded;
         for (uint256 i = 0; i < len; i++) {
             if (_lockedContracts[i] == lockedContract) {
                 _lockedContracts[i] = _lockedContracts[len - 1];
+                finded = true;
                 break;
             }
         }
-
-        lockedContracts = _lockedContracts;
-        lockedContracts.pop();
+        if (finded) {
+            lockedContracts = _lockedContracts;
+            lockedContracts.pop();
+        }
     }
 
     function getCirculation() public view returns (uint256 circulation) {
