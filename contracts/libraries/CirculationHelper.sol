@@ -17,8 +17,8 @@ contract CirculationHelper is AdminUpgradeable {
     EnumerableSet.AddressSet private _lockedContracts;
 
     error ZeroAddress();
-    error MaxPenaltyRatioTooLarge();
-    error InvalidPenaltyRatio();
+    error CannotExceedMaxPenaltyRatio(uint256 maxPenaltyRatio);
+    error InvalidPenaltyRatio(uint256 min, uint256 max);
 
     constructor(
         address _vxZenlinkToken, 
@@ -28,11 +28,27 @@ contract CirculationHelper is AdminUpgradeable {
     ) {
         vxZenlinkToken = _vxZenlinkToken;
         zenlinkToken = _zenlinkToken;
-        if (_maxPenaltyRatio > 50e16) revert MaxPenaltyRatioTooLarge();
-        if (_minPenaltyRatio >= _maxPenaltyRatio) revert InvalidPenaltyRatio();
+        _updatePenaltyRatio(_minPenaltyRatio, _maxPenaltyRatio);
+        _initializeAdmin(msg.sender);
+    }
+
+    function updatePenaltyRatio(
+        uint256 _minPenaltyRatio, 
+        uint256 _maxPenaltyRatio
+    ) external onlyAdmin {
+        _updatePenaltyRatio(_minPenaltyRatio, _maxPenaltyRatio);
+    }
+
+    function _updatePenaltyRatio(
+        uint256 _minPenaltyRatio, 
+        uint256 _maxPenaltyRatio
+    ) private {
+        if (_maxPenaltyRatio > 50e16) 
+            revert CannotExceedMaxPenaltyRatio(50e16);
+        if (_minPenaltyRatio >= _maxPenaltyRatio) 
+            revert InvalidPenaltyRatio(_minPenaltyRatio, _maxPenaltyRatio);
         minPenaltyRatio = _minPenaltyRatio;
         maxPenaltyRatio = _maxPenaltyRatio;
-        _initializeAdmin(msg.sender);
     }
 
     function lockedContracts() external view returns (address[] memory) {
