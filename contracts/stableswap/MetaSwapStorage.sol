@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { LPToken } from "./LPToken.sol";
-import { IStableSwap } from "./interfaces/IStableSwap.sol";
-import { IStableSwapCallee } from "./interfaces/IStableSwapCallee.sol";
-import { StableSwapStorage } from "./StableSwapStorage.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {LPToken} from "./LPToken.sol";
+import {IStableSwap} from "./interfaces/IStableSwap.sol";
+import {IStableSwapCallee} from "./interfaces/IStableSwapCallee.sol";
+import {StableSwapStorage} from "./StableSwapStorage.sol";
 
 library MetaSwapStorage {
     using SafeERC20 for IERC20;
