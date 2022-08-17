@@ -778,4 +778,85 @@ describe('Farming', () => {
       expect(await tokenC.balanceOf(farming.address)).to.eq(BigNumber.from(300))
     })
   })
+
+  describe('setClaimableBlock', () => {
+    let farming: Contract
+    beforeEach('deploy', async () => {
+      farming = await deployContract(wallet0, Farming, [], overrides)
+      await tokenA.setBalance(wallet0.address, 1000)
+      await tokenA.approve(farming.address, constants.MaxUint256, overrides)
+      await tokenB.setBalance(farming.address, 10000)
+      await tokenC.setBalance(farming.address, 20000)
+    })
+
+    it('successful set and check poolInfo', async () => {
+      await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 10, 10)
+      await expect(farming.setClaimableBlock(0, 0))
+        .to.emit(farming, 'ClaimableBlockUpdated')
+        .withArgs(0, 0)
+      const poolInfo = parsePoolInfo(await farming.getPoolInfo(0))
+      expect(poolInfo).to.deep.eq({
+        farmingToken: tokenA.address,
+        amount: BigNumber.from(0),
+        rewardTokens: [tokenB.address, tokenC.address],
+        rewardPerBlock: [BigNumber.from(100), BigNumber.from(200)],
+        accRewardPerShare: [BigNumber.from(0), BigNumber.from(0)],
+        lastRewardBlock: poolInfo.lastRewardBlock,
+        startBlock: poolInfo.startBlock,
+        claimableInterval: BigNumber.from(0)
+      })
+    })
+
+    it('should claim everyBlock when set to zero', async () => {
+      await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 10, 0)
+      // block: 454
+      await farming.stake(0, tokenA.address, 200)
+      await Time.advanceBlockTo(460)
+      await farming.claim(0)
+      expect(await tokenB.balanceOf(wallet0.address)).to.eq(BigNumber.from('600'))
+      expect(await tokenC.balanceOf(wallet0.address)).to.eq(BigNumber.from('1200'))
+      await Time.advanceBlockTo(465)
+      await farming.claim(0)
+      expect(await tokenB.balanceOf(wallet0.address)).to.eq(BigNumber.from('1100'))
+      expect(await tokenC.balanceOf(wallet0.address)).to.eq(BigNumber.from('2200'))
+    })
+
+    it('should work well when setting interval from 10 to 0', async () => {
+      await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 474, 10)
+      // block: 475
+      await farming.stake(0, tokenA.address, 200)
+      await Time.advanceBlockTo(480)
+      await expect(farming.claim(0)).to.be.revertedWith('NOT_CLAIMABLE')
+      await farming.setClaimableBlock(0, 0)
+      await Time.advanceBlockTo(485)
+      await farming.claim(0)
+      expect(await tokenB.balanceOf(wallet0.address)).to.eq(BigNumber.from('1000'))
+      expect(await tokenC.balanceOf(wallet0.address)).to.eq(BigNumber.from('2000'))
+      await Time.advanceBlockTo(490)
+      await farming.claim(0)
+      expect(await tokenB.balanceOf(wallet0.address)).to.eq(BigNumber.from('1500'))
+      expect(await tokenC.balanceOf(wallet0.address)).to.eq(BigNumber.from('3000'))
+      await Time.advanceBlockTo(495)
+      await farming.claim(0)
+      expect(await tokenB.balanceOf(wallet0.address)).to.eq(BigNumber.from('2000'))
+      expect(await tokenC.balanceOf(wallet0.address)).to.eq(BigNumber.from('4000'))
+    })
+
+    it('should work well when setting interval from 0 to 10', async () => {
+      await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 504, 0)
+      // block: 505
+      await farming.stake(0, tokenA.address, 200)
+      await Time.advanceBlockTo(510)
+      await farming.claim(0)
+      expect(await tokenB.balanceOf(wallet0.address)).to.eq(BigNumber.from('500'))
+      expect(await tokenC.balanceOf(wallet0.address)).to.eq(BigNumber.from('1000'))
+      await farming.setClaimableBlock(0, 10)
+      await Time.advanceBlockTo(515)
+      await farming.claim(0)
+      expect(await tokenB.balanceOf(wallet0.address)).to.eq(BigNumber.from('1000'))
+      expect(await tokenC.balanceOf(wallet0.address)).to.eq(BigNumber.from('2000'))
+      await Time.advanceBlockTo(520)
+      await expect(farming.claim(0)).to.be.revertedWith('NOT_CLAIMABLE')
+    })
+  })
 })

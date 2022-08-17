@@ -39,6 +39,7 @@ contract Farming is AdminUpgradeable {
     mapping(uint256 => mapping(address => UserInfo)) private userInfo;
 
     event PoolAdded(address indexed farmingToken);
+    event ClaimableBlockUpdated(uint256 indexed pid, uint256 interval);
     event Charged(uint256 indexed pid, address[] rewards, uint256[] amounts);
     event WithdrawRewards(uint256 indexed pid, address[] rewards, uint256[] amounts);
     event Stake(address indexed user, uint256 indexed pid, uint256 amount);
@@ -105,6 +106,15 @@ contract Farming is AdminUpgradeable {
         PoolInfo storage pool = poolInfo[_pid];
         require(_rewardPerBlock.length == pool.rewardPerBlock.length, 'INVALID_REWARDS');
         pool.rewardPerBlock = _rewardPerBlock;
+    }
+
+    function setClaimableBlock(
+        uint256 _pid,
+        uint256 _interval
+    ) external onlyAdmin {
+        PoolInfo storage pool = poolInfo[_pid];
+        pool.claimableInterval = _interval;
+        emit ClaimableBlockUpdated(_pid, _interval);
     }
 
     // Charge the given pool's rewards. Can only be called by the admin.
@@ -236,7 +246,7 @@ contract Farming is AdminUpgradeable {
         returns(uint256 periods) 
     {
         PoolInfo memory pool = poolInfo[_pid];
-        if (block.number <= pool.startBlock) return 0;
+        if (block.number <= pool.startBlock || pool.claimableInterval == 0) return 0;
         uint256 blocksSinceStart = block.number.sub(pool.startBlock);
         periods = (blocksSinceStart / pool.claimableInterval).add(1);
         if (blocksSinceStart % pool.claimableInterval == 0) {
