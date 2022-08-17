@@ -1,15 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
-import { 
-    StableSwap, 
-    StableSwapStorage, 
-    SafeERC20,
-    IERC20,
-    IStableSwap,
-    LPToken
-} from "./StableSwap.sol";
-import { MetaSwapStorage } from "./MetaSwapStorage.sol";
+import {StableSwap, StableSwapStorage, SafeERC20, IERC20, IStableSwap, LPToken} from "./StableSwap.sol";
+import {MetaSwapStorage} from "./MetaSwapStorage.sol";
 
 contract MetaSwap is StableSwap {
     using MetaSwapStorage for StableSwapStorage.SwapStorage;
