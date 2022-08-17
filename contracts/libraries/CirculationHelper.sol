@@ -72,7 +72,7 @@ contract CirculationHelper is AdminUpgradeable {
     function getCirculation() public view returns (uint256 circulation) {
         circulation = IERC20(zenlinkToken).totalSupply();
         address[] memory contracts = _lockedContracts.values();
-        for (uint256 i = 0; i < _lockedContracts.length(); i++) {
+        for (uint256 i = 0; i < contracts.length; i++) {
             circulation -= IERC20(zenlinkToken).balanceOf(contracts[i]);
         }
     }
