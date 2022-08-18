@@ -3,10 +3,10 @@ pragma solidity >=0.8.0;
 
 import {ERC4626, IERC20Metadata, ERC20, Math} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import {AdminUpgradeable} from "../libraries/AdminUpgradeable.sol";
-import {IZenlinkTokenLoyaltyCaculator} from "../libraries/interfaces/IZenlinkTokenLoyaltyCaculator.sol";
+import {IZenlinkTokenLoyaltyCalculator} from "../libraries/interfaces/IZenlinkTokenLoyaltyCalculator.sol";
 
 contract vxZenlinkToken is ERC4626, AdminUpgradeable {
-    address public loyaltyCaculator;
+    address public loyaltyCalculator;
 
     event WithdrawVXZLK(
         address indexed caller,
@@ -25,12 +25,12 @@ contract vxZenlinkToken is ERC4626, AdminUpgradeable {
         _initializeAdmin(msg.sender);
     }
 
-    function updateLoyaltyCaculator(address caculator) external onlyAdmin {
-        loyaltyCaculator = caculator;
+    function updateLoyaltyCaculator(address calculator) external onlyAdmin {
+        loyaltyCalculator = calculator;
     }
 
     function getZenlinkTokenWithdrawFeeRatio() public view returns (uint256) {
-        return IZenlinkTokenLoyaltyCaculator(loyaltyCaculator).getZenlinkTokenWithdrawFeeRatio();
+        return IZenlinkTokenLoyaltyCalculator(loyaltyCalculator).getZenlinkTokenWithdrawFeeRatio();
     }
 
     function getWithdrawResult(uint256 assets) 

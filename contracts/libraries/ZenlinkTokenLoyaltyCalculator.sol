@@ -6,7 +6,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-contract ZenlinkTokenLoyaltyCaculator is AdminUpgradeable {
+contract ZenlinkTokenLoyaltyCalculator is AdminUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     address immutable vxZenlinkToken;
