@@ -4,7 +4,7 @@ import { BigNumber, constants, Contract } from 'ethers'
 import { expandTo18Decimals } from './shared/utilities'
 
 import ZenlinkToken from '../build/contracts/tokens/ZenlinkToken.sol/ZenlinkToken.json'
-import vxZenlinkToken from '../build/contracts/tokens/vxZenlinkToken.sol/vxZenlinkToken.json'
+import vxZenlinkToken from '../build/contracts/test/vxZenlinkTokenMock.sol/vxZenlinkTokenMock.json'
 import ZenlinkTokenLoyaltyCalculator from '../build/contracts/libraries/ZenlinkTokenLoyaltyCalculator.sol/ZenlinkTokenLoyaltyCalculator.json'
 
 chai.use(solidity)
@@ -54,7 +54,7 @@ describe('vxZenlinkToken', () => {
     expect(await vxzlk.loyaltyCalculator()).to.be.eq(loyaltyCalculator.address)
   })
 
-  describe('empty vault: no assets & no shares', async () => {
+  describe('empty vault: no assets & no shares', () => {
     it('status', async () => {
       expect(await vxzlk.totalAssets()).to.be.eq(0)
     });
@@ -106,5 +106,74 @@ describe('vxZenlinkToken', () => {
         .to.emit(vxzlk, 'Transfer')
         .withArgs(wallet.address, AddressZero, '0')
     })
+  })
+
+  describe('partially empty vault: assets & no shares', () => {
+    beforeEach(async () => {
+      await zlk.mint(expandTo18Decimals(1))
+      await zlk.transfer(vxzlk.address, expandTo18Decimals(1))
+    })
+
+    it('status', async () => {
+      expect(await vxzlk.totalAssets()).to.be.eq(expandTo18Decimals(1))
+    });
+
+    it('deposit', async () => {
+      expect(await vxzlk.maxDeposit(wallet.address)).to.be.eq(MaxUint256)
+      expect(await vxzlk.previewDeposit(expandTo18Decimals(1))).to.be.eq(expandTo18Decimals(1))
+      expect(
+        await vxzlk.deposit(expandTo18Decimals(1), other.address)
+      )
+        .to.emit(zlk, 'Transfer')
+        .withArgs(wallet.address, vxzlk.address, expandTo18Decimals(1))
+        .to.emit(vxzlk, 'Transfer')
+        .withArgs(AddressZero, other.address, expandTo18Decimals(1))
+    })
+
+    it('mint', async () => {
+      expect(await vxzlk.maxMint(wallet.address)).to.be.eq(MaxUint256)
+      expect(await vxzlk.previewMint(expandTo18Decimals(1))).to.be.eq(expandTo18Decimals(1))
+      expect(
+        await vxzlk.mint(expandTo18Decimals(1), other.address)
+      )
+        .to.emit(zlk, 'Transfer')
+        .withArgs(wallet.address, vxzlk.address, expandTo18Decimals(1))
+        .to.emit(vxzlk, 'Transfer')
+        .withArgs(AddressZero, other.address, expandTo18Decimals(1))
+    })
+
+    it('withdraw', async () => {
+      expect(await vxzlk.maxWithdraw(wallet.address)).to.be.eq(0)
+      expect(await vxzlk.previewWithdraw('0')).to.be.eq(0)
+      expect(
+        await vxzlk.withdraw('0', other.address, wallet.address)
+      )
+        .to.emit(zlk, 'Transfer')
+        .withArgs(vxzlk.address, other.address, '0')
+        .to.emit(vxzlk, 'Transfer')
+        .withArgs(wallet.address, AddressZero, '0')
+    })
+
+    it('redeem', async () => {
+      expect(await vxzlk.maxRedeem(wallet.address)).to.be.eq(0)
+      expect(await vxzlk.previewRedeem('0')).to.be.eq(0)
+      expect(
+        await vxzlk.redeem('0', other.address, wallet.address)
+      )
+        .to.emit(zlk, 'Transfer')
+        .withArgs(vxzlk.address, other.address, '0')
+        .to.emit(vxzlk, 'Transfer')
+        .withArgs(wallet.address, AddressZero, '0')
+    })
+  })
+
+  describe('partially empty vault: shares & no assets', () => {
+    beforeEach(async () => {
+      await vxzlk.mockMint(wallet.address, expandTo18Decimals(1))
+    })
+
+    it('status', async () => {
+      expect(await vxzlk.totalAssets()).to.be.eq(0)
+    });
   })
 })
