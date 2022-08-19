@@ -48,13 +48,13 @@ describe('vxZenlinkToken', () => {
 
   beforeEach(async () => {
     zlk = await deployContract(
-      wallet, 
-      ZenlinkToken, 
+      wallet,
+      ZenlinkToken,
       ['ZLK', 'Zenlink Token', 18, expandTo18Decimals(100), expandTo18Decimals(1000)]
     )
     vxzlk = await deployContract(
-      wallet, 
-      vxZenlinkToken, 
+      wallet,
+      vxZenlinkToken,
       [zlk.address, 'Vault vxZLK', 'vxZLK']
     )
     loyaltyCalculator = await deployContract(
@@ -292,14 +292,14 @@ describe('vxZenlinkToken', () => {
         await zlk.totalSupply(),
         await zlk.balanceOf(vxzlk.address)
       )
-      const zlkAmountExpectedReceived = expandTo18Decimals(1).sub(
+      const expectedZlkReceived = expandTo18Decimals(1).sub(
         expandTo18Decimals(1).mul(ratio).div(expandTo18Decimals(1))
       )
       expect(
         await vxzlk.withdraw(expandTo18Decimals(1), other.address, wallet.address)
       )
         .to.emit(zlk, 'Transfer')
-        .withArgs(vxzlk.address, other.address, zlkAmountExpectedReceived)
+        .withArgs(vxzlk.address, other.address, expectedZlkReceived)
         .to.emit(vxzlk, 'Transfer')
         .withArgs(wallet.address, AddressZero, expandTo18Decimals(100))
     })
@@ -318,14 +318,14 @@ describe('vxZenlinkToken', () => {
         await zlk.totalSupply(),
         await zlk.balanceOf(vxzlk.address)
       )
-      const zlkAmountExpectedReceived = expandTo18Decimals(1).sub(
+      const expectedZlkReceived = expandTo18Decimals(1).sub(
         expandTo18Decimals(1).mul(ratio).div(expandTo18Decimals(1))
       )
       expect(
         await vxzlk.redeem(expandTo18Decimals(100), other.address, wallet.address)
       )
         .to.emit(zlk, 'Transfer')
-        .withArgs(vxzlk.address, other.address, zlkAmountExpectedReceived)
+        .withArgs(vxzlk.address, other.address, expectedZlkReceived)
         .to.emit(vxzlk, 'Transfer')
         .withArgs(wallet.address, AddressZero, expandTo18Decimals(100))
     })
@@ -345,22 +345,197 @@ describe('vxZenlinkToken', () => {
     await zlk.connect(user2).approve(vxzlk.address, 7001)
 
     // 1. Alice mints 2000 shares (costs 2000 tokens)
+    expect(
+      await vxzlk.connect(user1).mint(2000, user1.address)
+    )
+      .to.emit(zlk, 'Transfer')
+      .withArgs(user1.address, vxzlk.address, '2000')
+      .to.emit(vxzlk, 'Transfer')
+      .withArgs(AddressZero, user1.address, '2000')
+
+    expect(await vxzlk.previewDeposit(2000)).to.be.eq(2000)
+    expect(await vxzlk.balanceOf(user1.address)).to.be.eq(2000)
+    expect(await vxzlk.balanceOf(user2.address)).to.be.eq(0)
+    expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user1.address))).to.be.eq(2000)
+    expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user2.address))).to.be.eq(0)
+    expect(await vxzlk.totalSupply()).to.be.eq(2000)
+    expect(await vxzlk.totalAssets()).to.be.eq(2000)
+
+    // 2. Bob deposits 4000 tokens (mints 4000 shares)
+    expect(
+      await vxzlk.connect(user2).mint(4000, user2.address)
+    )
+      .to.emit(zlk, 'Transfer')
+      .withArgs(user2.address, vxzlk.address, '4000')
+      .to.emit(vxzlk, 'Transfer')
+      .withArgs(AddressZero, user2.address, '4000')
+
+    expect(await vxzlk.previewDeposit(4000)).to.be.eq(4000)
+    expect(await vxzlk.balanceOf(user1.address)).to.be.eq(2000)
+    expect(await vxzlk.balanceOf(user2.address)).to.be.eq(4000)
+    expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user1.address))).to.be.eq(2000)
+    expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user2.address))).to.be.eq(4000)
+    expect(await vxzlk.totalSupply()).to.be.eq(6000)
+    expect(await vxzlk.totalAssets()).to.be.eq(6000)
+
+    // 3. Vault mutates by +3000 tokens (simulated yield returned from strategy)
+    await zlk.transfer(vxzlk.address, 3000)
+
+    expect(await vxzlk.balanceOf(user1.address)).to.be.eq(2000)
+    expect(await vxzlk.balanceOf(user2.address)).to.be.eq(4000)
+    expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user1.address))).to.be.eq(3000)
+    expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user2.address))).to.be.eq(6000)
+    expect(await vxzlk.totalSupply()).to.be.eq(6000)
+    expect(await vxzlk.totalAssets()).to.be.eq(9000)
+
+    // 4. Alice deposits 2000 tokens (mints 1333 shares)
+    expect(
+      await vxzlk.connect(user1).deposit(2000, user1.address)
+    )
+      .to.emit(zlk, 'Transfer')
+      .withArgs(user1.address, vxzlk.address, '2000')
+      .to.emit(vxzlk, 'Transfer')
+      .withArgs(AddressZero, user1.address, '1333')
+
+    expect(await vxzlk.balanceOf(user1.address)).to.be.eq(3333)
+    expect(await vxzlk.balanceOf(user2.address)).to.be.eq(4000)
+    expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user1.address))).to.be.eq(4999)
+    expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user2.address))).to.be.eq(6000)
+    expect(await vxzlk.totalSupply()).to.be.eq(7333)
+    expect(await vxzlk.totalAssets()).to.be.eq(11000)
+
+    // 5. Bob mints 2000 shares (costs 3001 assets)
+    // NOTE: Bob's assets spent got rounded up
+    // NOTE: Alices's vault assets got rounded up
+    expect(
+      await vxzlk.connect(user2).mint(2000, user2.address)
+    )
+      .to.emit(zlk, 'Transfer')
+      .withArgs(user2.address, vxzlk.address, '3001')
+      .to.emit(vxzlk, 'Transfer')
+      .withArgs(AddressZero, user2.address, '2000')
+
+    expect(await vxzlk.balanceOf(user1.address)).to.be.eq(3333)
+    expect(await vxzlk.balanceOf(user2.address)).to.be.eq(6000)
+    expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user1.address))).to.be.eq(5000)
+    expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user2.address))).to.be.eq(9000)
+    expect(await vxzlk.totalSupply()).to.be.eq(9333)
+    expect(await vxzlk.totalAssets()).to.be.eq(14001)
+
+    // 6. Vault mutates by +3000 tokens
+    // NOTE: Vault holds 17001 tokens, but sum of assetsOf() is 17000.
+    await zlk.transfer(vxzlk.address, 3000)
+
+    expect(await vxzlk.balanceOf(user1.address)).to.be.eq(3333)
+    expect(await vxzlk.balanceOf(user2.address)).to.be.eq(6000)
+    expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user1.address))).to.be.eq(6071)
+    expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user2.address))).to.be.eq(10929)
+    expect(await vxzlk.totalSupply()).to.be.eq(9333)
+    expect(await vxzlk.totalAssets()).to.be.eq(17001)
+
+    // 7. Alice redeem 1333 shares (2428 assets)
     {
+      const assets = await vxzlk.previewRedeem(1333)
+      const ratio = getZenlinkTokenWithdrawFeeRatio(
+        await zlk.totalSupply(),
+        await zlk.balanceOf(vxzlk.address)
+      )
+      const expectedZlkReceived = assets.sub(
+        assets.mul(ratio).div(expandTo18Decimals(1))
+      )
       expect(
-        await vxzlk.connect(user1).mint(2000, user1.address)
+        await vxzlk.connect(user1).redeem(1333, user1.address, user1.address)
       )
         .to.emit(zlk, 'Transfer')
-        .withArgs(user1.address, vxzlk.address, '2000')
+        .withArgs(vxzlk.address, user1.address, expectedZlkReceived)
         .to.emit(vxzlk, 'Transfer')
-        .withArgs(AddressZero, user1.address, '2000')
+        .withArgs(user1.address, AddressZero, '1333')
 
-      expect(await vxzlk.previewDeposit(2000)).to.be.eq(2000)
       expect(await vxzlk.balanceOf(user1.address)).to.be.eq(2000)
+      expect(await vxzlk.balanceOf(user2.address)).to.be.eq(6000)
+      expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user1.address))).to.be.eq(3946)
+      expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user2.address))).to.be.eq(11840)
+      expect(await vxzlk.totalSupply()).to.be.eq(8000)
+      expect(await vxzlk.totalAssets()).to.be.eq(15787)
+    }
+
+    // 8. Bob withdraws 2929 assets (1485 shares)
+    {
+      expect(await vxzlk.previewWithdraw(2929)).to.be.eq(1485)
+      const ratio = getZenlinkTokenWithdrawFeeRatio(
+        await zlk.totalSupply(),
+        await zlk.balanceOf(vxzlk.address)
+      )
+      const expectedZlkReceived = BigNumber.from(2929).sub(
+        BigNumber.from(2929).mul(ratio).div(expandTo18Decimals(1))
+      )
+      expect(
+        await vxzlk.connect(user2).withdraw(2929, user2.address, user2.address)
+      )
+        .to.emit(zlk, 'Transfer')
+        .withArgs(vxzlk.address, user2.address, expectedZlkReceived)
+        .to.emit(vxzlk, 'Transfer')
+        .withArgs(user2.address, AddressZero, '1485')
+
+      expect(await vxzlk.balanceOf(user1.address)).to.be.eq(2000)
+      expect(await vxzlk.balanceOf(user2.address)).to.be.eq(4515)
+      expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user1.address))).to.be.eq(4396)
+      expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user2.address))).to.be.eq(9925)
+      expect(await vxzlk.totalSupply()).to.be.eq(6515)
+      expect(await vxzlk.totalAssets()).to.be.eq(14322)
+    }
+
+    // 9. Alice withdraws 4396 assets (2000 shares)
+    // NOTE: Bob's assets have been rounded back up
+    {
+      expect(await vxzlk.previewWithdraw(4396)).to.be.eq(2000)
+      const ratio = getZenlinkTokenWithdrawFeeRatio(
+        await zlk.totalSupply(),
+        await zlk.balanceOf(vxzlk.address)
+      )
+      const expectedZlkReceived = BigNumber.from(4396).sub(
+        BigNumber.from(4396).mul(ratio).div(expandTo18Decimals(1))
+      )
+      expect(
+        await vxzlk.connect(user1).withdraw(4396, user1.address, user1.address)
+      )
+        .to.emit(zlk, 'Transfer')
+        .withArgs(vxzlk.address, user1.address, expectedZlkReceived)
+        .to.emit(vxzlk, 'Transfer')
+        .withArgs(user1.address, AddressZero, '2000')
+
+      expect(await vxzlk.balanceOf(user1.address)).to.be.eq(0)
+      expect(await vxzlk.balanceOf(user2.address)).to.be.eq(4515)
+      expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user1.address))).to.be.eq(0)
+      expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user2.address))).to.be.eq(12124)
+      expect(await vxzlk.totalSupply()).to.be.eq(4515)
+      expect(await vxzlk.totalAssets()).to.be.eq(12124)
+    }
+
+    // 10. Bob redeem 4515 shares (12124 tokens)
+    {
+      expect(await vxzlk.previewRedeem(4515)).to.be.eq(12124)
+      const ratio = getZenlinkTokenWithdrawFeeRatio(
+        await zlk.totalSupply(),
+        await zlk.balanceOf(vxzlk.address)
+      )
+      const expectedZlkReceived = BigNumber.from(12124).sub(
+        BigNumber.from(12124).mul(ratio).div(expandTo18Decimals(1))
+      )
+      expect(
+        await vxzlk.connect(user2).redeem(4515, user2.address, user2.address)
+      )
+        .to.emit(zlk, 'Transfer')
+        .withArgs(vxzlk.address, user2.address, expectedZlkReceived)
+        .to.emit(vxzlk, 'Transfer')
+        .withArgs(user2.address, AddressZero, '4515')
+
+      expect(await vxzlk.balanceOf(user1.address)).to.be.eq(0)
       expect(await vxzlk.balanceOf(user2.address)).to.be.eq(0)
-      expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user1.address))).to.be.eq(2000)
+      expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user1.address))).to.be.eq(0)
       expect(await vxzlk.convertToAssets(await vxzlk.balanceOf(user2.address))).to.be.eq(0)
-      expect(await vxzlk.totalSupply()).to.be.eq(2000)
-      expect(await vxzlk.totalAssets()).to.be.eq(2000)
+      expect(await vxzlk.totalSupply()).to.be.eq(0)
+      expect(await vxzlk.totalAssets()).to.be.eq(6062) // 12124 / 2 
     }
   })
 })
