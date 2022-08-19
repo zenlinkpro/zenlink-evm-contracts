@@ -43,9 +43,9 @@ contract ZenlinkTokenLoyaltyCalculator is AdminUpgradeable {
         uint256 _minPenaltyRatio, 
         uint256 _maxPenaltyRatio
     ) private {
-        if (_maxPenaltyRatio > 50e16) 
-            revert CannotExceedMaxPenaltyRatio(50e16);
-        if (_minPenaltyRatio >= _maxPenaltyRatio) 
+        if (_maxPenaltyRatio > 5e17) 
+            revert CannotExceedMaxPenaltyRatio(5e17);
+        if (_minPenaltyRatio > _maxPenaltyRatio) 
             revert InvalidPenaltyRatio(_minPenaltyRatio, _maxPenaltyRatio);
         minPenaltyRatio = _minPenaltyRatio;
         maxPenaltyRatio = _maxPenaltyRatio;
