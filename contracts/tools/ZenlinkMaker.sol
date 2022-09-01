@@ -8,7 +8,7 @@ import {IFactory} from "../core/interfaces/IFactory.sol";
 import {IPair} from "../core/interfaces/IPair.sol";
 import {IStableSwap} from "../stableswap/interfaces/IStableSwap.sol";
 
-contract Buyback is AdminUpgradeable {
+contract ZenlinkMaker is AdminUpgradeable {
     using SafeERC20 for IERC20;
 
     IFactory public immutable factory;
