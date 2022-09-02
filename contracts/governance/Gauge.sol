@@ -204,9 +204,7 @@ contract Gauge is AdminUpgradeable {
         }
 
         for (uint256 i; i < poolIds.length; i++) {
-            PoolPeriodState storage poolPeriodState = allPoolState[periodId][
-                poolIds[i]
-            ];
+            PoolPeriodState storage poolPeriodState = allPoolState[periodId][poolIds[i]];
             poolPeriodState.votable = true;
             poolPeriodState.resetVotable = true;
         }
@@ -223,9 +221,7 @@ contract Gauge is AdminUpgradeable {
         }
 
         for (uint256 i; i < poolIds.length; i++) {
-            PoolPeriodState storage poolPeriodState = allPoolState[periodId][
-                poolIds[i]
-            ];
+            PoolPeriodState storage poolPeriodState = allPoolState[periodId][poolIds[i]];
             poolPeriodState.votable = false;
             poolPeriodState.resetVotable = true;
         }
@@ -395,9 +391,7 @@ contract Gauge is AdminUpgradeable {
         }
 
         uint256 lastUpdatePeriod = poolLastUpdatePeriod[poolId];
-        PoolPeriodState memory lastPoolState = allPoolState[lastUpdatePeriod][
-            poolId
-        ];
+        PoolPeriodState memory lastPoolState = allPoolState[lastUpdatePeriod][poolId];
 
         curPoolState.inherit = true;
         curPoolState.score = lastPoolState.totalAmount;
