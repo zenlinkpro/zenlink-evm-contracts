@@ -1,0 +1,874 @@
+{
+  "address": "0x7291df5772AfCbCB937b3c45723Cd384d39A3CC7",
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "oldAdmin",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newAdmin",
+          "type": "address"
+        }
+      ],
+      "name": "AdminChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newAdmin",
+          "type": "address"
+        }
+      ],
+      "name": "Candidate",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "pid",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address[]",
+          "name": "rewards",
+          "type": "address[]"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256[]",
+          "name": "amounts",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "Charged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "pid",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address[]",
+          "name": "rewards",
+          "type": "address[]"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256[]",
+          "name": "amounts",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "Claim",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "pid",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "interval",
+          "type": "uint256"
+        }
+      ],
+      "name": "ClaimableBlockUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "pid",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "EmergencyWithdraw",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "farmingToken",
+          "type": "address"
+        }
+      ],
+      "name": "PoolAdded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "pid",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "Redeem",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "pid",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "Stake",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "pid",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address[]",
+          "name": "rewards",
+          "type": "address[]"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256[]",
+          "name": "amounts",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "WithdrawRewards",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_farmingToken",
+          "type": "address"
+        },
+        {
+          "internalType": "address[]",
+          "name": "_rewardTokens",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "_rewardPerBlock",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_startBlock",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_claimableInterval",
+          "type": "uint256"
+        }
+      ],
+      "name": "add",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "admin",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "adminCandidate",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "candidateConfirm",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pid",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "_amounts",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "charge",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pid",
+          "type": "uint256"
+        }
+      ],
+      "name": "claim",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pid",
+          "type": "uint256"
+        }
+      ],
+      "name": "emergencyWithdraw",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pid",
+          "type": "uint256"
+        }
+      ],
+      "name": "getPeriodsSinceStart",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "periods",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pid",
+          "type": "uint256"
+        }
+      ],
+      "name": "getPoolInfo",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "farmingToken",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address[]",
+          "name": "rewardTokens",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "rewardPerBlock",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "accRewardPerShare",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "lastRewardBlock",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "startBlock",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "claimableInterval",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pid",
+          "type": "uint256"
+        }
+      ],
+      "name": "getRemaingRewards",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "remainingRewards",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pid",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getUserInfo",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "pending",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "rewardDebt",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "nextClaimableBlock",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pid",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "pendingRewards",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "rewards",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "nextClaimableBlock",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "poolLength",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pid",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_farmingToken",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "redeem",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pid",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "_rewardPerBlock",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "bool",
+          "name": "_withUpdate",
+          "type": "bool"
+        }
+      ],
+      "name": "set",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_candidate",
+          "type": "address"
+        }
+      ],
+      "name": "setAdminCandidate",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pid",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_interval",
+          "type": "uint256"
+        }
+      ],
+      "name": "setClaimableBlock",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pid",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_farmingToken",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "stake",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pid",
+          "type": "uint256"
+        }
+      ],
+      "name": "updatePool",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pid",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "_amounts",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "withdrawRewards",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0xc1e6273a1cdbfb46482918033a80aa55468f608968d677d172a4371de3eaa72a",
+  "receipt": {
+    "to": null,
+    "from": "0x0597EB296eFbb84CA64C843a7F80d7F8Bff7d17d",
+    "contractAddress": "0x7291df5772AfCbCB937b3c45723Cd384d39A3CC7",
+    "transactionIndex": 139,
+    "gasUsed": "2610301",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x91d375f43be9cec0309589b1fff272cb654ef3cb77f1d5e63bd1012f42330856",
+    "transactionHash": "0xc1e6273a1cdbfb46482918033a80aa55468f608968d677d172a4371de3eaa72a",
+    "logs": [],
+    "blockNumber": 2782486,
+    "cumulativeGasUsed": "5569670",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "numDeployments": 1,
+  "solcInputHash": "007aa94c81b3bc67ae48537a63ee475f",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.7+commit.e28d00a7\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"oldAdmin\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newAdmin\",\"type\":\"address\"}],\"name\":\"AdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newAdmin\",\"type\":\"address\"}],\"name\":\"Candidate\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"pid\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address[]\",\"name\":\"rewards\",\"type\":\"address[]\"},{\"indexed\":false,\"internalType\":\"uint256[]\",\"name\":\"amounts\",\"type\":\"uint256[]\"}],\"name\":\"Charged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"pid\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address[]\",\"name\":\"rewards\",\"type\":\"address[]\"},{\"indexed\":false,\"internalType\":\"uint256[]\",\"name\":\"amounts\",\"type\":\"uint256[]\"}],\"name\":\"Claim\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"pid\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"interval\",\"type\":\"uint256\"}],\"name\":\"ClaimableBlockUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"pid\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"EmergencyWithdraw\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"farmingToken\",\"type\":\"address\"}],\"name\":\"PoolAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"pid\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Redeem\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"pid\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Stake\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"pid\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address[]\",\"name\":\"rewards\",\"type\":\"address[]\"},{\"indexed\":false,\"internalType\":\"uint256[]\",\"name\":\"amounts\",\"type\":\"uint256[]\"}],\"name\":\"WithdrawRewards\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_farmingToken\",\"type\":\"address\"},{\"internalType\":\"address[]\",\"name\":\"_rewardTokens\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"_rewardPerBlock\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"_startBlock\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_claimableInterval\",\"type\":\"uint256\"}],\"name\":\"add\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"admin\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"adminCandidate\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"candidateConfirm\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_pid\",\"type\":\"uint256\"},{\"internalType\":\"uint256[]\",\"name\":\"_amounts\",\"type\":\"uint256[]\"}],\"name\":\"charge\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_pid\",\"type\":\"uint256\"}],\"name\":\"claim\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_pid\",\"type\":\"uint256\"}],\"name\":\"emergencyWithdraw\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_pid\",\"type\":\"uint256\"}],\"name\":\"getPeriodsSinceStart\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"periods\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_pid\",\"type\":\"uint256\"}],\"name\":\"getPoolInfo\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"farmingToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"rewardTokens\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"rewardPerBlock\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256[]\",\"name\":\"accRewardPerShare\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"lastRewardBlock\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"startBlock\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"claimableInterval\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_pid\",\"type\":\"uint256\"}],\"name\":\"getRemaingRewards\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"remainingRewards\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_pid\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"getUserInfo\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint256[]\",\"name\":\"pending\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256[]\",\"name\":\"rewardDebt\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"nextClaimableBlock\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_pid\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"pendingRewards\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"rewards\",\"type\":\"uint256[]\"},{\"internalType\":\"uint256\",\"name\":\"nextClaimableBlock\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"poolLength\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_pid\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_farmingToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"redeem\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_pid\",\"type\":\"uint256\"},{\"internalType\":\"uint256[]\",\"name\":\"_rewardPerBlock\",\"type\":\"uint256[]\"},{\"internalType\":\"bool\",\"name\":\"_withUpdate\",\"type\":\"bool\"}],\"name\":\"set\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_candidate\",\"type\":\"address\"}],\"name\":\"setAdminCandidate\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_pid\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_interval\",\"type\":\"uint256\"}],\"name\":\"setClaimableBlock\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_pid\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_farmingToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"stake\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_pid\",\"type\":\"uint256\"}],\"name\":\"updatePool\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_pid\",\"type\":\"uint256\"},{\"internalType\":\"uint256[]\",\"name\":\"_amounts\",\"type\":\"uint256[]\"}],\"name\":\"withdrawRewards\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/periphery/Farming.sol\":\"Farming\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/token/ERC20/IERC20.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/IERC20.sol)\\n\\npragma solidity ^0.8.0;\\n\\n/**\\n * @dev Interface of the ERC20 standard as defined in the EIP.\\n */\\ninterface IERC20 {\\n    /**\\n     * @dev Emitted when `value` tokens are moved from one account (`from`) to\\n     * another (`to`).\\n     *\\n     * Note that `value` may be zero.\\n     */\\n    event Transfer(address indexed from, address indexed to, uint256 value);\\n\\n    /**\\n     * @dev Emitted when the allowance of a `spender` for an `owner` is set by\\n     * a call to {approve}. `value` is the new allowance.\\n     */\\n    event Approval(address indexed owner, address indexed spender, uint256 value);\\n\\n    /**\\n     * @dev Returns the amount of tokens in existence.\\n     */\\n    function totalSupply() external view returns (uint256);\\n\\n    /**\\n     * @dev Returns the amount of tokens owned by `account`.\\n     */\\n    function balanceOf(address account) external view returns (uint256);\\n\\n    /**\\n     * @dev Moves `amount` tokens from the caller's account to `to`.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a {Transfer} event.\\n     */\\n    function transfer(address to, uint256 amount) external returns (bool);\\n\\n    /**\\n     * @dev Returns the remaining number of tokens that `spender` will be\\n     * allowed to spend on behalf of `owner` through {transferFrom}. This is\\n     * zero by default.\\n     *\\n     * This value changes when {approve} or {transferFrom} are called.\\n     */\\n    function allowance(address owner, address spender) external view returns (uint256);\\n\\n    /**\\n     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * IMPORTANT: Beware that changing an allowance with this method brings the risk\\n     * that someone may use both the old and the new allowance by unfortunate\\n     * transaction ordering. One possible solution to mitigate this race\\n     * condition is to first reduce the spender's allowance to 0 and set the\\n     * desired value afterwards:\\n     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729\\n     *\\n     * Emits an {Approval} event.\\n     */\\n    function approve(address spender, uint256 amount) external returns (bool);\\n\\n    /**\\n     * @dev Moves `amount` tokens from `from` to `to` using the\\n     * allowance mechanism. `amount` is then deducted from the caller's\\n     * allowance.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a {Transfer} event.\\n     */\\n    function transferFrom(\\n        address from,\\n        address to,\\n        uint256 amount\\n    ) external returns (bool);\\n}\\n\",\"keccak256\":\"0x9750c6b834f7b43000631af5cc30001c5f547b3ceb3635488f140f60e897ea6b\",\"license\":\"MIT\"},\"contracts/core/interfaces/IFactory.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity >=0.8.0;\\n\\ninterface IFactory {\\n    event PairCreated(\\n        address indexed token0,\\n        address indexed token1,\\n        address pair,\\n        uint256\\n    );\\n    event PairCreateLocked(\\n        address indexed caller\\n    );\\n    event PairCreateUnlocked(\\n        address indexed caller\\n    );\\n    event BootstrapSetted(\\n        address indexed tokenA,\\n        address indexed tokenB,\\n        address indexed bootstrap\\n    );\\n    event FeetoUpdated(\\n        address indexed feeto\\n    );\\n    event FeeBasePointUpdated(\\n        uint8 basePoint\\n    );\\n\\n    function feeto() external view returns (address);\\n\\n    function feeBasePoint() external view returns (uint8);\\n\\n    function lockForPairCreate() external view returns (bool);\\n\\n    function getPair(address tokenA, address tokenB)\\n        external\\n        view\\n        returns (address pair);\\n    \\n    function getBootstrap(address tokenA, address tokenB)\\n        external\\n        view\\n        returns (address bootstrap);\\n\\n    function allPairs(uint256) external view returns (address pair);\\n\\n    function allPairsLength() external view returns (uint256);\\n\\n    function createPair(address tokenA, address tokenB)\\n        external\\n        returns (address pair);\\n}\\n\",\"keccak256\":\"0x211140634ad85da83e50e8623d7fd7aeff89fb1fd472e2a8bec7927c416b3bf9\",\"license\":\"MIT\"},\"contracts/core/interfaces/IPair.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity >=0.8.0;\\n\\ninterface IPair {\\n    event Mint(address indexed sender, uint256 amount0, uint256 amount1);\\n    event Burn(\\n        address indexed sender,\\n        uint256 amount0,\\n        uint256 amount1,\\n        address indexed to\\n    );\\n    event Swap(\\n        address indexed sender,\\n        uint256 amount0In,\\n        uint256 amount1In,\\n        uint256 amount0Out,\\n        uint256 amount1Out,\\n        address indexed to\\n    );\\n\\n    event Sync(uint112 reserve0, uint112 reserve1);\\n\\n    function MINIMUM_LIQUIDITY() external pure returns (uint256);\\n\\n    function factory() external view returns (address);\\n\\n    function token0() external view returns (address);\\n\\n    function token1() external view returns (address);\\n\\n    function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);\\n\\n    function price0CumulativeLast() external view returns (uint256);\\n    function price1CumulativeLast() external view returns (uint256);\\n    function kLast() external view returns (uint256);\\n\\n    function mint(address to) external returns (uint256 liquidity);\\n\\n    function burn(address to)\\n        external\\n        returns (uint256 amount0, uint256 amount1);\\n\\n    function swap(uint256 amount0Out, uint256 amount1Out, address to, bytes calldata data) external;\\n\\n    function skim(address to) external;\\n    function sync() external;\\n\\n    function initialize(address, address) external;\\n}\\n\",\"keccak256\":\"0x384acf5ee76958b02b75d074934d79e0e6d0b5fcdb8a5f63752996cb4de7bffa\",\"license\":\"MIT\"},\"contracts/libraries/AdminUpgradeable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity >=0.8.0;\\n\\nabstract contract AdminUpgradeable {\\n    address public admin;\\n    address public adminCandidate;\\n\\n    function _initializeAdmin(address _admin) internal {\\n        require(admin == address(0), \\\"admin already set\\\");\\n\\n        admin = _admin;\\n    }\\n\\n    function candidateConfirm() external {\\n        require(msg.sender == adminCandidate, \\\"not Candidate\\\");\\n        emit AdminChanged(admin, adminCandidate);\\n\\n        admin = adminCandidate;\\n        adminCandidate = address(0);\\n    }\\n\\n    function setAdminCandidate(address _candidate) external onlyAdmin {\\n        adminCandidate = _candidate;\\n        emit Candidate(_candidate);\\n    }\\n\\n    modifier onlyAdmin {\\n        require(msg.sender == admin, \\\"not admin\\\");\\n        _;\\n    }\\n\\n    event Candidate(address indexed newAdmin);\\n    event AdminChanged(address indexed oldAdmin, address indexed newAdmin);\\n}\",\"keccak256\":\"0x1f6a33fd54009078e00c3b586e2b9bb359ff99d9c5cb87e3e32ec109480f99ae\",\"license\":\"MIT\"},\"contracts/libraries/Helper.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity >=0.8.0;\\n\\nimport \\\"./Math.sol\\\";\\nimport \\\"../core/interfaces/IPair.sol\\\";\\nimport \\\"../core/interfaces/IFactory.sol\\\";\\n\\nlibrary Helper {\\n    using Math for uint256;\\n\\n    function sortTokens(address tokenA, address tokenB)\\n        internal\\n        pure\\n        returns (address token0, address token1)\\n    {\\n        require(tokenA != tokenB, \\\"Helper: IDENTICAL_ADDRESSES\\\");\\n        (token0, token1) = tokenA < tokenB\\n            ? (tokenA, tokenB)\\n            : (tokenB, tokenA);\\n        require(token0 != address(0), \\\"Helper: ZERO_ADDRESS\\\");\\n    }\\n\\n    function pairFor(\\n        address factory,\\n        address tokenA,\\n        address tokenB\\n    ) internal view returns (address pair) {\\n        return IFactory(factory).getPair(tokenA, tokenB);\\n    }\\n\\n    function quote(\\n        uint256 amountA,\\n        uint256 reserveA,\\n        uint256 reserveB\\n    ) internal pure returns (uint256 amountB) {\\n        require(amountA > 0, \\\"INSUFFICIENT_AMOUNT\\\");\\n        require(reserveA > 0 && reserveB > 0, \\\"INSUFFICIENT_LIQUIDITY\\\");\\n        amountB = amountA.mul(reserveB) / reserveA;\\n    }\\n\\n    function getReserves(\\n        address factory,\\n        address tokenA,\\n        address tokenB\\n    ) internal view returns (uint256 reserveA, uint256 reserveB) {\\n        (address token0, ) = sortTokens(tokenA, tokenB);\\n        (uint256 reserve0, uint256 reserve1, ) = IPair(\\n            pairFor(factory, tokenA, tokenB)\\n        ).getReserves();\\n        (reserveA, reserveB) = tokenA == token0\\n            ? (reserve0, reserve1)\\n            : (reserve1, reserve0);\\n    }\\n\\n    function safeTransferFrom(\\n        address token,\\n        address from,\\n        address to,\\n        uint256 value\\n    ) internal {\\n        // bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));\\n        (bool success, bytes memory data) = token.call(\\n            abi.encodeWithSelector(0x23b872dd, from, to, value)\\n        );\\n        require(\\n            success && (data.length == 0 || abi.decode(data, (bool))),\\n            \\\"TransferHelper::transferFrom: transferFrom failed\\\"\\n        );\\n    }\\n\\n    function safeTransfer(\\n        address token,\\n        address to,\\n        uint256 value\\n    ) internal {\\n        // bytes4(keccak256(bytes('transfer(address,uint256)')));\\n        (bool success, bytes memory data) = token.call(\\n            abi.encodeWithSelector(0xa9059cbb, to, value)\\n        );\\n        require(\\n            success && (data.length == 0 || abi.decode(data, (bool))),\\n            \\\"TransferHelper::safeTransfer: transfer failed\\\"\\n        );\\n    }\\n\\n    function safeTransferNativeCurrency(address to, uint256 value) internal {\\n        (bool success, ) = to.call{value: value}(new bytes(0));\\n        require(\\n            success,\\n            \\\"TransferHelper::safeTransferNativeCurrency: NativeCurrency transfer failed\\\"\\n        );\\n    }\\n\\n    // given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset\\n    function getAmountOut(\\n        uint256 amountIn,\\n        uint256 reserveIn,\\n        uint256 reserveOut\\n    ) internal pure returns (uint256 amountOut) {\\n        require(amountIn > 0, \\\"Helper: INSUFFICIENT_INPUT_AMOUNT\\\");\\n        require(\\n            reserveIn > 0 && reserveOut > 0,\\n            \\\"Helper: INSUFFICIENT_LIQUIDITY\\\"\\n        );\\n        uint256 amountInWithFee = amountIn.mul(997);\\n        uint256 numerator = amountInWithFee.mul(reserveOut);\\n        uint256 denominator = reserveIn.mul(1000).add(amountInWithFee);\\n        amountOut = numerator / denominator;\\n    }\\n\\n    // given an output amount of an asset and pair reserves, returns a required input amount of the other asset\\n    function getAmountIn(\\n        uint256 amountOut,\\n        uint256 reserveIn,\\n        uint256 reserveOut\\n    ) internal pure returns (uint256 amountIn) {\\n        require(amountOut > 0, \\\"Helper: INSUFFICIENT_OUTPUT_AMOUNT\\\");\\n        require(\\n            reserveIn > 0 && reserveOut > 0,\\n            \\\"Helper: INSUFFICIENT_LIQUIDITY\\\"\\n        );\\n        uint256 numerator = reserveIn.mul(amountOut).mul(1000);\\n        uint256 denominator = reserveOut.sub(amountOut).mul(997);\\n        amountIn = (numerator / denominator).add(1);\\n    }\\n\\n    // performs chained getAmountOut calculations on any number of pairs\\n    function getAmountsOut(\\n        address factory,\\n        uint256 amountIn,\\n        address[] memory path\\n    ) internal view returns (uint256[] memory amounts) {\\n        require(path.length >= 2, \\\"Helper: INVALID_PATH\\\");\\n        amounts = new uint256[](path.length);\\n        amounts[0] = amountIn;\\n        for (uint256 i; i < path.length - 1; i++) {\\n            (uint256 reserveIn, uint256 reserveOut) = getReserves(\\n                factory,\\n                path[i],\\n                path[i + 1]\\n            );\\n            amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut);\\n        }\\n    }\\n\\n    function getAmountsIn(\\n        address factory,\\n        uint256 amountOut,\\n        address[] memory path\\n    ) internal view returns (uint256[] memory amounts) {\\n        require(path.length >= 2, \\\"Helper: INVALID_PATH\\\");\\n        amounts = new uint256[](path.length);\\n        amounts[amounts.length - 1] = amountOut;\\n        for (uint256 i = path.length - 1; i > 0; i--) {\\n            (uint256 reserveIn, uint256 reserveOut) = getReserves(\\n                factory,\\n                path[i - 1],\\n                path[i]\\n            );\\n            amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut);\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x48c51fc09136856361337a0edc7295ab91b9c5a61c45aa1e4c44c63762dff3c5\",\"license\":\"MIT\"},\"contracts/libraries/Math.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity >=0.8.0;\\n\\n// a library for performing various math operations\\n\\nlibrary Math {\\n    function min(uint256 x, uint256 y) internal pure returns (uint256 z) {\\n        z = x < y ? x : y;\\n    }\\n\\n    // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)\\n    function sqrt(uint256 y) internal pure returns (uint256 z) {\\n        if (y > 3) {\\n            z = y;\\n            uint256 x = y / 2 + 1;\\n            while (x < z) {\\n                z = x;\\n                x = (y / x + x) / 2;\\n            }\\n        } else if (y != 0) {\\n            z = 1;\\n        }\\n    }\\n\\n    function add(uint256 x, uint256 y) internal pure returns (uint256 z) {\\n        require((z = x + y) >= x, \\\"ds-math-add-overflow\\\");\\n    }\\n\\n    function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {\\n        require((z = x - y) <= x, \\\"ds-math-sub-underflow\\\");\\n    }\\n\\n    function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {\\n        require(y == 0 || (z = x * y) / y == x, \\\"ds-math-mul-overflow\\\");\\n    }\\n}\\n\",\"keccak256\":\"0xdaf217d097cd3962ad38fdeaab113dc3dddf1f65bc45ecf3a5b0a0487c0a2092\",\"license\":\"MIT\"},\"contracts/periphery/Farming.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity >=0.8.0;\\n\\nimport \\\"../libraries/Math.sol\\\";\\nimport \\\"../libraries/Helper.sol\\\";\\nimport \\\"../libraries/AdminUpgradeable.sol\\\";\\nimport \\\"@openzeppelin/contracts/token/ERC20/IERC20.sol\\\";\\n\\ncontract Farming is AdminUpgradeable {\\n    using Math for uint256;\\n    // Info of each user.\\n    struct UserInfo {\\n        uint256 amount; // How many farming tokens that user has provided.\\n        uint256[] rewardDebt; // Reward debt. See explanation below.\\n        // pending reward = (user.amount * pool.accRewardPerShare) - user.rewardDebt\\n        // Whenever a user stakes or redeems farming tokens to a pool. Here's what happens:\\n        //   1. The pool's `accRewardPerShare` (and `lastRewardBlock`) gets updated.\\n        //   2. User add pending reward to his/her info.\\n        //   3. User's `amount` gets updated.\\n        //   4. User's `rewardDebt` gets updated.\\n        uint256[] pending; // Pending rewards.\\n        uint256 nextClaimableBlock; // Next Block user can claim rewards.\\n    }\\n    // Info of each pool.\\n    struct PoolInfo {\\n        address farmingToken; // Address of farming token contract.\\n        address[] rewardTokens; // Reward tokens.\\n        uint256[] rewardPerBlock; // Reward tokens created per block.\\n        uint256[] accRewardPerShare; // Accumulated rewards per share, times 1e12.\\n        uint256[] remainingRewards; // remaining rewards in the pool.\\n        uint256 amount; // amount of farming token.\\n        uint256 lastRewardBlock; // Last block number that pools updated.\\n        uint256 startBlock; // Start block of pools.\\n        uint256 claimableInterval; // How many blocks of rewards can be claimed.\\n    }\\n    // Info of each pool.\\n    PoolInfo[] private poolInfo;\\n    // Info of each user that stakes farming tokens.\\n    mapping(uint256 => mapping(address => UserInfo)) private userInfo;\\n\\n    event PoolAdded(address indexed farmingToken);\\n    event ClaimableBlockUpdated(uint256 indexed pid, uint256 interval);\\n    event Charged(uint256 indexed pid, address[] rewards, uint256[] amounts);\\n    event WithdrawRewards(uint256 indexed pid, address[] rewards, uint256[] amounts);\\n    event Stake(address indexed user, uint256 indexed pid, uint256 amount);\\n    event Redeem(address indexed user, uint256 indexed pid, uint256 amount);\\n    event Claim(\\n        address indexed user, \\n        uint256 indexed pid, \\n        address[] rewards,\\n        uint256[] amounts\\n    );\\n    event EmergencyWithdraw(\\n        address indexed user,\\n        uint256 indexed pid,\\n        uint256 amount\\n    );\\n\\n    constructor() {\\n        _initializeAdmin(msg.sender);\\n    }\\n\\n    function poolLength() external view returns (uint256) {\\n        return poolInfo.length;\\n    }\\n\\n    // Add a new farming token to the pool. Can only be called by the admin.\\n    // XXX DO NOT add the same farming token more than once. Rewards will be messed up if you do.\\n    function add(\\n        address _farmingToken,\\n        address[] memory _rewardTokens,\\n        uint256[] memory _rewardPerBlock,\\n        uint256 _startBlock,\\n        uint256 _claimableInterval\\n    ) external onlyAdmin {\\n        require(_rewardTokens.length == _rewardPerBlock.length, 'INVALID_REWARDS');\\n        uint256 lastRewardBlock =\\n            block.number > _startBlock ? block.number : _startBlock;\\n        uint256[] memory accRewardPerShare = new uint256[](_rewardTokens.length);\\n        uint256[] memory remainingRewards = new uint256[](_rewardTokens.length);\\n        poolInfo.push(\\n            PoolInfo({\\n                farmingToken: _farmingToken,\\n                rewardTokens: _rewardTokens,\\n                rewardPerBlock: _rewardPerBlock,\\n                accRewardPerShare: accRewardPerShare,\\n                remainingRewards: remainingRewards,\\n                amount: 0,\\n                lastRewardBlock: lastRewardBlock,\\n                startBlock: _startBlock,\\n                claimableInterval: _claimableInterval\\n            })\\n        );\\n        emit PoolAdded(_farmingToken);\\n    }\\n\\n    // Update the given pool's rewardPerBlock. Can only be called by the admin.\\n    function set(\\n        uint256 _pid,\\n        uint256[] memory _rewardPerBlock,\\n        bool _withUpdate\\n    ) external onlyAdmin {\\n        if (_withUpdate) {\\n            updatePool(_pid);\\n        }\\n        PoolInfo storage pool = poolInfo[_pid];\\n        require(_rewardPerBlock.length == pool.rewardPerBlock.length, 'INVALID_REWARDS');\\n        pool.rewardPerBlock = _rewardPerBlock;\\n    }\\n\\n    function setClaimableBlock(\\n        uint256 _pid,\\n        uint256 _interval\\n    ) external onlyAdmin {\\n        PoolInfo storage pool = poolInfo[_pid];\\n        pool.claimableInterval = _interval;\\n        emit ClaimableBlockUpdated(_pid, _interval);\\n    }\\n\\n    // Charge the given pool's rewards. Can only be called by the admin.\\n    function charge(\\n        uint256 _pid,\\n        uint256[] memory _amounts\\n    ) external onlyAdmin {\\n        PoolInfo storage pool = poolInfo[_pid];\\n        require(_amounts.length == pool.rewardTokens.length, 'INVALID_AMOUNTS');\\n        for (uint256 i = 0; i < _amounts.length; i++) {\\n            if (_amounts[i] > 0) {\\n                Helper.safeTransferFrom(\\n                    pool.rewardTokens[i], \\n                    msg.sender, \\n                    address(this), \\n                    _amounts[i]\\n                );\\n                pool.remainingRewards[i] = pool.remainingRewards[i].add(_amounts[i]);\\n            }\\n        }\\n        emit Charged(_pid, pool.rewardTokens, _amounts);\\n    }\\n\\n    // Withdraw the given pool's rewards. Can only be called by the admin.\\n    function withdrawRewards(\\n        uint256 _pid,\\n        uint256[] memory _amounts\\n    ) external onlyAdmin {\\n        PoolInfo storage pool = poolInfo[_pid];\\n        require(_amounts.length == pool.rewardTokens.length, 'INVALID_AMOUNTS');\\n        for (uint256 i = 0; i < _amounts.length; i++) {\\n            require(_amounts[i] <= pool.remainingRewards[i], 'INVALID_AMOUNT');\\n            if (_amounts[i] > 0) {\\n                Helper.safeTransfer(\\n                    pool.rewardTokens[i], \\n                    msg.sender, \\n                    _amounts[i]\\n                );\\n                pool.remainingRewards[i] = pool.remainingRewards[i].sub(_amounts[i]);\\n            }\\n        }\\n        emit WithdrawRewards(_pid, pool.rewardTokens, _amounts);\\n    }\\n\\n    // View function to see the given pool's info.\\n    function getPoolInfo(uint256 _pid) \\n        external \\n        view\\n        returns(\\n            address farmingToken,\\n            uint256 amount,\\n            address[] memory rewardTokens,\\n            uint256[] memory rewardPerBlock,\\n            uint256[] memory accRewardPerShare,\\n            uint256 lastRewardBlock,\\n            uint256 startBlock,\\n            uint256 claimableInterval\\n        )\\n    {\\n        PoolInfo memory pool = poolInfo[_pid];\\n        farmingToken = pool.farmingToken;\\n        amount = pool.amount;\\n        rewardTokens = pool.rewardTokens;\\n        rewardPerBlock = pool.rewardPerBlock;\\n        accRewardPerShare = pool.accRewardPerShare;\\n        lastRewardBlock = pool.lastRewardBlock;\\n        startBlock = pool.startBlock;\\n        claimableInterval = pool.claimableInterval;\\n    }\\n\\n    // View function to see the remaing rewards of the given pool.\\n    function getRemaingRewards(uint256 _pid) \\n        external\\n        view\\n        returns(uint256[] memory remainingRewards)\\n    {\\n        PoolInfo memory pool = poolInfo[_pid];\\n        remainingRewards = pool.remainingRewards;\\n    }\\n\\n    // View function to see the given pool's info of user.\\n    function getUserInfo(uint256 _pid, address _user)\\n        external \\n        view\\n        returns(\\n            uint256 amount,\\n            uint256[] memory pending,\\n            uint256[] memory rewardDebt,\\n            uint256 nextClaimableBlock\\n        )\\n    {\\n        UserInfo memory user = userInfo[_pid][_user];\\n        amount = user.amount;\\n        pending = user.pending;\\n        rewardDebt= user.rewardDebt;\\n        nextClaimableBlock = user.nextClaimableBlock;\\n    }\\n\\n    // View function to see pending rewards.\\n    function pendingRewards(uint256 _pid, address _user) \\n        public \\n        view \\n        returns(uint256[] memory rewards, uint256 nextClaimableBlock)\\n    {\\n        PoolInfo memory pool = poolInfo[_pid];\\n        UserInfo memory user = userInfo[_pid][_user];\\n        uint256 farmingTokenSupply = pool.amount;\\n        rewards = user.pending;\\n        if (block.number >= pool.lastRewardBlock && user.pending.length > 0 && farmingTokenSupply != 0) {\\n            for (uint256 i = 0; i < pool.accRewardPerShare.length; i++) {\\n                uint256 reward = pool.rewardPerBlock[i].mul(\\n                    block.number.sub(pool.lastRewardBlock)\\n                );\\n                uint256 accRewardPerShare = pool.accRewardPerShare[i].add(\\n                    reward.mul(1e12) / farmingTokenSupply\\n                );\\n                rewards[i] = user.pending[i].add(\\n                    (user.amount.mul(accRewardPerShare) / 1e12).sub(user.rewardDebt[i])\\n                );\\n            }\\n        }\\n        nextClaimableBlock = user.nextClaimableBlock;\\n    }\\n\\n    // View function to see current periods.\\n    function getPeriodsSinceStart(uint256 _pid) \\n        public \\n        view \\n        returns(uint256 periods) \\n    {\\n        PoolInfo memory pool = poolInfo[_pid];\\n        if (block.number <= pool.startBlock || pool.claimableInterval == 0) return 0;\\n        uint256 blocksSinceStart = block.number.sub(pool.startBlock);\\n        periods = (blocksSinceStart / pool.claimableInterval).add(1);\\n        if (blocksSinceStart % pool.claimableInterval == 0) {\\n            periods = periods - 1;\\n        }\\n    }\\n\\n    // Update reward variables of the given pool to be up-to-date.\\n    function updatePool(uint256 _pid) public {\\n        PoolInfo storage pool = poolInfo[_pid];\\n        if (block.number <= pool.lastRewardBlock) {\\n            return;\\n        }\\n        uint256 farmingTokenSupply = pool.amount;\\n        if (farmingTokenSupply == 0) {\\n            pool.lastRewardBlock = block.number;\\n            return;\\n        }\\n        for (uint256 i = 0; i < pool.accRewardPerShare.length; i++) {\\n            uint256 reward = pool.rewardPerBlock[i].mul(\\n                block.number.sub(pool.lastRewardBlock)\\n            );\\n            if (pool.remainingRewards[i] >= reward) {\\n                pool.remainingRewards[i] = pool.remainingRewards[i].sub(reward);\\n            } else {\\n                pool.remainingRewards[i] = 0;\\n            }\\n            pool.accRewardPerShare[i] = pool.accRewardPerShare[i].add(\\n                reward.mul(1e12) / farmingTokenSupply\\n            );\\n        }\\n        pool.lastRewardBlock = block.number;\\n    }\\n\\n    // Stake farming tokens to the given pool.\\n    function stake(\\n        uint256 _pid,\\n        address _farmingToken, \\n        uint256 _amount\\n    ) external {\\n        PoolInfo storage pool = poolInfo[_pid];\\n        UserInfo storage user = userInfo[_pid][msg.sender];\\n        require(pool.farmingToken == _farmingToken, 'FARMING_TOKEN_SAFETY_CHECK');\\n        updatePool(_pid);\\n        if (user.amount > 0) {\\n            for (uint256 i = 0; i < pool.accRewardPerShare.length; i++) {\\n                uint256 pending = (\\n                    user.amount.mul(pool.accRewardPerShare[i]) / 1e12\\n                ).sub(user.rewardDebt[i]);\\n                user.pending[i] = user.pending[i].add(pending);\\n            }\\n        }\\n        if (user.nextClaimableBlock == 0 && user.amount == 0) {\\n            if (block.number <= pool.startBlock) {\\n                user.nextClaimableBlock = pool.startBlock.add(pool.claimableInterval);\\n            } else {\\n                uint256 periods = getPeriodsSinceStart(_pid);\\n                user.nextClaimableBlock = pool.startBlock.add(\\n                    periods.mul(pool.claimableInterval)\\n                );\\n            }\\n            user.rewardDebt = new uint256[](pool.rewardTokens.length);\\n            user.pending = new uint256[](pool.rewardTokens.length);\\n        }\\n        Helper.safeTransferFrom(\\n            pool.farmingToken, \\n            msg.sender, \\n            address(this), \\n            _amount\\n        );\\n        user.amount = user.amount.add(_amount);\\n        pool.amount = pool.amount.add(_amount);\\n        for (uint256 i = 0; i < pool.accRewardPerShare.length; i++) {\\n            user.rewardDebt[i] = user.amount.mul(pool.accRewardPerShare[i]) / 1e12;\\n        }\\n        emit Stake(msg.sender, _pid, _amount);\\n    }\\n\\n    // Redeem farming tokens from the given pool.\\n    function redeem(\\n        uint256 _pid, \\n        address _farmingToken, \\n        uint256 _amount\\n    ) external {\\n        PoolInfo storage pool = poolInfo[_pid];\\n        UserInfo storage user = userInfo[_pid][msg.sender];\\n        require(pool.farmingToken == _farmingToken, 'FARMING_TOKEN_SAFETY_CHECK');\\n        require(user.amount >= _amount, 'INSUFFICIENT_AMOUNT');\\n        updatePool(_pid);\\n        for (uint256 i = 0; i < pool.accRewardPerShare.length; i++) {\\n            uint256 pending = (\\n                user.amount.mul(pool.accRewardPerShare[i]) / 1e12\\n            ).sub(user.rewardDebt[i]);\\n            user.pending[i] = user.pending[i].add(pending);\\n            user.rewardDebt[i] = user.amount.sub(_amount).mul(pool.accRewardPerShare[i]) / 1e12;\\n        }\\n        Helper.safeTransfer(pool.farmingToken, msg.sender, _amount);\\n        user.amount = user.amount.sub(_amount);\\n        pool.amount = pool.amount.sub(_amount);\\n        emit Redeem(msg.sender, _pid, _amount);\\n    }\\n\\n    // Claim rewards when block number larger than user's nextClaimableBlock.\\n    function claim(uint256 _pid) external {\\n        PoolInfo storage pool = poolInfo[_pid];\\n        UserInfo storage user = userInfo[_pid][msg.sender];\\n        require(block.number > user.nextClaimableBlock, 'NOT_CLAIMABLE');\\n        (uint256[] memory rewards, ) = pendingRewards(_pid, msg.sender);\\n        updatePool(_pid);\\n        for (uint256 i = 0; i < pool.accRewardPerShare.length; i++) {\\n            user.pending[i] = 0;\\n            user.rewardDebt[i] = user.amount.mul(pool.accRewardPerShare[i]) / 1e12;\\n            if (rewards[i] > 0) {\\n                Helper.safeTransfer(pool.rewardTokens[i], msg.sender, rewards[i]);\\n            }\\n        }\\n        uint256 periods = getPeriodsSinceStart(_pid);\\n        user.nextClaimableBlock = pool.startBlock.add(\\n            periods.mul(pool.claimableInterval)\\n        );\\n        emit Claim(msg.sender, _pid, pool.rewardTokens, rewards);\\n    }\\n\\n    // Withdraw without caring about rewards. EMERGENCY ONLY.\\n    function emergencyWithdraw(uint256 _pid) external {\\n        PoolInfo storage pool = poolInfo[_pid];\\n        UserInfo storage user = userInfo[_pid][msg.sender];\\n        uint256 amount = user.amount;\\n        pool.amount = pool.amount.sub(amount);\\n        user.amount = 0;\\n        user.pending = new uint256[](pool.accRewardPerShare.length);\\n        user.rewardDebt = new uint256[](pool.accRewardPerShare.length);\\n        user.nextClaimableBlock = 0;\\n        Helper.safeTransfer(pool.farmingToken, msg.sender, amount);\\n        emit EmergencyWithdraw(msg.sender, _pid, amount);\\n    }\\n}\\n\",\"keccak256\":\"0x8ce5f91368a04d225a339f8c3af9b3164661c8fa3bdbd127f82bb67b61867fb7\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x60806040523480156200001157600080fd5b506200001d3362000023565b62000097565b6000546001600160a01b031615620000755760405162461bcd60e51b815260206004820152601160248201527018591b5a5b88185b1c9958591e481cd95d607a1b604482015260640160405180910390fd5b600080546001600160a01b0319166001600160a01b0392909216919091179055565b612dd180620000a76000396000f3fe608060405234801561001057600080fd5b506004361061012c5760003560e01c80635312ea8e116100ad578063a0b1f5dd11610071578063a0b1f5dd14610292578063d18df53c146102a5578063d8780161146102c6578063f674fc50146102d9578063f851a440146102ec57600080fd5b80635312ea8e146102265780636e9c931c1461023957806374ffcc1a1461024c57806395e77e531461026c57806396de7aa01461027f57600080fd5b80633accfa6c116100f45780633accfa6c146101ba5780633f023230146101e5578063432daf3d146101ed5780634dd1a1b71461020057806351eb05a61461021357600080fd5b8063081e3eda146101315780631069f3b51461014857806313df2cb51461016b5780632f380b3514610180578063379607f5146101a7575b600080fd5b6002545b6040519081526020015b60405180910390f35b61015b610156366004612914565b6102ff565b60405161013f9493929190612c0f565b61017e6101793660046127f3565b610411565b005b61019361018e3660046128fb565b6106bf565b60405161013f989796959493929190612aaf565b61017e6101b53660046128fb565b6108e2565b6001546101cd906001600160a01b031681565b6040516001600160a01b03909116815260200161013f565b61017e610b19565b61017e6101fb366004612975565b610bc7565b61017e61020e3660046129bc565b610da6565b61017e6102213660046128fb565b610e69565b61017e6102343660046128fb565b611021565b61017e610247366004612940565b611190565b61025f61025a3660046128fb565b611522565b60405161013f9190612bb7565b61017e61027a366004612a17565b6116fe565b61017e61028d3660046127d1565b611788565b61017e6102a0366004612975565b6117fc565b6102b86102b3366004612914565b611a20565b60405161013f929190612bca565b61017e6102d4366004612940565b611e7b565b6101356102e73660046128fb565b6120b4565b6000546101cd906001600160a01b031681565b60008281526003602090815260408083206001600160a01b038516845282528083208151608081018352815481526001820180548451818702810187019095528085526060958695889586959490938584019383018282801561038157602002820191906000526020600020905b81548152602001906001019080831161036d575b50505050508152602001600282018054806020026020016040519081016040528092919081815260200182805480156103d957602002820191906000526020600020905b8154815260200190600101908083116103c5575b5050509183525050600391909101546020918201528151604083015191830151606090930151909a9199509197509095509350505050565b6000546001600160a01b031633146104445760405162461bcd60e51b815260040161043b90612bec565b60405180910390fd5b82518451146104875760405162461bcd60e51b815260206004820152600f60248201526e494e56414c49445f5245574152445360881b604482015260640161043b565b60008243116104965782610498565b435b90506000855167ffffffffffffffff8111156104b6576104b6612d74565b6040519080825280602002602001820160405280156104df578160200160208202803683370190505b5090506000865167ffffffffffffffff8111156104fe576104fe612d74565b604051908082528060200260200182016040528015610527578160200160208202803683370190505b5060408051610120810182526001600160a01b038b8116825260208083018c81529383018b90526060830187905260808301859052600060a0840181905260c0840189905260e084018b905261010084018a905260028054600181018255915283517f405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace600990920291820180546001600160a01b031916919094161783559351805195965092949193610601937f405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5acf9091019291019061268e565b506040820151805161061d9160028401916020909101906126f3565b50606082015180516106399160038401916020909101906126f3565b50608082015180516106559160048401916020909101906126f3565b5060a0820151600582015560c0820151600682015560e08201516007820155610100909101516008909101556040516001600160a01b038916907f73cca62ab1b520c9715bf4e6c71e3e518c754e7148f65102f43289a7df0efea690600090a25050505050505050565b600080606080606060008060008060028a815481106106e0576106e0612d5e565b60009182526020918290206040805161012081018252600990930290910180546001600160a01b0316835260018101805483518187028101870190945280845293949193858301939283018282801561076257602002820191906000526020600020905b81546001600160a01b03168152600190910190602001808311610744575b50505050508152602001600282018054806020026020016040519081016040528092919081815260200182805480156107ba57602002820191906000526020600020905b8154815260200190600101908083116107a6575b505050505081526020016003820180548060200260200160405190810160405280929190818152602001828054801561081257602002820191906000526020600020905b8154815260200190600101908083116107fe575b505050505081526020016004820180548060200260200160405190810160405280929190818152602001828054801561086a57602002820191906000526020600020905b815481526020019060010190808311610856575b505050505081526020016005820154815260200160068201548152602001600782015481526020016008820154815250509050806000015198508060a0015197508060200151965080604001519550806060015194508060c0015193508060e001519250806101000151915050919395975091939597565b6000600282815481106108f7576108f7612d5e565b600091825260208083208584526003808352604080862033875290935291909320908101546009909202909201925043116109645760405162461bcd60e51b815260206004820152600d60248201526c4e4f545f434c41494d41424c4560981b604482015260640161043b565b60006109708433611a20565b50905061097c84610e69565b60005b6003840154811015610a995760008360020182815481106109a2576109a2612d5e565b906000526020600020018190555064e8d4a510006109e28560030183815481106109ce576109ce612d5e565b60009182526020909120015485549061230e565b6109ec9190612cb9565b836001018281548110610a0157610a01612d5e565b90600052602060002001819055506000828281518110610a2357610a23612d5e565b60200260200101511115610a8757610a87846001018281548110610a4957610a49612d5e565b9060005260206000200160009054906101000a90046001600160a01b031633848481518110610a7a57610a7a612d5e565b602002602001015161237b565b80610a9181612d03565b91505061097f565b506000610aa5856120b4565b9050610acc610ac185600801548361230e90919063ffffffff16565b6007860154906124a5565b6003840155604051859033907f29efd1570858633f7fcf640ecc43b3edc6515af5b29e8e92d9dcad5209f5cd0d90610b0a9060018901908790612b4f565b60405180910390a35050505050565b6001546001600160a01b03163314610b635760405162461bcd60e51b815260206004820152600d60248201526c6e6f742043616e64696461746560981b604482015260640161043b565b600154600080546040516001600160a01b0393841693909116917f7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f91a360018054600080546001600160a01b03199081166001600160a01b03841617909155169055565b6000546001600160a01b03163314610bf15760405162461bcd60e51b815260040161043b90612bec565b600060028381548110610c0657610c06612d5e565b906000526020600020906009020190508060010180549050825114610c5f5760405162461bcd60e51b815260206004820152600f60248201526e494e56414c49445f414d4f554e545360881b604482015260640161043b565b60005b8251811015610d63576000838281518110610c7f57610c7f612d5e565b60200260200101511115610d5157610ce4826001018281548110610ca557610ca5612d5e565b9060005260206000200160009054906101000a90046001600160a01b03163330868581518110610cd757610cd7612d5e565b60200260200101516124fa565b610d2f838281518110610cf957610cf9612d5e565b6020026020010151836004018381548110610d1657610d16612d5e565b90600052602060002001546124a590919063ffffffff16565b826004018281548110610d4457610d44612d5e565b6000918252602090912001555b80610d5b81612d03565b915050610c62565b50827fa145d60156a87e91a4a98486a8d187f4e4b78f756ff02d42b63b4b2f97207d4d8260010184604051610d99929190612b4f565b60405180910390a2505050565b6000546001600160a01b03163314610dd05760405162461bcd60e51b815260040161043b90612bec565b8015610ddf57610ddf83610e69565b600060028481548110610df457610df4612d5e565b906000526020600020906009020190508060020180549050835114610e4d5760405162461bcd60e51b815260206004820152600f60248201526e494e56414c49445f5245574152445360881b604482015260640161043b565b8251610e6290600283019060208601906126f3565b5050505050565b600060028281548110610e7e57610e7e612d5e565b9060005260206000209060090201905080600601544311610e9d575050565b600581015480610eb257504360069091015550565b60005b6003830154811015611015576000610f0b610edd85600601544361263890919063ffffffff16565b856002018481548110610ef257610ef2612d5e565b906000526020600020015461230e90919063ffffffff16565b905080846004018381548110610f2357610f23612d5e565b906000526020600020015410610f8b57610f6581856004018481548110610f4c57610f4c612d5e565b906000526020600020015461263890919063ffffffff16565b846004018381548110610f7a57610f7a612d5e565b600091825260209091200155610faf565b6000846004018381548110610fa257610fa2612d5e565b6000918252602090912001555b610fe183610fc28364e8d4a5100061230e565b610fcc9190612cb9565b856003018481548110610d1657610d16612d5e565b846003018381548110610ff657610ff6612d5e565b600091825260209091200155508061100d81612d03565b915050610eb5565b50504360069091015550565b60006002828154811061103657611036612d5e565b600091825260208083208584526003825260408085203386529092529220805460099290920290920160058101549093506110719082612638565b600584015560008255600383015467ffffffffffffffff81111561109757611097612d74565b6040519080825280602002602001820160405280156110c0578160200160208202803683370190505b5080516110d79160028501916020909101906126f3565b50600383015467ffffffffffffffff8111156110f5576110f5612d74565b60405190808252806020026020018201604052801561111e578160200160208202803683370190505b5080516111359160018501916020909101906126f3565b50600060038301558254611153906001600160a01b0316338361237b565b604051818152849033907fbb757047c2b5f3974fe26b7c10f732e7bce710b0952a71082702781e62ae05959060200160405180910390a350505050565b6000600284815481106111a5576111a5612d5e565b600091825260208083208784526003825260408085203386529092529220600990910290910180549092506001600160a01b039081169085161461122b5760405162461bcd60e51b815260206004820152601a60248201527f4641524d494e475f544f4b454e5f5341464554595f434845434b000000000000604482015260640161043b565b61123485610e69565b8054156113025760005b60038301548110156113005760006112b183600101838154811061126457611264612d5e565b906000526020600020015464e8d4a510006112a187600301868154811061128d5761128d612d5e565b60009182526020909120015487549061230e565b6112ab9190612cb9565b90612638565b90506112cc81846002018481548110610d1657610d16612d5e565b8360020183815481106112e1576112e1612d5e565b60009182526020909120015550806112f881612d03565b91505061123e565b505b600381015415801561131357508054155b1561143657816007015443116113405760088201546007830154611336916124a5565b6003820155611379565b600061134b866120b4565b905061137261136784600801548361230e90919063ffffffff16565b6007850154906124a5565b6003830155505b600182015467ffffffffffffffff81111561139657611396612d74565b6040519080825280602002602001820160405280156113bf578160200160208202803683370190505b5080516113d69160018401916020909101906126f3565b50600182015467ffffffffffffffff8111156113f4576113f4612d74565b60405190808252806020026020018201604052801561141d578160200160208202803683370190505b5080516114349160028401916020909101906126f3565b505b815461144d906001600160a01b03163330866124fa565b805461145990846124a5565b8155600582015461146a90846124a5565b600583015560005b60038301548110156114ed5764e8d4a510006114b084600301838154811061149c5761149c612d5e565b60009182526020909120015484549061230e565b6114ba9190612cb9565b8260010182815481106114cf576114cf612d5e565b600091825260209091200155806114e581612d03565b915050611472565b50604051838152859033907f5af417134f72a9d41143ace85b0a26dce6f550f894f2cbc1eeee8810603d91b690602001610b0a565b606060006002838154811061153957611539612d5e565b60009182526020918290206040805161012081018252600990930290910180546001600160a01b031683526001810180548351818702810187019094528084529394919385830193928301828280156115bb57602002820191906000526020600020905b81546001600160a01b0316815260019091019060200180831161159d575b505050505081526020016002820180548060200260200160405190810160405280929190818152602001828054801561161357602002820191906000526020600020905b8154815260200190600101908083116115ff575b505050505081526020016003820180548060200260200160405190810160405280929190818152602001828054801561166b57602002820191906000526020600020905b815481526020019060010190808311611657575b50505050508152602001600482018054806020026020016040519081016040528092919081815260200182805480156116c357602002820191906000526020600020905b8154815260200190600101908083116116af575b505050918352505060058201546020820152600682015460408201526007820154606082015260089091015460809182015201519392505050565b6000546001600160a01b031633146117285760405162461bcd60e51b815260040161043b90612bec565b60006002838154811061173d5761173d612d5e565b90600052602060002090600902019050818160080181905550827fa885ff4d8d3bf78eea3ffc74848dbebe77635486e06727000a3c1b5837845e0a83604051610d9991815260200190565b6000546001600160a01b031633146117b25760405162461bcd60e51b815260040161043b90612bec565b600180546001600160a01b0319166001600160a01b0383169081179091556040517f8cc40b9abca4a505a92028908f9d913d621d18112c69412806506f02333f26b490600090a250565b6000546001600160a01b031633146118265760405162461bcd60e51b815260040161043b90612bec565b60006002838154811061183b5761183b612d5e565b9060005260206000209060090201905080600101805490508251146118945760405162461bcd60e51b815260206004820152600f60248201526e494e56414c49445f414d4f554e545360881b604482015260640161043b565b60005b82518110156119ea578160040181815481106118b5576118b5612d5e565b90600052602060002001548382815181106118d2576118d2612d5e565b602002602001015111156119195760405162461bcd60e51b815260206004820152600e60248201526d1253959053125117d05353d5539560921b604482015260640161043b565b600083828151811061192d5761192d612d5e565b602002602001015111156119d85761198482600101828154811061195357611953612d5e565b9060005260206000200160009054906101000a90046001600160a01b031633858481518110610a7a57610a7a612d5e565b6119b683828151811061199957611999612d5e565b6020026020010151836004018381548110610f4c57610f4c612d5e565b8260040182815481106119cb576119cb612d5e565b6000918252602090912001555b806119e281612d03565b915050611897565b50827f8a63d6747886a8cc1166e78fdd0df86a7a77fe1ee60ac1d042e6ff56c234fcc58260010184604051610d99929190612b4f565b606060008060028581548110611a3857611a38612d5e565b60009182526020918290206040805161012081018252600990930290910180546001600160a01b03168352600181018054835181870281018701909452808452939491938583019392830182828015611aba57602002820191906000526020600020905b81546001600160a01b03168152600190910190602001808311611a9c575b5050505050815260200160028201805480602002602001604051908101604052809291908181526020018280548015611b1257602002820191906000526020600020905b815481526020019060010190808311611afe575b5050505050815260200160038201805480602002602001604051908101604052809291908181526020018280548015611b6a57602002820191906000526020600020905b815481526020019060010190808311611b56575b5050505050815260200160048201805480602002602001604051908101604052809291908181526020018280548015611bc257602002820191906000526020600020905b815481526020019060010190808311611bae575b5050505050815260200160058201548152602001600682015481526020016007820154815260200160088201548152505090506000600360008781526020019081526020016000206000866001600160a01b03166001600160a01b031681526020019081526020016000206040518060800160405290816000820154815260200160018201805480602002602001604051908101604052809291908181526020018280548015611c9157602002820191906000526020600020905b815481526020019060010190808311611c7d575b5050505050815260200160028201805480602002602001604051908101604052809291908181526020018280548015611ce957602002820191906000526020600020905b815481526020019060010190808311611cd5575b50505050508152602001600382015481525050905060008260a001519050816040015194508260c001514310158015611d2757506000826040015151115b8015611d3257508015155b15611e6a5760005b836060015151811015611e68576000611d8f611d638660c001514361263890919063ffffffff16565b86604001518481518110611d7957611d79612d5e565b602002602001015161230e90919063ffffffff16565b90506000611ddc84611da68464e8d4a5100061230e565b611db09190612cb9565b87606001518581518110611dc657611dc6612d5e565b60200260200101516124a590919063ffffffff16565b9050611e35611e1f86602001518581518110611dfa57611dfa612d5e565b602002602001015164e8d4a510006112a1858a6000015161230e90919063ffffffff16565b86604001518581518110611dc657611dc6612d5e565b888481518110611e4757611e47612d5e565b60200260200101818152505050508080611e6090612d03565b915050611d3a565b505b816060015193505050509250929050565b600060028481548110611e9057611e90612d5e565b600091825260208083208784526003825260408085203386529092529220600990910290910180549092506001600160a01b0390811690851614611f165760405162461bcd60e51b815260206004820152601a60248201527f4641524d494e475f544f4b454e5f5341464554595f434845434b000000000000604482015260640161043b565b8054831115611f5d5760405162461bcd60e51b8152602060048201526013602482015272125394d551919250d251539517d05353d55395606a1b604482015260640161043b565b611f6685610e69565b60005b6003830154811015612047576000611f8f83600101838154811061126457611264612d5e565b9050611faa81846002018481548110610d1657610d16612d5e565b836002018381548110611fbf57611fbf612d5e565b906000526020600020018190555064e8d4a51000612009856003018481548110611feb57611feb612d5e565b60009182526020909120015485546120039089612638565b9061230e565b6120139190612cb9565b83600101838154811061202857612028612d5e565b600091825260209091200155508061203f81612d03565b915050611f69565b50815461205e906001600160a01b0316338561237b565b805461206a9084612638565b8155600582015461207b9084612638565b6005830155604051838152859033907fe5b754fb1abb7f01b499791d0b820ae3b6af3424ac1c59768edb53f4ec31a92990602001610b0a565b600080600283815481106120ca576120ca612d5e565b60009182526020918290206040805161012081018252600990930290910180546001600160a01b0316835260018101805483518187028101870190945280845293949193858301939283018282801561214c57602002820191906000526020600020905b81546001600160a01b0316815260019091019060200180831161212e575b50505050508152602001600282018054806020026020016040519081016040528092919081815260200182805480156121a457602002820191906000526020600020905b815481526020019060010190808311612190575b50505050508152602001600382018054806020026020016040519081016040528092919081815260200182805480156121fc57602002820191906000526020600020905b8154815260200190600101908083116121e8575b505050505081526020016004820180548060200260200160405190810160405280929190818152602001828054801561225457602002820191906000526020600020905b815481526020019060010190808311612240575b5050505050815260200160058201548152602001600682015481526020016007820154815260200160088201548152505090508060e001514311158061229d5750610100810151155b156122ab5750600092915050565b60006122c48260e001514361263890919063ffffffff16565b90506122e26001836101000151836122dc9190612cb9565b906124a5565b9250816101000151816122f59190612d1e565b61230757612304600184612cec565b92505b5050919050565b6000811580612332575082826123248183612ccd565b92506123309083612cb9565b145b6123755760405162461bcd60e51b815260206004820152601460248201527364732d6d6174682d6d756c2d6f766572666c6f7760601b604482015260640161043b565b92915050565b604080516001600160a01b038481166024830152604480830185905283518084039091018152606490920183526020820180516001600160e01b031663a9059cbb60e01b17905291516000928392908716916123d79190612a74565b6000604051808303816000865af19150503d8060008114612414576040519150601f19603f3d011682016040523d82523d6000602084013e612419565b606091505b509150915081801561244357508051158061244357508080602001905181019061244391906128de565b610e625760405162461bcd60e51b815260206004820152602d60248201527f5472616e7366657248656c7065723a3a736166655472616e736665723a20747260448201526c185b9cd9995c8819985a5b1959609a1b606482015260840161043b565b6000826124b28382612ca1565b91508110156123755760405162461bcd60e51b815260206004820152601460248201527364732d6d6174682d6164642d6f766572666c6f7760601b604482015260640161043b565b604080516001600160a01b0385811660248301528481166044830152606480830185905283518084039091018152608490920183526020820180516001600160e01b03166323b872dd60e01b179052915160009283929088169161255e9190612a74565b6000604051808303816000865af19150503d806000811461259b576040519150601f19603f3d011682016040523d82523d6000602084013e6125a0565b606091505b50915091508180156125ca5750805115806125ca5750808060200190518101906125ca91906128de565b6126305760405162461bcd60e51b815260206004820152603160248201527f5472616e7366657248656c7065723a3a7472616e7366657246726f6d3a207472604482015270185b9cd9995c919c9bdb4819985a5b1959607a1b606482015260840161043b565b505050505050565b6000826126458382612cec565b91508111156123755760405162461bcd60e51b815260206004820152601560248201527464732d6d6174682d7375622d756e646572666c6f7760581b604482015260640161043b565b8280548282559060005260206000209081019282156126e3579160200282015b828111156126e357825182546001600160a01b0319166001600160a01b039091161782556020909201916001909101906126ae565b506126ef92915061272e565b5090565b8280548282559060005260206000209081019282156126e3579160200282015b828111156126e3578251825591602001919060010190612713565b5b808211156126ef576000815560010161272f565b80356001600160a01b038116811461275a57600080fd5b919050565b600082601f83011261277057600080fd5b8135602061278561278083612c7d565b612c4c565b80838252828201915082860187848660051b89010111156127a557600080fd5b60005b858110156127c4578135845292840192908401906001016127a8565b5090979650505050505050565b6000602082840312156127e357600080fd5b6127ec82612743565b9392505050565b600080600080600060a0868803121561280b57600080fd5b61281486612743565b945060208087013567ffffffffffffffff8082111561283257600080fd5b818901915089601f83011261284657600080fd5b813561285461278082612c7d565b8082825285820191508585018d878560051b880101111561287457600080fd5b600095505b8386101561289e5761288a81612743565b835260019590950194918601918601612879565b509850505060408901359250808311156128b757600080fd5b50506128c58882890161275f565b9598949750949560608101359550608001359392505050565b6000602082840312156128f057600080fd5b81516127ec81612d8a565b60006020828403121561290d57600080fd5b5035919050565b6000806040838503121561292757600080fd5b8235915061293760208401612743565b90509250929050565b60008060006060848603121561295557600080fd5b8335925061296560208501612743565b9150604084013590509250925092565b6000806040838503121561298857600080fd5b82359150602083013567ffffffffffffffff8111156129a657600080fd5b6129b28582860161275f565b9150509250929050565b6000806000606084860312156129d157600080fd5b83359250602084013567ffffffffffffffff8111156129ef57600080fd5b6129fb8682870161275f565b9250506040840135612a0c81612d8a565b809150509250925092565b60008060408385031215612a2a57600080fd5b50508035926020909101359150565b600081518084526020808501945080840160005b83811015612a6957815187529582019590820190600101612a4d565b509495945050505050565b6000825160005b81811015612a955760208186018101518583015201612a7b565b81811115612aa4576000828501525b509190910192915050565b6001600160a01b03898116825260208083018a90526101006040840181905289519084018190526000926101208501928b810192855b81811015612b03578451841686529482019493820193600101612ae5565b50505050508281036060840152612b1a8189612a39565b90508281036080840152612b2e8188612a39565b60a0840196909652505060c081019290925260e09091015295945050505050565b6000604082016040835280855480835260608501915086600052602092508260002060005b82811015612b995781546001600160a01b031684529284019260019182019101612b74565b50505083810382850152612bad8186612a39565b9695505050505050565b6020815260006127ec6020830184612a39565b604081526000612bdd6040830185612a39565b90508260208301529392505050565b6020808252600990820152683737ba1030b236b4b760b91b604082015260600190565b848152608060208201526000612c286080830186612a39565b8281036040840152612c3a8186612a39565b91505082606083015295945050505050565b604051601f8201601f1916810167ffffffffffffffff81118282101715612c7557612c75612d74565b604052919050565b600067ffffffffffffffff821115612c9757612c97612d74565b5060051b60200190565b60008219821115612cb457612cb4612d32565b500190565b600082612cc857612cc8612d48565b500490565b6000816000190483118215151615612ce757612ce7612d32565b500290565b600082821015612cfe57612cfe612d32565b500390565b6000600019821415612d1757612d17612d32565b5060010190565b600082612d2d57612d2d612d48565b500690565b634e487b7160e01b600052601160045260246000fd5b634e487b7160e01b600052601260045260246000fd5b634e487b7160e01b600052603260045260246000fd5b634e487b7160e01b600052604160045260246000fd5b8015158114612d9857600080fd5b5056fea2646970667358221220e5ed26721d4ca427b6be6bc982ca3363ff60e5a92a73fae38397cad3fedafead64736f6c63430008070033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061012c5760003560e01c80635312ea8e116100ad578063a0b1f5dd11610071578063a0b1f5dd14610292578063d18df53c146102a5578063d8780161146102c6578063f674fc50146102d9578063f851a440146102ec57600080fd5b80635312ea8e146102265780636e9c931c1461023957806374ffcc1a1461024c57806395e77e531461026c57806396de7aa01461027f57600080fd5b80633accfa6c116100f45780633accfa6c146101ba5780633f023230146101e5578063432daf3d146101ed5780634dd1a1b71461020057806351eb05a61461021357600080fd5b8063081e3eda146101315780631069f3b51461014857806313df2cb51461016b5780632f380b3514610180578063379607f5146101a7575b600080fd5b6002545b6040519081526020015b60405180910390f35b61015b610156366004612914565b6102ff565b60405161013f9493929190612c0f565b61017e6101793660046127f3565b610411565b005b61019361018e3660046128fb565b6106bf565b60405161013f989796959493929190612aaf565b61017e6101b53660046128fb565b6108e2565b6001546101cd906001600160a01b031681565b6040516001600160a01b03909116815260200161013f565b61017e610b19565b61017e6101fb366004612975565b610bc7565b61017e61020e3660046129bc565b610da6565b61017e6102213660046128fb565b610e69565b61017e6102343660046128fb565b611021565b61017e610247366004612940565b611190565b61025f61025a3660046128fb565b611522565b60405161013f9190612bb7565b61017e61027a366004612a17565b6116fe565b61017e61028d3660046127d1565b611788565b61017e6102a0366004612975565b6117fc565b6102b86102b3366004612914565b611a20565b60405161013f929190612bca565b61017e6102d4366004612940565b611e7b565b6101356102e73660046128fb565b6120b4565b6000546101cd906001600160a01b031681565b60008281526003602090815260408083206001600160a01b038516845282528083208151608081018352815481526001820180548451818702810187019095528085526060958695889586959490938584019383018282801561038157602002820191906000526020600020905b81548152602001906001019080831161036d575b50505050508152602001600282018054806020026020016040519081016040528092919081815260200182805480156103d957602002820191906000526020600020905b8154815260200190600101908083116103c5575b5050509183525050600391909101546020918201528151604083015191830151606090930151909a9199509197509095509350505050565b6000546001600160a01b031633146104445760405162461bcd60e51b815260040161043b90612bec565b60405180910390fd5b82518451146104875760405162461bcd60e51b815260206004820152600f60248201526e494e56414c49445f5245574152445360881b604482015260640161043b565b60008243116104965782610498565b435b90506000855167ffffffffffffffff8111156104b6576104b6612d74565b6040519080825280602002602001820160405280156104df578160200160208202803683370190505b5090506000865167ffffffffffffffff8111156104fe576104fe612d74565b604051908082528060200260200182016040528015610527578160200160208202803683370190505b5060408051610120810182526001600160a01b038b8116825260208083018c81529383018b90526060830187905260808301859052600060a0840181905260c0840189905260e084018b905261010084018a905260028054600181018255915283517f405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace600990920291820180546001600160a01b031916919094161783559351805195965092949193610601937f405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5acf9091019291019061268e565b506040820151805161061d9160028401916020909101906126f3565b50606082015180516106399160038401916020909101906126f3565b50608082015180516106559160048401916020909101906126f3565b5060a0820151600582015560c0820151600682015560e08201516007820155610100909101516008909101556040516001600160a01b038916907f73cca62ab1b520c9715bf4e6c71e3e518c754e7148f65102f43289a7df0efea690600090a25050505050505050565b600080606080606060008060008060028a815481106106e0576106e0612d5e565b60009182526020918290206040805161012081018252600990930290910180546001600160a01b0316835260018101805483518187028101870190945280845293949193858301939283018282801561076257602002820191906000526020600020905b81546001600160a01b03168152600190910190602001808311610744575b50505050508152602001600282018054806020026020016040519081016040528092919081815260200182805480156107ba57602002820191906000526020600020905b8154815260200190600101908083116107a6575b505050505081526020016003820180548060200260200160405190810160405280929190818152602001828054801561081257602002820191906000526020600020905b8154815260200190600101908083116107fe575b505050505081526020016004820180548060200260200160405190810160405280929190818152602001828054801561086a57602002820191906000526020600020905b815481526020019060010190808311610856575b505050505081526020016005820154815260200160068201548152602001600782015481526020016008820154815250509050806000015198508060a0015197508060200151965080604001519550806060015194508060c0015193508060e001519250806101000151915050919395975091939597565b6000600282815481106108f7576108f7612d5e565b600091825260208083208584526003808352604080862033875290935291909320908101546009909202909201925043116109645760405162461bcd60e51b815260206004820152600d60248201526c4e4f545f434c41494d41424c4560981b604482015260640161043b565b60006109708433611a20565b50905061097c84610e69565b60005b6003840154811015610a995760008360020182815481106109a2576109a2612d5e565b906000526020600020018190555064e8d4a510006109e28560030183815481106109ce576109ce612d5e565b60009182526020909120015485549061230e565b6109ec9190612cb9565b836001018281548110610a0157610a01612d5e565b90600052602060002001819055506000828281518110610a2357610a23612d5e565b60200260200101511115610a8757610a87846001018281548110610a4957610a49612d5e565b9060005260206000200160009054906101000a90046001600160a01b031633848481518110610a7a57610a7a612d5e565b602002602001015161237b565b80610a9181612d03565b91505061097f565b506000610aa5856120b4565b9050610acc610ac185600801548361230e90919063ffffffff16565b6007860154906124a5565b6003840155604051859033907f29efd1570858633f7fcf640ecc43b3edc6515af5b29e8e92d9dcad5209f5cd0d90610b0a9060018901908790612b4f565b60405180910390a35050505050565b6001546001600160a01b03163314610b635760405162461bcd60e51b815260206004820152600d60248201526c6e6f742043616e64696461746560981b604482015260640161043b565b600154600080546040516001600160a01b0393841693909116917f7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f91a360018054600080546001600160a01b03199081166001600160a01b03841617909155169055565b6000546001600160a01b03163314610bf15760405162461bcd60e51b815260040161043b90612bec565b600060028381548110610c0657610c06612d5e565b906000526020600020906009020190508060010180549050825114610c5f5760405162461bcd60e51b815260206004820152600f60248201526e494e56414c49445f414d4f554e545360881b604482015260640161043b565b60005b8251811015610d63576000838281518110610c7f57610c7f612d5e565b60200260200101511115610d5157610ce4826001018281548110610ca557610ca5612d5e565b9060005260206000200160009054906101000a90046001600160a01b03163330868581518110610cd757610cd7612d5e565b60200260200101516124fa565b610d2f838281518110610cf957610cf9612d5e565b6020026020010151836004018381548110610d1657610d16612d5e565b90600052602060002001546124a590919063ffffffff16565b826004018281548110610d4457610d44612d5e565b6000918252602090912001555b80610d5b81612d03565b915050610c62565b50827fa145d60156a87e91a4a98486a8d187f4e4b78f756ff02d42b63b4b2f97207d4d8260010184604051610d99929190612b4f565b60405180910390a2505050565b6000546001600160a01b03163314610dd05760405162461bcd60e51b815260040161043b90612bec565b8015610ddf57610ddf83610e69565b600060028481548110610df457610df4612d5e565b906000526020600020906009020190508060020180549050835114610e4d5760405162461bcd60e51b815260206004820152600f60248201526e494e56414c49445f5245574152445360881b604482015260640161043b565b8251610e6290600283019060208601906126f3565b5050505050565b600060028281548110610e7e57610e7e612d5e565b9060005260206000209060090201905080600601544311610e9d575050565b600581015480610eb257504360069091015550565b60005b6003830154811015611015576000610f0b610edd85600601544361263890919063ffffffff16565b856002018481548110610ef257610ef2612d5e565b906000526020600020015461230e90919063ffffffff16565b905080846004018381548110610f2357610f23612d5e565b906000526020600020015410610f8b57610f6581856004018481548110610f4c57610f4c612d5e565b906000526020600020015461263890919063ffffffff16565b846004018381548110610f7a57610f7a612d5e565b600091825260209091200155610faf565b6000846004018381548110610fa257610fa2612d5e565b6000918252602090912001555b610fe183610fc28364e8d4a5100061230e565b610fcc9190612cb9565b856003018481548110610d1657610d16612d5e565b846003018381548110610ff657610ff6612d5e565b600091825260209091200155508061100d81612d03565b915050610eb5565b50504360069091015550565b60006002828154811061103657611036612d5e565b600091825260208083208584526003825260408085203386529092529220805460099290920290920160058101549093506110719082612638565b600584015560008255600383015467ffffffffffffffff81111561109757611097612d74565b6040519080825280602002602001820160405280156110c0578160200160208202803683370190505b5080516110d79160028501916020909101906126f3565b50600383015467ffffffffffffffff8111156110f5576110f5612d74565b60405190808252806020026020018201604052801561111e578160200160208202803683370190505b5080516111359160018501916020909101906126f3565b50600060038301558254611153906001600160a01b0316338361237b565b604051818152849033907fbb757047c2b5f3974fe26b7c10f732e7bce710b0952a71082702781e62ae05959060200160405180910390a350505050565b6000600284815481106111a5576111a5612d5e565b600091825260208083208784526003825260408085203386529092529220600990910290910180549092506001600160a01b039081169085161461122b5760405162461bcd60e51b815260206004820152601a60248201527f4641524d494e475f544f4b454e5f5341464554595f434845434b000000000000604482015260640161043b565b61123485610e69565b8054156113025760005b60038301548110156113005760006112b183600101838154811061126457611264612d5e565b906000526020600020015464e8d4a510006112a187600301868154811061128d5761128d612d5e565b60009182526020909120015487549061230e565b6112ab9190612cb9565b90612638565b90506112cc81846002018481548110610d1657610d16612d5e565b8360020183815481106112e1576112e1612d5e565b60009182526020909120015550806112f881612d03565b91505061123e565b505b600381015415801561131357508054155b1561143657816007015443116113405760088201546007830154611336916124a5565b6003820155611379565b600061134b866120b4565b905061137261136784600801548361230e90919063ffffffff16565b6007850154906124a5565b6003830155505b600182015467ffffffffffffffff81111561139657611396612d74565b6040519080825280602002602001820160405280156113bf578160200160208202803683370190505b5080516113d69160018401916020909101906126f3565b50600182015467ffffffffffffffff8111156113f4576113f4612d74565b60405190808252806020026020018201604052801561141d578160200160208202803683370190505b5080516114349160028401916020909101906126f3565b505b815461144d906001600160a01b03163330866124fa565b805461145990846124a5565b8155600582015461146a90846124a5565b600583015560005b60038301548110156114ed5764e8d4a510006114b084600301838154811061149c5761149c612d5e565b60009182526020909120015484549061230e565b6114ba9190612cb9565b8260010182815481106114cf576114cf612d5e565b600091825260209091200155806114e581612d03565b915050611472565b50604051838152859033907f5af417134f72a9d41143ace85b0a26dce6f550f894f2cbc1eeee8810603d91b690602001610b0a565b606060006002838154811061153957611539612d5e565b60009182526020918290206040805161012081018252600990930290910180546001600160a01b031683526001810180548351818702810187019094528084529394919385830193928301828280156115bb57602002820191906000526020600020905b81546001600160a01b0316815260019091019060200180831161159d575b505050505081526020016002820180548060200260200160405190810160405280929190818152602001828054801561161357602002820191906000526020600020905b8154815260200190600101908083116115ff575b505050505081526020016003820180548060200260200160405190810160405280929190818152602001828054801561166b57602002820191906000526020600020905b815481526020019060010190808311611657575b50505050508152602001600482018054806020026020016040519081016040528092919081815260200182805480156116c357602002820191906000526020600020905b8154815260200190600101908083116116af575b505050918352505060058201546020820152600682015460408201526007820154606082015260089091015460809182015201519392505050565b6000546001600160a01b031633146117285760405162461bcd60e51b815260040161043b90612bec565b60006002838154811061173d5761173d612d5e565b90600052602060002090600902019050818160080181905550827fa885ff4d8d3bf78eea3ffc74848dbebe77635486e06727000a3c1b5837845e0a83604051610d9991815260200190565b6000546001600160a01b031633146117b25760405162461bcd60e51b815260040161043b90612bec565b600180546001600160a01b0319166001600160a01b0383169081179091556040517f8cc40b9abca4a505a92028908f9d913d621d18112c69412806506f02333f26b490600090a250565b6000546001600160a01b031633146118265760405162461bcd60e51b815260040161043b90612bec565b60006002838154811061183b5761183b612d5e565b9060005260206000209060090201905080600101805490508251146118945760405162461bcd60e51b815260206004820152600f60248201526e494e56414c49445f414d4f554e545360881b604482015260640161043b565b60005b82518110156119ea578160040181815481106118b5576118b5612d5e565b90600052602060002001548382815181106118d2576118d2612d5e565b602002602001015111156119195760405162461bcd60e51b815260206004820152600e60248201526d1253959053125117d05353d5539560921b604482015260640161043b565b600083828151811061192d5761192d612d5e565b602002602001015111156119d85761198482600101828154811061195357611953612d5e565b9060005260206000200160009054906101000a90046001600160a01b031633858481518110610a7a57610a7a612d5e565b6119b683828151811061199957611999612d5e565b6020026020010151836004018381548110610f4c57610f4c612d5e565b8260040182815481106119cb576119cb612d5e565b6000918252602090912001555b806119e281612d03565b915050611897565b50827f8a63d6747886a8cc1166e78fdd0df86a7a77fe1ee60ac1d042e6ff56c234fcc58260010184604051610d99929190612b4f565b606060008060028581548110611a3857611a38612d5e565b60009182526020918290206040805161012081018252600990930290910180546001600160a01b03168352600181018054835181870281018701909452808452939491938583019392830182828015611aba57602002820191906000526020600020905b81546001600160a01b03168152600190910190602001808311611a9c575b5050505050815260200160028201805480602002602001604051908101604052809291908181526020018280548015611b1257602002820191906000526020600020905b815481526020019060010190808311611afe575b5050505050815260200160038201805480602002602001604051908101604052809291908181526020018280548015611b6a57602002820191906000526020600020905b815481526020019060010190808311611b56575b5050505050815260200160048201805480602002602001604051908101604052809291908181526020018280548015611bc257602002820191906000526020600020905b815481526020019060010190808311611bae575b5050505050815260200160058201548152602001600682015481526020016007820154815260200160088201548152505090506000600360008781526020019081526020016000206000866001600160a01b03166001600160a01b031681526020019081526020016000206040518060800160405290816000820154815260200160018201805480602002602001604051908101604052809291908181526020018280548015611c9157602002820191906000526020600020905b815481526020019060010190808311611c7d575b5050505050815260200160028201805480602002602001604051908101604052809291908181526020018280548015611ce957602002820191906000526020600020905b815481526020019060010190808311611cd5575b50505050508152602001600382015481525050905060008260a001519050816040015194508260c001514310158015611d2757506000826040015151115b8015611d3257508015155b15611e6a5760005b836060015151811015611e68576000611d8f611d638660c001514361263890919063ffffffff16565b86604001518481518110611d7957611d79612d5e565b602002602001015161230e90919063ffffffff16565b90506000611ddc84611da68464e8d4a5100061230e565b611db09190612cb9565b87606001518581518110611dc657611dc6612d5e565b60200260200101516124a590919063ffffffff16565b9050611e35611e1f86602001518581518110611dfa57611dfa612d5e565b602002602001015164e8d4a510006112a1858a6000015161230e90919063ffffffff16565b86604001518581518110611dc657611dc6612d5e565b888481518110611e4757611e47612d5e565b60200260200101818152505050508080611e6090612d03565b915050611d3a565b505b816060015193505050509250929050565b600060028481548110611e9057611e90612d5e565b600091825260208083208784526003825260408085203386529092529220600990910290910180549092506001600160a01b0390811690851614611f165760405162461bcd60e51b815260206004820152601a60248201527f4641524d494e475f544f4b454e5f5341464554595f434845434b000000000000604482015260640161043b565b8054831115611f5d5760405162461bcd60e51b8152602060048201526013602482015272125394d551919250d251539517d05353d55395606a1b604482015260640161043b565b611f6685610e69565b60005b6003830154811015612047576000611f8f83600101838154811061126457611264612d5e565b9050611faa81846002018481548110610d1657610d16612d5e565b836002018381548110611fbf57611fbf612d5e565b906000526020600020018190555064e8d4a51000612009856003018481548110611feb57611feb612d5e565b60009182526020909120015485546120039089612638565b9061230e565b6120139190612cb9565b83600101838154811061202857612028612d5e565b600091825260209091200155508061203f81612d03565b915050611f69565b50815461205e906001600160a01b0316338561237b565b805461206a9084612638565b8155600582015461207b9084612638565b6005830155604051838152859033907fe5b754fb1abb7f01b499791d0b820ae3b6af3424ac1c59768edb53f4ec31a92990602001610b0a565b600080600283815481106120ca576120ca612d5e565b60009182526020918290206040805161012081018252600990930290910180546001600160a01b0316835260018101805483518187028101870190945280845293949193858301939283018282801561214c57602002820191906000526020600020905b81546001600160a01b0316815260019091019060200180831161212e575b50505050508152602001600282018054806020026020016040519081016040528092919081815260200182805480156121a457602002820191906000526020600020905b815481526020019060010190808311612190575b50505050508152602001600382018054806020026020016040519081016040528092919081815260200182805480156121fc57602002820191906000526020600020905b8154815260200190600101908083116121e8575b505050505081526020016004820180548060200260200160405190810160405280929190818152602001828054801561225457602002820191906000526020600020905b815481526020019060010190808311612240575b5050505050815260200160058201548152602001600682015481526020016007820154815260200160088201548152505090508060e001514311158061229d5750610100810151155b156122ab5750600092915050565b60006122c48260e001514361263890919063ffffffff16565b90506122e26001836101000151836122dc9190612cb9565b906124a5565b9250816101000151816122f59190612d1e565b61230757612304600184612cec565b92505b5050919050565b6000811580612332575082826123248183612ccd565b92506123309083612cb9565b145b6123755760405162461bcd60e51b815260206004820152601460248201527364732d6d6174682d6d756c2d6f766572666c6f7760601b604482015260640161043b565b92915050565b604080516001600160a01b038481166024830152604480830185905283518084039091018152606490920183526020820180516001600160e01b031663a9059cbb60e01b17905291516000928392908716916123d79190612a74565b6000604051808303816000865af19150503d8060008114612414576040519150601f19603f3d011682016040523d82523d6000602084013e612419565b606091505b509150915081801561244357508051158061244357508080602001905181019061244391906128de565b610e625760405162461bcd60e51b815260206004820152602d60248201527f5472616e7366657248656c7065723a3a736166655472616e736665723a20747260448201526c185b9cd9995c8819985a5b1959609a1b606482015260840161043b565b6000826124b28382612ca1565b91508110156123755760405162461bcd60e51b815260206004820152601460248201527364732d6d6174682d6164642d6f766572666c6f7760601b604482015260640161043b565b604080516001600160a01b0385811660248301528481166044830152606480830185905283518084039091018152608490920183526020820180516001600160e01b03166323b872dd60e01b179052915160009283929088169161255e9190612a74565b6000604051808303816000865af19150503d806000811461259b576040519150601f19603f3d011682016040523d82523d6000602084013e6125a0565b606091505b50915091508180156125ca5750805115806125ca5750808060200190518101906125ca91906128de565b6126305760405162461bcd60e51b815260206004820152603160248201527f5472616e7366657248656c7065723a3a7472616e7366657246726f6d3a207472604482015270185b9cd9995c919c9bdb4819985a5b1959607a1b606482015260840161043b565b505050505050565b6000826126458382612cec565b91508111156123755760405162461bcd60e51b815260206004820152601560248201527464732d6d6174682d7375622d756e646572666c6f7760581b604482015260640161043b565b8280548282559060005260206000209081019282156126e3579160200282015b828111156126e357825182546001600160a01b0319166001600160a01b039091161782556020909201916001909101906126ae565b506126ef92915061272e565b5090565b8280548282559060005260206000209081019282156126e3579160200282015b828111156126e3578251825591602001919060010190612713565b5b808211156126ef576000815560010161272f565b80356001600160a01b038116811461275a57600080fd5b919050565b600082601f83011261277057600080fd5b8135602061278561278083612c7d565b612c4c565b80838252828201915082860187848660051b89010111156127a557600080fd5b60005b858110156127c4578135845292840192908401906001016127a8565b5090979650505050505050565b6000602082840312156127e357600080fd5b6127ec82612743565b9392505050565b600080600080600060a0868803121561280b57600080fd5b61281486612743565b945060208087013567ffffffffffffffff8082111561283257600080fd5b818901915089601f83011261284657600080fd5b813561285461278082612c7d565b8082825285820191508585018d878560051b880101111561287457600080fd5b600095505b8386101561289e5761288a81612743565b835260019590950194918601918601612879565b509850505060408901359250808311156128b757600080fd5b50506128c58882890161275f565b9598949750949560608101359550608001359392505050565b6000602082840312156128f057600080fd5b81516127ec81612d8a565b60006020828403121561290d57600080fd5b5035919050565b6000806040838503121561292757600080fd5b8235915061293760208401612743565b90509250929050565b60008060006060848603121561295557600080fd5b8335925061296560208501612743565b9150604084013590509250925092565b6000806040838503121561298857600080fd5b82359150602083013567ffffffffffffffff8111156129a657600080fd5b6129b28582860161275f565b9150509250929050565b6000806000606084860312156129d157600080fd5b83359250602084013567ffffffffffffffff8111156129ef57600080fd5b6129fb8682870161275f565b9250506040840135612a0c81612d8a565b809150509250925092565b60008060408385031215612a2a57600080fd5b50508035926020909101359150565b600081518084526020808501945080840160005b83811015612a6957815187529582019590820190600101612a4d565b509495945050505050565b6000825160005b81811015612a955760208186018101518583015201612a7b565b81811115612aa4576000828501525b509190910192915050565b6001600160a01b03898116825260208083018a90526101006040840181905289519084018190526000926101208501928b810192855b81811015612b03578451841686529482019493820193600101612ae5565b50505050508281036060840152612b1a8189612a39565b90508281036080840152612b2e8188612a39565b60a0840196909652505060c081019290925260e09091015295945050505050565b6000604082016040835280855480835260608501915086600052602092508260002060005b82811015612b995781546001600160a01b031684529284019260019182019101612b74565b50505083810382850152612bad8186612a39565b9695505050505050565b6020815260006127ec6020830184612a39565b604081526000612bdd6040830185612a39565b90508260208301529392505050565b6020808252600990820152683737ba1030b236b4b760b91b604082015260600190565b848152608060208201526000612c286080830186612a39565b8281036040840152612c3a8186612a39565b91505082606083015295945050505050565b604051601f8201601f1916810167ffffffffffffffff81118282101715612c7557612c75612d74565b604052919050565b600067ffffffffffffffff821115612c9757612c97612d74565b5060051b60200190565b60008219821115612cb457612cb4612d32565b500190565b600082612cc857612cc8612d48565b500490565b6000816000190483118215151615612ce757612ce7612d32565b500290565b600082821015612cfe57612cfe612d32565b500390565b6000600019821415612d1757612d17612d32565b5060010190565b600082612d2d57612d2d612d48565b500690565b634e487b7160e01b600052601160045260246000fd5b634e487b7160e01b600052601260045260246000fd5b634e487b7160e01b600052603260045260246000fd5b634e487b7160e01b600052604160045260246000fd5b8015158114612d9857600080fd5b5056fea2646970667358221220e5ed26721d4ca427b6be6bc982ca3363ff60e5a92a73fae38397cad3fedafead64736f6c63430008070033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 7604,
+        "contract": "contracts/periphery/Farming.sol:Farming",
+        "label": "admin",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "astId": 7606,
+        "contract": "contracts/periphery/Farming.sol:Farming",
+        "label": "adminCandidate",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address"
+      },
+      {
+        "astId": 10915,
+        "contract": "contracts/periphery/Farming.sol:Farming",
+        "label": "poolInfo",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_array(t_struct(PoolInfo)10911_storage)dyn_storage"
+      },
+      {
+        "astId": 10922,
+        "contract": "contracts/periphery/Farming.sol:Farming",
+        "label": "userInfo",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(UserInfo)10888_storage))"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_array(t_address)dyn_storage": {
+        "base": "t_address",
+        "encoding": "dynamic_array",
+        "label": "address[]",
+        "numberOfBytes": "32"
+      },
+      "t_array(t_struct(PoolInfo)10911_storage)dyn_storage": {
+        "base": "t_struct(PoolInfo)10911_storage",
+        "encoding": "dynamic_array",
+        "label": "struct Farming.PoolInfo[]",
+        "numberOfBytes": "32"
+      },
+      "t_array(t_uint256)dyn_storage": {
+        "base": "t_uint256",
+        "encoding": "dynamic_array",
+        "label": "uint256[]",
+        "numberOfBytes": "32"
+      },
+      "t_mapping(t_address,t_struct(UserInfo)10888_storage)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => struct Farming.UserInfo)",
+        "numberOfBytes": "32",
+        "value": "t_struct(UserInfo)10888_storage"
+      },
+      "t_mapping(t_uint256,t_mapping(t_address,t_struct(UserInfo)10888_storage))": {
+        "encoding": "mapping",
+        "key": "t_uint256",
+        "label": "mapping(uint256 => mapping(address => struct Farming.UserInfo))",
+        "numberOfBytes": "32",
+        "value": "t_mapping(t_address,t_struct(UserInfo)10888_storage)"
+      },
+      "t_struct(PoolInfo)10911_storage": {
+        "encoding": "inplace",
+        "label": "struct Farming.PoolInfo",
+        "members": [
+          {
+            "astId": 10890,
+            "contract": "contracts/periphery/Farming.sol:Farming",
+            "label": "farmingToken",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address"
+          },
+          {
+            "astId": 10893,
+            "contract": "contracts/periphery/Farming.sol:Farming",
+            "label": "rewardTokens",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_address)dyn_storage"
+          },
+          {
+            "astId": 10896,
+            "contract": "contracts/periphery/Farming.sol:Farming",
+            "label": "rewardPerBlock",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_array(t_uint256)dyn_storage"
+          },
+          {
+            "astId": 10899,
+            "contract": "contracts/periphery/Farming.sol:Farming",
+            "label": "accRewardPerShare",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_array(t_uint256)dyn_storage"
+          },
+          {
+            "astId": 10902,
+            "contract": "contracts/periphery/Farming.sol:Farming",
+            "label": "remainingRewards",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_array(t_uint256)dyn_storage"
+          },
+          {
+            "astId": 10904,
+            "contract": "contracts/periphery/Farming.sol:Farming",
+            "label": "amount",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 10906,
+            "contract": "contracts/periphery/Farming.sol:Farming",
+            "label": "lastRewardBlock",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 10908,
+            "contract": "contracts/periphery/Farming.sol:Farming",
+            "label": "startBlock",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 10910,
+            "contract": "contracts/periphery/Farming.sol:Farming",
+            "label": "claimableInterval",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint256"
+          }
+        ],
+        "numberOfBytes": "288"
+      },
+      "t_struct(UserInfo)10888_storage": {
+        "encoding": "inplace",
+        "label": "struct Farming.UserInfo",
+        "members": [
+          {
+            "astId": 10879,
+            "contract": "contracts/periphery/Farming.sol:Farming",
+            "label": "amount",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 10882,
+            "contract": "contracts/periphery/Farming.sol:Farming",
+            "label": "rewardDebt",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)dyn_storage"
+          },
+          {
+            "astId": 10885,
+            "contract": "contracts/periphery/Farming.sol:Farming",
+            "label": "pending",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_array(t_uint256)dyn_storage"
+          },
+          {
+            "astId": 10887,
+            "contract": "contracts/periphery/Farming.sol:Farming",
+            "label": "nextClaimableBlock",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256"
+          }
+        ],
+        "numberOfBytes": "128"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}
