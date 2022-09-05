@@ -6,7 +6,10 @@ import { ethers } from 'hardhat'
 import TestERC20 from '../build/contracts/test/BasicToken.sol/BasicToken.json'
 import StableSwap from '../build/contracts/stableswap/StableSwap.sol/StableSwap.json'
 import StableSwapStorage from '../build/contracts/stableswap/StableSwapStorage.sol/StableSwapStorage.json'
+import MetaSwap from '../build/contracts/stableswap/MetaSwap.sol/MetaSwap.json'
+import MetaSwapStorage from '../build/contracts/stableswap/MetaSwapStorage.sol/MetaSwapStorage.json'
 import StableSwapRouter from '../build/contracts/periphery/StableSwapRouter.sol/StableSwapRouter.json'
+
 import { 
   asyncForEach, 
   linkBytecode, 
@@ -18,21 +21,19 @@ chai.use(solidity)
 describe('StableSwapRouter', async () => {
   let signers: Array<Wallet>
   let swapRouter: Contract
-  let swap: Contract
-  let secondSwap: Contract
+  let baseSwap: Contract
+  let metaSwap: Contract
   let firstToken: Contract
   let secondToken: Contract
   let thirdToken: Contract
   let fourthToken: Contract
-  let swapToken: Contract
-  let secondSwapToken: Contract
+  let baseLPToken: Contract
+  let metaLPToken: Contract
   let owner: Wallet
   let user1: Wallet
   let user2: Wallet
   let ownerAddress: string
-  let user1Address: string
-  let user2Address: string
-  let swapStorage: {
+  let baseSwapStorage: {
     initialA: BigNumber
     futureA: BigNumber
     initialATime: BigNumber
@@ -41,7 +42,7 @@ describe('StableSwapRouter', async () => {
     adminFee: BigNumber
     lpToken: string
   }
-  let secondSwapStorage: {
+  let metaSwapStorage: {
     initialA: BigNumber
     futureA: BigNumber
     initialATime: BigNumber
@@ -71,8 +72,6 @@ describe('StableSwapRouter', async () => {
     user1 = signers[1]
     user2 = signers[2]
     ownerAddress = owner.address
-    user1Address = user1.address
-    user2Address = user2.address
 
     firstToken = await deployContract(
       owner,
@@ -106,28 +105,29 @@ describe('StableSwapRouter', async () => {
       await fourthToken.setBalance(address, String(1e8))
     })
 
-    const swapStorageContract = await deployContract(owner, StableSwapStorage)
-    const secondSwapStorageContract = await deployContract(owner, StableSwapStorage)
+    const baseSwapStorageContract = await deployContract(owner, StableSwapStorage)
+    const metaSwapStorageContract = await deployContract(owner, MetaSwapStorage)
 
-    const swapFactory = (await ethers.getContractFactory(
+    const baseSwapFactory = (await ethers.getContractFactory(
       StableSwap.abi,
       linkBytecode(StableSwap, {
-        'StableSwapStorage': swapStorageContract.address
+        'StableSwapStorage': baseSwapStorageContract.address
       }),
       owner,
     )) as ContractFactory
-    const secondSwapFactory = (await ethers.getContractFactory(
-      StableSwap.abi,
-      linkBytecode(StableSwap, {
-        'StableSwapStorage': secondSwapStorageContract.address
+    const metaSwapFactory = (await ethers.getContractFactory(
+      MetaSwap.abi,
+      linkBytecode(MetaSwap, {
+        'StableSwapStorage': baseSwapStorageContract.address,
+        'MetaSwapStorage': metaSwapStorageContract.address
       }),
       owner,
     )) as ContractFactory
 
-    swap = await swapFactory.deploy()
-    secondSwap = await secondSwapFactory.deploy()
+    baseSwap = await baseSwapFactory.deploy()
+    metaSwap = await metaSwapFactory.deploy()
 
-    await swap.initialize(
+    await baseSwap.initialize(
       [firstToken.address, secondToken.address, thirdToken.address],
       [18, 18, 6],
       LP_TOKEN_NAME,
@@ -137,32 +137,46 @@ describe('StableSwapRouter', async () => {
       ADMIN_FEE,
       owner.address
     )
-    swapStorage = await swap.swapStorage()
-    swapToken = await ethers.getContractAt(
+    baseSwapStorage = await baseSwap.swapStorage()
+    baseLPToken = await ethers.getContractAt(
       'LPToken',
-      swapStorage.lpToken,
+      baseSwapStorage.lpToken,
       owner
     )
 
-    await secondSwap.initialize(
-      [swapToken.address, fourthToken.address],
-      [18, 6],
+    await asyncForEach(
+      [firstToken, secondToken, thirdToken],
+      async (token) => {
+        await token.approve(baseSwap.address, MAX_UINT256)
+      }
+    )
+
+    await baseSwap.addLiquidity(
+      [String(1e18), String(1e18), String(1e6)],
+      0,
+      MAX_UINT256
+    )
+
+    await metaSwap.initializeMetaSwap(
+      [fourthToken.address, baseLPToken.address],
+      [6, 18],
       LP_TOKEN_NAME,
       LP_TOKEN_SYMBOL,
       INITIAL_A_VALUE,
       SWAP_FEE,
       ADMIN_FEE,
-      owner.address
+      owner.address,
+      baseSwap.address
     )
-    secondSwapStorage = await secondSwap.swapStorage()
-    secondSwapToken = await ethers.getContractAt(
+    metaSwapStorage = await metaSwap.swapStorage()
+    metaLPToken = await ethers.getContractAt(
       'LPToken',
-      secondSwapStorage.lpToken,
+      metaSwapStorage.lpToken,
       owner
     )
 
-    expect(await swap.getVirtualPrice()).to.be.eq(0)
-    expect(await secondSwap.getVirtualPrice()).to.be.eq(0)
+    expect(await baseSwap.getVirtualPrice()).to.be.eq('1000000000000000000')
+    expect(await metaSwap.getVirtualPrice()).to.be.eq(0)
 
     swapRouter = await deployContract(
       owner,
@@ -175,8 +189,8 @@ describe('StableSwapRouter', async () => {
       await secondToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
       await thirdToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
       await fourthToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
-      await swapToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
-      await secondSwapToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
+      await baseLPToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
+      await metaLPToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
     })
   }
 
@@ -210,16 +224,16 @@ describe('StableSwapRouter', async () => {
     expect(await thirdToken.balanceOf(toConvertSwap.address)).to.eq(String(0))
 
     await swapRouter.addPoolLiquidity(
-      swap.address,
+      baseSwap.address,
       [String(1e18), String(1e18), String(1e6)], 
       0, 
       owner.address,
       MAX_UINT256
     )
-    const lpAmount = await swapToken.balanceOf(ownerAddress)
+    const lpAmount = await baseLPToken.balanceOf(ownerAddress)
 
     await swapRouter.convert(
-      swap.address,
+      baseSwap.address,
       toConvertSwap.address,
       lpAmount,
       0,
@@ -227,67 +241,69 @@ describe('StableSwapRouter', async () => {
       MAX_UINT256
     )
     
-    expect(await firstToken.balanceOf(toConvertSwap.address)).to.eq(String(1e18))
-    expect(await secondToken.balanceOf(toConvertSwap.address)).to.eq(String(1e18))
-    expect(await thirdToken.balanceOf(toConvertSwap.address)).to.eq(String(1e6))
+    expect(await firstToken.balanceOf(toConvertSwap.address)).to.eq(String(2e18))
+    expect(await secondToken.balanceOf(toConvertSwap.address)).to.eq(String(2e18))
+    expect(await thirdToken.balanceOf(toConvertSwap.address)).to.eq(String(2e6))
   })
 
   it('addPoolLiquidity', async () => {
     await swapRouter.addPoolLiquidity(
-      swap.address,
+      baseSwap.address,
       [String(1e18), String(1e18), String(1e6)], 
       0, 
       owner.address,
       MAX_UINT256
     )
 
-    expect(await swapToken.balanceOf(ownerAddress)).to.eq(String(3e18))
+    expect(await baseLPToken.balanceOf(ownerAddress)).to.eq(String(6e18))
 
     await swapRouter.addPoolLiquidity(
-      secondSwap.address,
-      [String(1e18), String(1e6)],
+      metaSwap.address,
+      [String(1e6), String(1e18)],
       0,
       owner.address,
       MAX_UINT256
     )
 
-    expect(await swapToken.balanceOf(ownerAddress)).to.eq(String(2e18))
-    expect(await secondSwapToken.balanceOf(ownerAddress)).to.eq(String(2e18))
+    expect(await baseLPToken.balanceOf(ownerAddress)).to.eq(String(5e18))
+    expect(await metaLPToken.balanceOf(ownerAddress)).to.eq(String(2e18))
 
     asyncForEach([firstToken, secondToken, thirdToken, fourthToken], async (token) => {
-      expect(await token.allowance(swapRouter.address, swap.address)).to.eq(String(0))
-      expect(await token.allowance(swapRouter.address, secondSwap.address)).to.eq(String(0))
+      expect(await token.allowance(swapRouter.address, baseSwap.address)).to.eq(String(0))
+      expect(await token.allowance(swapRouter.address, metaSwap.address)).to.eq(String(0))
       expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
     })
   })
 
   it('addPoolAndBaseLiquidity', async () => {
-    const expectLpAmount = await secondSwap.calculateTokenAmount(
-      [String(3e18), String(1e6)],
+    const expectLpAmount = await metaSwap.calculateTokenAmount(
+      [String(1e6), String(3e18)],
       true
     )
     await swapRouter.addPoolAndBaseLiquidity(
-      secondSwap.address,
-      swap.address,
-      [0, String(1e6)],
+      metaSwap.address,
+      baseSwap.address,
+      [String(1e6), 0],
       [String(1e18), String(1e18), String(1e6)],
       0,
       owner.address,
       MAX_UINT256
     )
 
-    expect(await secondSwapToken.balanceOf(ownerAddress)).to.eq(expectLpAmount)
+    expect(await metaLPToken.balanceOf(ownerAddress)).to.eq(expectLpAmount)
 
-    asyncForEach([firstToken, secondToken, thirdToken, fourthToken, swapToken, secondSwapToken], async (token) => {
-      expect(await token.allowance(swapRouter.address, swap.address)).to.eq(String(0))
-      expect(await token.allowance(swapRouter.address, secondSwap.address)).to.eq(String(0))
-      expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
+    await asyncForEach(
+      [firstToken, secondToken, thirdToken, fourthToken, baseLPToken, metaLPToken], 
+      async (token) => {
+        expect(await token.allowance(swapRouter.address, baseSwap.address)).to.eq(String(0))
+        expect(await token.allowance(swapRouter.address, metaSwap.address)).to.eq(String(0))
+        expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
     })
   })
 
   it('removePoolLiquidity', async () => {
     await swapRouter.addPoolLiquidity(
-      swap.address,
+      baseSwap.address,
       [String(1e18), String(1e18), String(1e6)], 
       0, 
       owner.address,
@@ -295,27 +311,27 @@ describe('StableSwapRouter', async () => {
     )
 
     await swapRouter.removePoolLiquidity(
-      swap.address,
+      baseSwap.address,
       String(1e18),
       [0, 0, 0],
       owner.address,
       MAX_UINT256
     )
 
-    expect(await swapToken.balanceOf(ownerAddress)).to.eq(String(2e18))
-    expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99333333333333333333'))
-    expect(await secondToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99333333333333333333'))
-    expect(await thirdToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99333333'))
+    expect(await baseLPToken.balanceOf(ownerAddress)).to.eq(String(5e18))
+    expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98333333333333333333'))
+    expect(await secondToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98333333333333333333'))
+    expect(await thirdToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98333333'))
 
-    asyncForEach([firstToken, secondToken, thirdToken, swapToken], async (token) => {
-      expect(await token.allowance(swapRouter.address, swap.address)).to.eq(String(0))
+    asyncForEach([firstToken, secondToken, thirdToken, baseLPToken], async (token) => {
+      expect(await token.allowance(swapRouter.address, baseSwap.address)).to.eq(String(0))
       expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
     })
   })
 
   it('removePoolLiquidityOneToken', async () => {
     await swapRouter.addPoolLiquidity(
-      swap.address,
+      baseSwap.address,
       [String(1e18), String(1e18), String(1e6)], 
       0, 
       owner.address,
@@ -323,7 +339,7 @@ describe('StableSwapRouter', async () => {
     )
 
     await swapRouter.removePoolLiquidityOneToken(
-      swap.address,
+      baseSwap.address,
       String(1e18),
       0,
       0,
@@ -331,20 +347,20 @@ describe('StableSwapRouter', async () => {
       MAX_UINT256
     )
 
-    expect(await swapToken.balanceOf(ownerAddress)).to.eq(String(2e18))
-    expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99943111614953373621'))
-    expect(await secondToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99000000000000000000'))
-    expect(await thirdToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99000000'))
+    expect(await baseLPToken.balanceOf(ownerAddress)).to.eq(String(5e18))
+    expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98994453519013542760'))
+    expect(await secondToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98000000000000000000'))
+    expect(await thirdToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98000000'))
 
-    asyncForEach([firstToken, swapToken], async (token) => {
-      expect(await token.allowance(swapRouter.address, swap.address)).to.eq(String(0))
+    asyncForEach([firstToken, baseLPToken], async (token) => {
+      expect(await token.allowance(swapRouter.address, baseSwap.address)).to.eq(String(0))
       expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
     })
   })
 
   it('removePoolAndBaseLiquidity', async () => {
     await swapRouter.addPoolLiquidity(
-      swap.address,
+      baseSwap.address,
       [String(1e18), String(1e18), String(1e6)], 
       0, 
       owner.address,
@@ -352,16 +368,16 @@ describe('StableSwapRouter', async () => {
     )
 
     await swapRouter.addPoolLiquidity(
-      secondSwap.address,
-      [String(1e18), String(1e6)],
+      metaSwap.address,
+      [String(1e6), String(1e18)],
       0,
       owner.address,
       MAX_UINT256
     )
 
     await swapRouter.removePoolAndBaseLiquidity(
-      secondSwap.address,
-      swap.address,
+      metaSwap.address,
+      baseSwap.address,
       String(1e18),
       [String(0), String(0)],
       [String(0), String(0), String(0)],
@@ -369,23 +385,23 @@ describe('StableSwapRouter', async () => {
       MAX_UINT256
     )
 
-    expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99166666666666666666'))
-    expect(await secondToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99166666666666666666'))
-    expect(await thirdToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99166666'))
+    expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98166666666666666666'))
+    expect(await secondToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98166666666666666666'))
+    expect(await thirdToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98166666'))
     expect(await fourthToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99500000'))
-    expect(await swapToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('2000000000000000000'))
-    expect(await secondSwapToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('1000000000000000000'))
+    expect(await baseLPToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('5000000000000000000'))
+    expect(await metaLPToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('1000000000000000000'))
 
-    asyncForEach([firstToken, secondToken, thirdToken, fourthToken, swapToken, secondSwapToken], async (token) => {
-      expect(await token.allowance(swapRouter.address, swap.address)).to.eq(String(0))
-      expect(await token.allowance(swapRouter.address, secondSwap.address)).to.eq(String(0))
+    asyncForEach([firstToken, secondToken, thirdToken, fourthToken, baseLPToken, metaLPToken], async (token) => {
+      expect(await token.allowance(swapRouter.address, baseSwap.address)).to.eq(String(0))
+      expect(await token.allowance(swapRouter.address, metaSwap.address)).to.eq(String(0))
       expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
     })
   })
 
   it('removePoolAndBaseLiquidityOneToken', async () => {
     await swapRouter.addPoolLiquidity(
-      swap.address,
+      baseSwap.address,
       [String(1e18), String(1e18), String(1e6)], 
       0, 
       owner.address,
@@ -393,16 +409,16 @@ describe('StableSwapRouter', async () => {
     )
 
     await swapRouter.addPoolLiquidity(
-      secondSwap.address,
-      [String(1e18), String(1e6)],
+      metaSwap.address,
+      [String(1e6), String(1e18)],
       0,
       owner.address,
       MAX_UINT256
     )
 
     await swapRouter.removePoolAndBaseLiquidityOneToken(
-      secondSwap.address,
-      swap.address,
+      metaSwap.address,
+      baseSwap.address,
       String(1e18),
       0,
       0,
@@ -410,23 +426,23 @@ describe('StableSwapRouter', async () => {
       MAX_UINT256
     )
 
-    expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99915975025371929634'))
-    expect(await secondToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99000000000000000000'))
-    expect(await thirdToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99000000'))
+    expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98949470360446232144'))
+    expect(await secondToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98000000000000000000'))
+    expect(await thirdToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98000000'))
     expect(await fourthToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99000000'))
-    expect(await swapToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('2000000000000000000'))
-    expect(await secondSwapToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('1000000000000000000'))
+    expect(await baseLPToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('5000000000000000000'))
+    expect(await metaLPToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('1000000000000000000'))
 
-    asyncForEach([firstToken, secondToken, thirdToken, fourthToken, swapToken, secondSwapToken], async (token) => {
-      expect(await token.allowance(swapRouter.address, swap.address)).to.eq(String(0))
-      expect(await token.allowance(swapRouter.address, secondSwap.address)).to.eq(String(0))
+    asyncForEach([firstToken, secondToken, thirdToken, fourthToken, baseLPToken, metaLPToken], async (token) => {
+      expect(await token.allowance(swapRouter.address, baseSwap.address)).to.eq(String(0))
+      expect(await token.allowance(swapRouter.address, metaSwap.address)).to.eq(String(0))
       expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
     })
   })
 
   it('swapPool', async () => {
     await swapRouter.addPoolLiquidity(
-      swap.address,
+      baseSwap.address,
       [String(1e18), String(1e18), String(1e6)], 
       0, 
       owner.address,
@@ -434,7 +450,7 @@ describe('StableSwapRouter', async () => {
     )
 
     await swapRouter.swapPool(
-      swap.address,
+      baseSwap.address,
       1,
       0,
       String(1e16),
@@ -443,20 +459,20 @@ describe('StableSwapRouter', async () => {
       MAX_UINT256
     )
 
-    expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99009988041372295327'))
-    expect(await secondToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98990000000000000000'))
-    expect(await thirdToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99000000'))
-    expect(await swapToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('3000000000000000000'))
+    expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98009989020660718509'))
+    expect(await secondToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('97990000000000000000'))
+    expect(await thirdToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98000000'))
+    expect(await baseLPToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('6000000000000000000'))
 
-    asyncForEach([firstToken, secondToken, thirdToken, swapToken], async (token) => {
-      expect(await token.allowance(swapRouter.address, swap.address)).to.eq(String(0))
+    asyncForEach([firstToken, secondToken, thirdToken, baseLPToken], async (token) => {
+      expect(await token.allowance(swapRouter.address, baseSwap.address)).to.eq(String(0))
       expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
     })
   })
 
   it('swapPoolFromBase', async () => {
     await swapRouter.addPoolLiquidity(
-      swap.address,
+      baseSwap.address,
       [String(1e18), String(1e18), String(1e6)], 
       0, 
       owner.address,
@@ -464,41 +480,41 @@ describe('StableSwapRouter', async () => {
     )
 
     await swapRouter.addPoolLiquidity(
-      secondSwap.address,
-      [String(1e18), String(1e6)],
+      metaSwap.address,
+      [String(1e6), String(1e18)],
       0,
       owner.address,
       MAX_UINT256
     )
 
     await swapRouter.swapPoolFromBase(
-      secondSwap.address,
-      swap.address,
+      metaSwap.address,
+      baseSwap.address,
       0,
-      1,
+      0,
       String(1e16),
       0,
       owner.address,
       MAX_UINT256
     )
 
-    expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98990000000000000000'))
-    expect(await secondToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99000000000000000000'))
-    expect(await thirdToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99000000'))
+    expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('97990000000000000000'))
+    expect(await secondToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98000000000000000000'))
+    expect(await thirdToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98000000'))
     expect(await fourthToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99009982'))
-    expect(await swapToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('2000000000000000000'))
-    expect(await secondSwapToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('2000000000000000000'))
+    expect(await baseLPToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('5000000000000000000'))
+    expect(await metaLPToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('2000000000000000000'))
 
-    asyncForEach([firstToken, secondToken, thirdToken, fourthToken, swapToken, secondSwapToken], async (token) => {
-      expect(await token.allowance(swapRouter.address, swap.address)).to.eq(String(0))
-      expect(await token.allowance(swapRouter.address, secondSwap.address)).to.eq(String(0))
+    asyncForEach([firstToken, secondToken, thirdToken, fourthToken, baseLPToken, metaLPToken], async (token) => {
+      expect(await token.allowance(swapRouter.address, baseSwap.address)).to.eq(String(0))
+      expect(await token.allowance(swapRouter.address, metaSwap.address)).to.eq(String(0))
       expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
     })
   })
 
   it('swapPoolToBase', async () => {
     await swapRouter.addPoolLiquidity(
-      swap.address,
+      baseSwap.address,
       [String(1e18), String(1e18), String(1e6)], 
       0, 
       owner.address,
@@ -506,17 +522,17 @@ describe('StableSwapRouter', async () => {
     )
 
     await swapRouter.addPoolLiquidity(
-      secondSwap.address,
-      [String(1e18), String(1e6)],
+      metaSwap.address,
+      [String(1e6), String(1e18)],
       0,
       owner.address,
       MAX_UINT256
     )
 
     await swapRouter.swapPoolToBase(
-      secondSwap.address,
-      swap.address,
-      1,
+      metaSwap.address,
+      baseSwap.address,
+      0,
       0,
       String(1e6),
       0,
@@ -524,16 +540,16 @@ describe('StableSwapRouter', async () => {
       MAX_UINT256
     )
 
-    expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99881980616021312485'))
-    expect(await secondToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99000000000000000000'))
-    expect(await thirdToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('99000000'))
+    expect(await firstToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98904215562925448542'))
+    expect(await secondToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98000000000000000000'))
+    expect(await thirdToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98000000'))
     expect(await fourthToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('98000000'))
-    expect(await swapToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('2000000000000000000'))
-    expect(await secondSwapToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('2000000000000000000'))
+    expect(await baseLPToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('5000000000000000000'))
+    expect(await metaLPToken.balanceOf(ownerAddress)).to.eq(BigNumber.from('2000000000000000000'))
 
-    asyncForEach([firstToken, secondToken, thirdToken, fourthToken, swapToken, secondSwapToken], async (token) => {
-      expect(await token.allowance(swapRouter.address, swap.address)).to.eq(String(0))
-      expect(await token.allowance(swapRouter.address, secondSwap.address)).to.eq(String(0))
+    asyncForEach([firstToken, secondToken, thirdToken, fourthToken, baseLPToken, metaLPToken], async (token) => {
+      expect(await token.allowance(swapRouter.address, baseSwap.address)).to.eq(String(0))
+      expect(await token.allowance(swapRouter.address, metaSwap.address)).to.eq(String(0))
       expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
     })
   })
