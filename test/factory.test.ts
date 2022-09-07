@@ -1,12 +1,11 @@
-import { expect, use } from "chai";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { expect } from "chai";
 import { Contract, BigNumber } from "ethers";
-import { solidity, MockProvider } from 'ethereum-waffle'
-import { factoryFixture } from './shared/fixtures'
+import { deployments } from "hardhat";
+import { Factory } from "../typechain-types";
 import { getCreate2Address } from './shared/utilities'
 
-import Pair from '../build/contracts/core/Pair.sol/Pair.json'
-
-use(solidity);
+import PairContrat from '../build/artifacts/contracts/core/Pair.sol/Pair.json'
 
 const TEST_ADDRESSES: [string, string] = [
   '0x1000000000000000000000000000000000000000',
@@ -14,37 +13,38 @@ const TEST_ADDRESSES: [string, string] = [
 ]
 
 describe('Factory', () => {
-  const provider = new MockProvider({
-    ganacheOptions: {
-      hardfork: 'istanbul',
-      mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-      gasLimit: 9999999,
-    },
-  })
+  let signers: SignerWithAddress[]
+  let wallet: SignerWithAddress
+  let walletTo: SignerWithAddress
+  let factory: Factory
 
-  const [wallet, walletTo] = provider.getWallets();
+  const setupTest = deployments.createFixture(
+    async ({ deployments, ethers }) => {
+      await deployments.fixture() // ensure you start from a fresh deployments
+      signers = await ethers.getSigners()
+      ;[wallet, walletTo] = signers
+      const factoryFactory = await ethers.getContractFactory('Factory')
+      factory = (await factoryFactory.deploy(wallet.address)) as Factory
+    }
+  )
 
-  let factory: Contract
   beforeEach(async () => {
-    const fixture = await factoryFixture(wallet)
-    factory = fixture.factory
+    await setupTest()
   })
 
   async function createPair(tokens: [string, string]) {
-    const bytecode = Pair.bytecode
+    const bytecode = PairContrat.bytecode
     const create2Address = getCreate2Address(factory.address, tokens, bytecode)
     await expect(factory.createPair(...tokens))
       .to.emit(factory, 'PairCreated')
       .withArgs(TEST_ADDRESSES[0], TEST_ADDRESSES[1], create2Address, BigNumber.from(1))
 
     await expect(factory.createPair(...tokens)).to.be.reverted
-    await expect(factory.createPair(...tokens.slice().reverse())).to.be.reverted
     expect(await factory.getPair(...tokens)).to.eq(create2Address)
-    expect(await factory.getPair(...tokens.slice().reverse())).to.eq(create2Address)
     expect(await factory.allPairs(0)).to.eq(create2Address)
     expect(await factory.allPairsLength()).to.eq(1)
 
-    const pair = new Contract(create2Address, JSON.stringify(Pair.abi), wallet)
+    const pair = new Contract(create2Address, JSON.stringify(PairContrat.abi), wallet)
     expect(await pair.factory()).to.eq(factory.address)
     expect(await pair.token0()).to.eq(TEST_ADDRESSES[0])
     expect(await pair.token1()).to.eq(TEST_ADDRESSES[1])

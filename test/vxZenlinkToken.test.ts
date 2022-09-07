@@ -1,13 +1,9 @@
-import chai, { expect } from 'chai'
-import { solidity, MockProvider, deployContract } from 'ethereum-waffle'
-import { BigNumber, constants, Contract } from 'ethers'
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { expect } from 'chai'
+import { BigNumber, constants } from 'ethers'
+import { deployments } from 'hardhat'
+import { VxZenlinkTokenMock, ZenlinkToken, ZenlinkTokenLoyaltyCalculator } from '../typechain-types'
 import { expandTo18Decimals } from './shared/utilities'
-
-import ZenlinkToken from '../build/contracts/tokens/ZenlinkToken.sol/ZenlinkToken.json'
-import vxZenlinkToken from '../build/contracts/test/vxZenlinkTokenMock.sol/vxZenlinkTokenMock.json'
-import ZenlinkTokenLoyaltyCalculator from '../build/contracts/libraries/ZenlinkTokenLoyaltyCalculator.sol/ZenlinkTokenLoyaltyCalculator.json'
-
-chai.use(solidity)
 
 const { MaxUint256, AddressZero } = constants
 const MIN_PENALTY_RATIO = BigNumber.from(0) // 0%
@@ -33,38 +29,35 @@ function getZenlinkTokenWithdrawFeeRatio(
 }
 
 describe('vxZenlinkToken', () => {
-  let zlk: Contract
-  let vxzlk: Contract
-  let loyaltyCalculator: Contract
+  let signers: SignerWithAddress[]
+  let wallet: SignerWithAddress
+  let other: SignerWithAddress
+  let user1: SignerWithAddress
+  let user2: SignerWithAddress
+  let zlk: ZenlinkToken
+  let vxzlk: VxZenlinkTokenMock
+  let loyaltyCalculator: ZenlinkTokenLoyaltyCalculator
 
-  const provider = new MockProvider({
-    ganacheOptions: {
-      hardfork: 'istanbul',
-      mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-      gasLimit: 9999999,
-    },
-  })
-  const [wallet, other, user1, user2] = provider.getWallets()
+  const setupTest = deployments.createFixture(
+    async ({ deployments, ethers }) => {
+      await deployments.fixture() // ensure you start from a fresh deployments
+      signers = await ethers.getSigners()
+        ;[wallet, other, user1, user2] = signers
+
+      const zlkFactory = await ethers.getContractFactory('ZenlinkToken')
+      const vxzlkFactory = await ethers.getContractFactory('vxZenlinkTokenMock')
+      const loyaltyCalculatorFactory = await ethers.getContractFactory('ZenlinkTokenLoyaltyCalculator')
+      zlk = (await zlkFactory.deploy('ZLK', 'Zenlink Token', 18, expandTo18Decimals(100), expandTo18Decimals(1000))) as ZenlinkToken
+      vxzlk = (await vxzlkFactory.deploy(zlk.address, 'Vault vxZLK', 'vxZLK')) as VxZenlinkTokenMock
+      loyaltyCalculator = (await loyaltyCalculatorFactory.deploy(vxzlk.address, zlk.address, BigNumber.from(0), expandTo18Decimals(1).div(2))) as ZenlinkTokenLoyaltyCalculator
+      await vxzlk.updateLoyaltyCaculator(loyaltyCalculator.address)
+      await zlk.approve(vxzlk.address, MaxUint256)
+      await zlk.enableTransfer()
+    }
+  )
 
   beforeEach(async () => {
-    zlk = await deployContract(
-      wallet,
-      ZenlinkToken,
-      ['ZLK', 'Zenlink Token', 18, expandTo18Decimals(100), expandTo18Decimals(1000)]
-    )
-    vxzlk = await deployContract(
-      wallet,
-      vxZenlinkToken,
-      [zlk.address, 'Vault vxZLK', 'vxZLK']
-    )
-    loyaltyCalculator = await deployContract(
-      wallet,
-      ZenlinkTokenLoyaltyCalculator,
-      [vxzlk.address, zlk.address, BigNumber.from(0), expandTo18Decimals(1).div(2)]
-    )
-    await vxzlk.updateLoyaltyCaculator(loyaltyCalculator.address)
-    await zlk.approve(vxzlk.address, MaxUint256)
-    await zlk.enableTransfer()
+    await setupTest()
   })
 
   it('metadata', async () => {

@@ -1,37 +1,24 @@
-import chai, { expect } from 'chai'
-import { solidity, MockProvider, deployContract } from 'ethereum-waffle'
-import { BigNumber, Contract, ContractFactory, Wallet } from 'ethers'
-import { ethers } from 'hardhat'
-
-import TestERC20 from '../build/contracts/test/BasicToken.sol/BasicToken.json'
-import StableSwap from '../build/contracts/stableswap/StableSwap.sol/StableSwap.json'
-import StableSwapStorage from '../build/contracts/stableswap/StableSwapStorage.sol/StableSwapStorage.json'
-import MetaSwap from '../build/contracts/stableswap/MetaSwap.sol/MetaSwap.json'
-import MetaSwapStorage from '../build/contracts/stableswap/MetaSwapStorage.sol/MetaSwapStorage.json'
-import StableSwapRouter from '../build/contracts/periphery/StableSwapRouter.sol/StableSwapRouter.json'
-
-import { 
-  asyncForEach, 
-  linkBytecode, 
-  MAX_UINT256
-} from './shared/utilities'
-
-chai.use(solidity)
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { expect } from 'chai'
+import { BigNumber } from 'ethers'
+import { deployments, ethers } from 'hardhat'
+import { BasicToken, LPToken, MetaSwap, StableSwap, StableSwapRouter } from '../typechain-types'
+import { asyncForEach, MAX_UINT256 } from './shared/utilities'
 
 describe('StableSwapRouter', async () => {
-  let signers: Array<Wallet>
-  let swapRouter: Contract
-  let baseSwap: Contract
-  let metaSwap: Contract
-  let firstToken: Contract
-  let secondToken: Contract
-  let thirdToken: Contract
-  let fourthToken: Contract
-  let baseLPToken: Contract
-  let metaLPToken: Contract
-  let owner: Wallet
-  let user1: Wallet
-  let user2: Wallet
+  let signers: Array<SignerWithAddress>
+  let swapRouter: StableSwapRouter
+  let baseSwap: StableSwap
+  let metaSwap: MetaSwap
+  let firstToken: BasicToken
+  let secondToken: BasicToken
+  let thirdToken: BasicToken
+  let fourthToken: BasicToken
+  let baseLPToken: LPToken
+  let metaLPToken: LPToken
+  let owner: SignerWithAddress
+  let user1: SignerWithAddress
+  let user2: SignerWithAddress
   let ownerAddress: string
   let baseSwapStorage: {
     initialA: BigNumber
@@ -57,157 +44,126 @@ describe('StableSwapRouter', async () => {
   const ADMIN_FEE = 0
   const LP_TOKEN_NAME = "Test LP Token Name"
   const LP_TOKEN_SYMBOL = "TESTLP"
-  
-  const provider = new MockProvider({
-    ganacheOptions: {
-      hardfork: 'istanbul',
-      mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-      gasLimit: 99999999999,
-    },
-  })
 
-  async function setupTest() {
-    signers = provider.getWallets()
-    owner = signers[0]
-    user1 = signers[1]
-    user2 = signers[2]
-    ownerAddress = owner.address
+  const setupTest = deployments.createFixture(
+    async ({ deployments, ethers }) => {
+      await deployments.fixture() // ensure you start from a fresh deployments
+      signers = await ethers.getSigners()
+        ;[owner, user1, user2] = signers
+      ownerAddress = owner.address
 
-    firstToken = await deployContract(
-      owner,
-      TestERC20,
-      ['First Token', 'FIRST', '18', '0']
-    )
 
-    secondToken = await deployContract(
-      owner,
-      TestERC20,
-      ['Second Token', 'SECOND', '18', '0']
-    )
+      const basicTokenFactory = await ethers.getContractFactory('BasicToken')
+      firstToken = (await basicTokenFactory.deploy('First Token', 'FIRST', '18', '0')) as BasicToken
+      secondToken = (await basicTokenFactory.deploy('Second Token', 'SECOND', '18', '0')) as BasicToken
+      thirdToken = (await basicTokenFactory.deploy('Third Token', 'THIRD', '6', '0')) as BasicToken
+      fourthToken = (await basicTokenFactory.deploy('Fourth Token', 'FOURTH', '6', '0')) as BasicToken
 
-    thirdToken = await deployContract(
-      owner,
-      TestERC20,
-      ['Third Token', 'THIRD', '6', '0']
-    )
+      await asyncForEach([owner, user1, user2], async (signer) => {
+        const address = await signer.getAddress()
+        await firstToken.setBalance(address, String(1e20))
+        await secondToken.setBalance(address, String(1e20))
+        await thirdToken.setBalance(address, String(1e8))
+        await fourthToken.setBalance(address, String(1e8))
+      })
 
-    fourthToken = await deployContract(
-      owner,
-      TestERC20,
-      ['Fourth Token', 'FOURTH', '6', '0']
-    )
+      const stableSwapStorageFactory = await ethers.getContractFactory('StableSwapStorage')
+      const stableSwapStorageLibrary = await stableSwapStorageFactory.deploy()
+      const metaSwapStorageFactory = await ethers.getContractFactory('MetaSwapStorage')
+      const metaSwapStorageLibrary = await metaSwapStorageFactory.deploy()
 
-    await asyncForEach([owner, user1, user2], async (signer) => {
-      const address = await signer.getAddress()
-      await firstToken.setBalance(address, String(1e20))
-      await secondToken.setBalance(address, String(1e20))
-      await thirdToken.setBalance(address, String(1e8))
-      await fourthToken.setBalance(address, String(1e8))
-    })
+      const stableSwapFactory = await ethers.getContractFactory('StableSwap', {
+        libraries: {
+          'StableSwapStorage': stableSwapStorageLibrary.address
+        }
+      })
+      baseSwap = (await stableSwapFactory.deploy()) as StableSwap
+      const metaSwapFactory = await ethers.getContractFactory('MetaSwap', {
+        libraries: {
+          'StableSwapStorage': stableSwapStorageLibrary.address,
+          'MetaSwapStorage': metaSwapStorageLibrary.address
+        }
+      })
+      metaSwap = (await metaSwapFactory.deploy()) as MetaSwap
 
-    const baseSwapStorageContract = await deployContract(owner, StableSwapStorage)
-    const metaSwapStorageContract = await deployContract(owner, MetaSwapStorage)
+      await baseSwap.initialize(
+        [firstToken.address, secondToken.address, thirdToken.address],
+        [18, 18, 6],
+        LP_TOKEN_NAME,
+        LP_TOKEN_SYMBOL,
+        INITIAL_A_VALUE,
+        SWAP_FEE,
+        ADMIN_FEE,
+        owner.address
+      )
+      baseSwapStorage = await baseSwap.swapStorage()
+      baseLPToken = (await ethers.getContractAt(
+        'LPToken',
+        baseSwapStorage.lpToken,
+        owner
+      )) as LPToken
 
-    const baseSwapFactory = (await ethers.getContractFactory(
-      StableSwap.abi,
-      linkBytecode(StableSwap, {
-        'StableSwapStorage': baseSwapStorageContract.address
-      }),
-      owner,
-    )) as ContractFactory
-    const metaSwapFactory = (await ethers.getContractFactory(
-      MetaSwap.abi,
-      linkBytecode(MetaSwap, {
-        'StableSwapStorage': baseSwapStorageContract.address,
-        'MetaSwapStorage': metaSwapStorageContract.address
-      }),
-      owner,
-    )) as ContractFactory
+      await asyncForEach(
+        [firstToken, secondToken, thirdToken],
+        async (token) => {
+          await token.approve(baseSwap.address, MAX_UINT256)
+        }
+      )
 
-    baseSwap = await baseSwapFactory.deploy()
-    metaSwap = await metaSwapFactory.deploy()
+      await baseSwap.addLiquidity(
+        [String(1e18), String(1e18), String(1e6)],
+        0,
+        MAX_UINT256
+      )
 
-    await baseSwap.initialize(
-      [firstToken.address, secondToken.address, thirdToken.address],
-      [18, 18, 6],
-      LP_TOKEN_NAME,
-      LP_TOKEN_SYMBOL,
-      INITIAL_A_VALUE,
-      SWAP_FEE,
-      ADMIN_FEE,
-      owner.address
-    )
-    baseSwapStorage = await baseSwap.swapStorage()
-    baseLPToken = await ethers.getContractAt(
-      'LPToken',
-      baseSwapStorage.lpToken,
-      owner
-    )
+      await metaSwap.initializeMetaSwap(
+        [fourthToken.address, baseLPToken.address],
+        [6, 18],
+        LP_TOKEN_NAME,
+        LP_TOKEN_SYMBOL,
+        INITIAL_A_VALUE,
+        SWAP_FEE,
+        ADMIN_FEE,
+        owner.address,
+        baseSwap.address
+      )
+      metaSwapStorage = await metaSwap.swapStorage()
+      metaLPToken = (await ethers.getContractAt(
+        'LPToken',
+        metaSwapStorage.lpToken,
+        owner
+      )) as LPToken
 
-    await asyncForEach(
-      [firstToken, secondToken, thirdToken],
-      async (token) => {
-        await token.approve(baseSwap.address, MAX_UINT256)
-      }
-    )
+      expect(await baseSwap.getVirtualPrice()).to.be.eq('1000000000000000000')
+      expect(await metaSwap.getVirtualPrice()).to.be.eq(0)
 
-    await baseSwap.addLiquidity(
-      [String(1e18), String(1e18), String(1e6)],
-      0,
-      MAX_UINT256
-    )
+      const swapRouterFactory = await ethers.getContractFactory('StableSwapRouter')
+      swapRouter = (await swapRouterFactory.deploy()) as StableSwapRouter
 
-    await metaSwap.initializeMetaSwap(
-      [fourthToken.address, baseLPToken.address],
-      [6, 18],
-      LP_TOKEN_NAME,
-      LP_TOKEN_SYMBOL,
-      INITIAL_A_VALUE,
-      SWAP_FEE,
-      ADMIN_FEE,
-      owner.address,
-      baseSwap.address
-    )
-    metaSwapStorage = await metaSwap.swapStorage()
-    metaLPToken = await ethers.getContractAt(
-      'LPToken',
-      metaSwapStorage.lpToken,
-      owner
-    )
-
-    expect(await baseSwap.getVirtualPrice()).to.be.eq('1000000000000000000')
-    expect(await metaSwap.getVirtualPrice()).to.be.eq(0)
-
-    swapRouter = await deployContract(
-      owner,
-      StableSwapRouter,
-      []
-    )
-
-    await asyncForEach([owner, user1, user2], async (signer) => {
-      await firstToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
-      await secondToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
-      await thirdToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
-      await fourthToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
-      await baseLPToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
-      await metaLPToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
-    })
-  }
+      await asyncForEach([owner, user1, user2], async (signer) => {
+        await firstToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
+        await secondToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
+        await thirdToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
+        await fourthToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
+        await baseLPToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
+        await metaLPToken.connect(signer).approve(swapRouter.address, MAX_UINT256)
+      })
+    }
+  )
 
   beforeEach(async () => {
     await setupTest()
   })
 
   it('convert', async () => {
-    const toConvertSwapStorageContract = await deployContract(owner, StableSwapStorage)
-    const toConvertswapFactory = (await ethers.getContractFactory(
-      StableSwap.abi,
-      linkBytecode(StableSwap, {
-        'StableSwapStorage': toConvertSwapStorageContract.address
-      }),
-      owner,
-    )) as ContractFactory
-    const toConvertSwap = await toConvertswapFactory.deploy()
+    const toConvertSwapStorageFactory = await ethers.getContractFactory('StableSwapStorage')
+    const toConvertSwapStorage = await toConvertSwapStorageFactory.deploy()
+    const toConvertSwapFactory = await ethers.getContractFactory('StableSwap', {
+      libraries: {
+        'StableSwapStorage': toConvertSwapStorage.address
+      }
+    })
+    const toConvertSwap = await toConvertSwapFactory.deploy()
     await toConvertSwap.initialize(
       [firstToken.address, secondToken.address, thirdToken.address],
       [18, 18, 6],
@@ -225,8 +181,8 @@ describe('StableSwapRouter', async () => {
 
     await swapRouter.addPoolLiquidity(
       baseSwap.address,
-      [String(1e18), String(1e18), String(1e6)], 
-      0, 
+      [String(1e18), String(1e18), String(1e6)],
+      0,
       owner.address,
       MAX_UINT256
     )
@@ -240,7 +196,7 @@ describe('StableSwapRouter', async () => {
       owner.address,
       MAX_UINT256
     )
-    
+
     expect(await firstToken.balanceOf(toConvertSwap.address)).to.eq(String(2e18))
     expect(await secondToken.balanceOf(toConvertSwap.address)).to.eq(String(2e18))
     expect(await thirdToken.balanceOf(toConvertSwap.address)).to.eq(String(2e6))
@@ -249,8 +205,8 @@ describe('StableSwapRouter', async () => {
   it('addPoolLiquidity', async () => {
     await swapRouter.addPoolLiquidity(
       baseSwap.address,
-      [String(1e18), String(1e18), String(1e6)], 
-      0, 
+      [String(1e18), String(1e18), String(1e6)],
+      0,
       owner.address,
       MAX_UINT256
     )
@@ -293,19 +249,19 @@ describe('StableSwapRouter', async () => {
     expect(await metaLPToken.balanceOf(ownerAddress)).to.eq(expectLpAmount)
 
     await asyncForEach(
-      [firstToken, secondToken, thirdToken, fourthToken, baseLPToken, metaLPToken], 
+      [firstToken, secondToken, thirdToken, fourthToken, baseLPToken, metaLPToken],
       async (token) => {
         expect(await token.allowance(swapRouter.address, baseSwap.address)).to.eq(String(0))
         expect(await token.allowance(swapRouter.address, metaSwap.address)).to.eq(String(0))
         expect(await token.balanceOf(swapRouter.address)).to.eq(String(0))
-    })
+      })
   })
 
   it('removePoolLiquidity', async () => {
     await swapRouter.addPoolLiquidity(
       baseSwap.address,
-      [String(1e18), String(1e18), String(1e6)], 
-      0, 
+      [String(1e18), String(1e18), String(1e6)],
+      0,
       owner.address,
       MAX_UINT256
     )
@@ -332,8 +288,8 @@ describe('StableSwapRouter', async () => {
   it('removePoolLiquidityOneToken', async () => {
     await swapRouter.addPoolLiquidity(
       baseSwap.address,
-      [String(1e18), String(1e18), String(1e6)], 
-      0, 
+      [String(1e18), String(1e18), String(1e6)],
+      0,
       owner.address,
       MAX_UINT256
     )
@@ -361,8 +317,8 @@ describe('StableSwapRouter', async () => {
   it('removePoolAndBaseLiquidity', async () => {
     await swapRouter.addPoolLiquidity(
       baseSwap.address,
-      [String(1e18), String(1e18), String(1e6)], 
-      0, 
+      [String(1e18), String(1e18), String(1e6)],
+      0,
       owner.address,
       MAX_UINT256
     )
@@ -402,8 +358,8 @@ describe('StableSwapRouter', async () => {
   it('removePoolAndBaseLiquidityOneToken', async () => {
     await swapRouter.addPoolLiquidity(
       baseSwap.address,
-      [String(1e18), String(1e18), String(1e6)], 
-      0, 
+      [String(1e18), String(1e18), String(1e6)],
+      0,
       owner.address,
       MAX_UINT256
     )
@@ -443,8 +399,8 @@ describe('StableSwapRouter', async () => {
   it('swapPool', async () => {
     await swapRouter.addPoolLiquidity(
       baseSwap.address,
-      [String(1e18), String(1e18), String(1e6)], 
-      0, 
+      [String(1e18), String(1e18), String(1e6)],
+      0,
       owner.address,
       MAX_UINT256
     )
@@ -473,8 +429,8 @@ describe('StableSwapRouter', async () => {
   it('swapPoolFromBase', async () => {
     await swapRouter.addPoolLiquidity(
       baseSwap.address,
-      [String(1e18), String(1e18), String(1e6)], 
-      0, 
+      [String(1e18), String(1e18), String(1e6)],
+      0,
       owner.address,
       MAX_UINT256
     )
@@ -515,8 +471,8 @@ describe('StableSwapRouter', async () => {
   it('swapPoolToBase', async () => {
     await swapRouter.addPoolLiquidity(
       baseSwap.address,
-      [String(1e18), String(1e18), String(1e6)], 
-      0, 
+      [String(1e18), String(1e18), String(1e6)],
+      0,
       owner.address,
       MAX_UINT256
     )

@@ -1,114 +1,115 @@
-import { expect, use } from "chai";
-import { Contract, constants } from "ethers";
-import { MockProvider, solidity } from "ethereum-waffle";
-import { ZenlinkTokenFixture } from './shared/fixtures'
+import { expect } from "chai";
+import { constants } from "ethers";
 import { expandTo18Decimals } from './shared/utilities'
 import { Address } from "ethereumjs-util";
-
-use(solidity);
-
-const overrides = {
-  gasLimit: 4100000
-}
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { deployments } from "hardhat";
+import { ZenlinkToken } from "../typechain-types";
 
 describe('ZenlinkToken', () => {
-  const provider = new MockProvider({
-    ganacheOptions: {
-      hardfork: 'istanbul',
-      mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-      gasLimit: 9999999,
-    },
-  })
-  const [wallet, walletTo] = provider.getWallets();
+  let signers: SignerWithAddress[]
+  let wallet: SignerWithAddress
+  let walletTo: SignerWithAddress
 
-  let zenlinkToken: Contract
+  let zenlinkToken: ZenlinkToken
+
+  const setupTest = deployments.createFixture(
+    async ({ deployments, ethers }) => {
+      await deployments.fixture() // ensure you start from a fresh deployments
+      signers = await ethers.getSigners()
+        ;[wallet, walletTo] = signers
+
+      const zlkFactory = await ethers.getContractFactory('ZenlinkToken')
+      zenlinkToken = (await zlkFactory.deploy("ZLK", "zenlink token", 18, '30000000000000000000000000', '40000000000000000000000000')) as ZenlinkToken
+      await zenlinkToken.transfer(walletTo.address, expandTo18Decimals(2))
+    }
+  )
+
   beforeEach(async () => {
-    const fixture = await ZenlinkTokenFixture(wallet)
-    zenlinkToken = fixture.zenlinkToken
-    await zenlinkToken.transfer(walletTo.address, expandTo18Decimals(2), overrides)
+    await setupTest()
   })
 
   it("mint", async () => {
-    await expect(zenlinkToken.connect(walletTo).mint(expandTo18Decimals(1), overrides)).to.be.revertedWith('not admin')
+    await expect(zenlinkToken.connect(walletTo).mint(expandTo18Decimals(1))).to.be.revertedWith('not admin')
 
-    await expect(zenlinkToken.connect(wallet).mint(expandTo18Decimals(1), overrides))
+    await expect(zenlinkToken.connect(wallet).mint(expandTo18Decimals(1)))
       .to.emit(zenlinkToken, "Transfer")
       .withArgs(constants.AddressZero, wallet.address, expandTo18Decimals(1))
 
-    await expect(zenlinkToken.connect(wallet).mint('40000000000000000000000000', overrides))
+    await expect(zenlinkToken.connect(wallet).mint('40000000000000000000000000'))
       .to.revertedWith("can't mint")
   })
 
   it("transfer only admin", async () => {
-    await expect(zenlinkToken.transfer(walletTo.address, expandTo18Decimals(1), overrides))
+    await expect(zenlinkToken.transfer(walletTo.address, expandTo18Decimals(1)))
       .to.emit(zenlinkToken, "Transfer")
       .withArgs(wallet.address, walletTo.address, expandTo18Decimals(1))
 
-    await expect(zenlinkToken.connect(walletTo).transfer(wallet.address, expandTo18Decimals(1), overrides))
+    await expect(zenlinkToken.connect(walletTo).transfer(wallet.address, expandTo18Decimals(1)))
       .to.be.revertedWith(`can't transfer`)
   })
 
   it('transferFrom only admin', async () => {
-    await zenlinkToken.connect(walletTo).approve(wallet.address, expandTo18Decimals(1), overrides);
-    await zenlinkToken.approve(walletTo.address, expandTo18Decimals(1), overrides);
+    await zenlinkToken.connect(walletTo).approve(wallet.address, expandTo18Decimals(1));
+    await zenlinkToken.approve(walletTo.address, expandTo18Decimals(1));
 
-    await expect(zenlinkToken.connect(walletTo).transferFrom(wallet.address, walletTo.address, expandTo18Decimals(1), overrides))
+    await expect(zenlinkToken.connect(walletTo).transferFrom(wallet.address, walletTo.address, expandTo18Decimals(1)))
       .to.be.revertedWith(`can't transfer`)
 
-    await expect(zenlinkToken.transferFrom(walletTo.address, wallet.address, expandTo18Decimals(1), overrides))
+    await expect(zenlinkToken.transferFrom(walletTo.address, wallet.address, expandTo18Decimals(1)))
       .to.emit(zenlinkToken, "Transfer")
       .withArgs(walletTo.address, wallet.address, expandTo18Decimals(1))
   })
 
   it('whitelist', async () => {
-    await expect(zenlinkToken.connect(walletTo).addWhitelist(walletTo.address, overrides)).to.be.revertedWith('not admin')
-    await zenlinkToken.addWhitelist(walletTo.address, overrides)
+    await expect(zenlinkToken.connect(walletTo).addWhitelist(walletTo.address)).to.be.revertedWith('not admin')
+    await zenlinkToken.addWhitelist(walletTo.address)
 
-    await expect(zenlinkToken.connect(walletTo).transfer(wallet.address, expandTo18Decimals(1), overrides))
+    await expect(zenlinkToken.connect(walletTo).transfer(wallet.address, expandTo18Decimals(1)))
       .to.emit(zenlinkToken, "Transfer")
       .withArgs(walletTo.address, wallet.address, expandTo18Decimals(1))
 
 
     await zenlinkToken.approve(walletTo.address, expandTo18Decimals(1))
-    await expect(zenlinkToken.connect(walletTo).transferFrom(wallet.address, walletTo.address, expandTo18Decimals(1), overrides))
+    await expect(zenlinkToken.connect(walletTo).transferFrom(wallet.address, walletTo.address, expandTo18Decimals(1)))
       .to.emit(zenlinkToken, "Transfer")
       .withArgs(wallet.address, walletTo.address, expandTo18Decimals(1))
 
-    await expect(zenlinkToken.connect(walletTo).removeWhitelist(walletTo.address, overrides)).to.be.revertedWith('not admin')
-    await zenlinkToken.removeWhitelist(walletTo.address, overrides)
+    await expect(zenlinkToken.connect(walletTo).removeWhitelist(walletTo.address)).to.be.revertedWith('not admin')
+    await zenlinkToken.removeWhitelist(walletTo.address)
 
-    await expect(zenlinkToken.connect(walletTo).transferFrom(wallet.address, walletTo.address, expandTo18Decimals(1), overrides))
+    await expect(zenlinkToken.connect(walletTo).transferFrom(wallet.address, walletTo.address, expandTo18Decimals(1)))
       .to.be.revertedWith(`can't transfer`)
-    await expect(zenlinkToken.connect(walletTo).transfer(wallet.address, expandTo18Decimals(1), overrides))
+    await expect(zenlinkToken.connect(walletTo).transfer(wallet.address, expandTo18Decimals(1)))
       .to.be.revertedWith(`can't transfer`)
   })
 
   it('global transferable switch', async () => {
-    await expect(zenlinkToken.connect(walletTo).enableTransfer(overrides)).to.be.revertedWith('not admin')
-    await zenlinkToken.enableTransfer(overrides)
-    await expect(zenlinkToken.connect(walletTo).disableTransfer(overrides)).to.be.revertedWith('not admin')
+    await expect(zenlinkToken.connect(walletTo).enableTransfer()).to.be.revertedWith('not admin')
+    await zenlinkToken.enableTransfer()
+    await expect(zenlinkToken.connect(walletTo).disableTransfer()).to.be.revertedWith('not admin')
 
-    await expect(zenlinkToken.connect(walletTo).transfer(wallet.address, expandTo18Decimals(1), overrides))
+    await expect(zenlinkToken.connect(walletTo).transfer(wallet.address, expandTo18Decimals(1)))
       .to.emit(zenlinkToken, "Transfer")
       .withArgs(walletTo.address, wallet.address, expandTo18Decimals(1))
 
 
     await zenlinkToken.approve(walletTo.address, expandTo18Decimals(1))
-    await expect(zenlinkToken.connect(walletTo).transferFrom(wallet.address, walletTo.address, expandTo18Decimals(1), overrides))
+    await expect(zenlinkToken.connect(walletTo).transferFrom(wallet.address, walletTo.address, expandTo18Decimals(1)))
       .to.emit(zenlinkToken, "Transfer")
       .withArgs(wallet.address, walletTo.address, expandTo18Decimals(1))
 
 
-    await zenlinkToken.disableTransfer(overrides)
+    await zenlinkToken.disableTransfer()
 
-    await expect(zenlinkToken.connect(walletTo).transferFrom(wallet.address, walletTo.address, expandTo18Decimals(1), overrides))
+    await expect(zenlinkToken.connect(walletTo).transferFrom(wallet.address, walletTo.address, expandTo18Decimals(1)))
       .to.be.revertedWith(`can't transfer`)
-    await expect(zenlinkToken.connect(walletTo).transfer(wallet.address, expandTo18Decimals(1), overrides))
+    await expect(zenlinkToken.connect(walletTo).transfer(wallet.address, expandTo18Decimals(1)))
       .to.be.revertedWith(`can't transfer`)
   })
 
   it('burn', async () => {
-    await zenlinkToken.enableTransfer(overrides)
+    await zenlinkToken.enableTransfer()
 
     let totalSupplyBeforeBurn = await zenlinkToken.totalSupply();
 
@@ -119,7 +120,7 @@ describe('ZenlinkToken', () => {
     let totalSupplyAfterBurn = await zenlinkToken.totalSupply();
     let balanceAfterBurn = await zenlinkToken.balanceOf(wallet.address);
 
-    expect(totalSupplyBeforeBurn - totalSupplyAfterBurn).to.be.equals(15000000000000000000000000);
+    expect(totalSupplyBeforeBurn.sub(totalSupplyAfterBurn)).to.be.equals('15000000000000000000000000');
     expect(balanceAfterBurn).to.be.equal("14999998000000000000000000");
   })
 })

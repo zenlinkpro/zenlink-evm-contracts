@@ -1,14 +1,8 @@
-import { expect, use } from "chai";
-import { Contract } from "ethers";
-import { MockProvider, solidity } from "ethereum-waffle";
-import { createTimeMachine } from "./shared/time";
-import { deployGaugeFixture } from "./shared/governance";
-
-use(solidity);
-
-const overrides = {
-  gasLimit: 4100000
-}
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { expect } from "chai";
+import { deployments } from "hardhat";
+import { BasicToken, Farming, Gauge } from "../typechain-types";
+import { getCurrentBlockTimestamp, setTimestamp } from "./shared/time";
 
 const T0PoolId = 0
 const T1PoolId = 1
@@ -18,44 +12,55 @@ let voteDuraton = Hour * 4
 let voteSetWindow = Hour
 
 describe('Gauge', () => {
-  const provider = new MockProvider({
-    ganacheOptions: {
-      hardfork: 'istanbul',
-      mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-      gasLimit: 9999999,
-    },
-  })
-  const [wallet, walletTo] = provider.getWallets();
-  const time = createTimeMachine(provider);
+  let signers: SignerWithAddress[]
+  let wallet: SignerWithAddress
+  let walletTo: SignerWithAddress
 
-  let gauge: Contract;
-  let voteToken: Contract;
-  let farming: Contract
-  let farmingToken: Contract
+  let gauge: Gauge;
+  let voteToken: BasicToken;
+  let farming: Farming
+  let farmingToken: BasicToken
 
-  async function getCurBlockTimestamp() {
-    const blockNumBefore = await provider.getBlockNumber();
-    const blockBefore = await provider.getBlock(blockNumBefore);
-    return blockBefore.timestamp;
-  }
+  const setupTest = deployments.createFixture(
+    async ({ deployments, ethers }) => {
+      await deployments.fixture() // ensure you start from a fresh deployments
+      signers = await ethers.getSigners()
+        ;[wallet, walletTo] = signers
+
+      const curTimestamp = await getCurrentBlockTimestamp()
+      const farmingFactory = await ethers.getContractFactory('Farming')
+      farming = (await farmingFactory.deploy()) as Farming
+
+      const basicTokenFactory = await ethers.getContractFactory('BasicToken')
+      voteToken = (await basicTokenFactory.deploy("VoteToken", "VT", 10, '40000000000000')) as BasicToken
+      farmingToken = (await basicTokenFactory.deploy("FarmingToken", "FT", 10, '40000000000000')) as BasicToken
+
+      const gaugeFactory = await ethers.getContractFactory('Gauge')
+      gauge = (
+        await gaugeFactory.deploy(
+          farming.address,
+          voteToken.address,
+          voteDuraton,
+          voteSetWindow,
+          curTimestamp + Hour
+        )
+      ) as Gauge
+
+      expect(await gauge.voteToken()).be.eq(voteToken.address)
+      expect(await gauge.nextVotePeriodID()).be.eq(1)
+      expect(await gauge.getCurrentPeriodId()).be.eq(0)
+
+      await voteToken.transfer(walletTo.address, '20000000000000')
+
+      await voteToken.approve(gauge.address, '50000000000000')
+      await voteToken.connect(walletTo).approve(gauge.address, '50000000000000')
+
+      await farming.add(farmingToken.address, [], [], 0, 0)
+    }
+  )
 
   beforeEach(async () => {
-    let curTimestamp = await getCurBlockTimestamp()
-    const fixture = await deployGaugeFixture(wallet, voteDuraton, voteSetWindow, curTimestamp + Hour)
-    gauge = fixture.gauge
-    voteToken = fixture.voteToken
-    farming = fixture.farming
-    farmingToken = fixture.farmingToken
-
-    expect(await gauge.voteToken()).be.eq(voteToken.address)
-    expect(await gauge.nextVotePeriodID()).be.eq(1)
-    expect(await gauge.getCurrentPeriodId()).be.eq(0)
-    await voteToken.transfer(walletTo.address, '20000000000000', overrides)
-
-    await voteToken.approve(gauge.address, '50000000000000', overrides)
-    await voteToken.connect(walletTo).approve(gauge.address, '50000000000000', overrides)
-
-    await farming.add(farmingToken.address, [], [], 0, 0)
+    await setupTest()
   })
 
   it('set votable pool', async () => {
@@ -113,13 +118,13 @@ describe('Gauge', () => {
 
     // in period0, updateVotePeriod do nothing
     let timestamp = period0.start.toNumber() + Hour
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
 
     await gauge.updateVotePeriod()
 
     // after period0, update vote period success
     timestamp = period0.end.toNumber() + (voteSetWindow / 2)
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
 
     let nextPeriodStart = period0.end.toNumber() + voteSetWindow
     let nextPeriodEnd = nextPeriodStart + voteDuraton
@@ -128,13 +133,13 @@ describe('Gauge', () => {
     // after period1.end + voteSetWindow, period2.start = block.Timestamp
     let period1 = await gauge.votePeriods(1)
     timestamp = period1.end.toNumber() + voteSetWindow
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
 
     await gauge.updateVotePeriod()
 
     expect(await gauge.getCurrentPeriodId()).to.eq(2)
     let period2 = await gauge.votePeriods(2)
-    let currentTimestamp = await getCurBlockTimestamp()
+    let currentTimestamp = await getCurrentBlockTimestamp()
     expect(period2.start.toNumber()).to.eq(currentTimestamp)
     expect(period2.end.toNumber()).to.eq(currentTimestamp + voteDuraton)
   })
@@ -151,11 +156,11 @@ describe('Gauge', () => {
     expect(period0AfterUpdate.end).to.eq(period0.end)
 
     let timestamp = period0.start.toNumber() + newVoteDuration + 10
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
     await gauge.updateVotePeriod()
 
     timestamp = period0.end.toNumber() + 10
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
     let nextPeriodStart = period0.end.toNumber() + newVoteSetWindow
     let nextPeriodEnd = nextPeriodStart + newVoteDuration
 
@@ -176,7 +181,7 @@ describe('Gauge', () => {
     let period0 = await gauge.votePeriods(0)
     let timestamp = period0.end.toNumber() + 10
 
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
     await expect(gauge.setVotablePools([T1PoolId])).to.emit(gauge, "SetVotablePools").withArgs(1, [T1PoolId])
     let poolState = await gauge.allPoolState(1, T1PoolId)
     expect(poolState.votable).eq(true)
@@ -189,7 +194,7 @@ describe('Gauge', () => {
 
     // after period0.End + voteSetWindow
     timestamp = period0.end.toNumber() + voteSetWindow + 10
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
     await expect(gauge.setVotablePools([T1PoolId])).to.emit(gauge, "SetVotablePools").withArgs(1, [T1PoolId])
     poolState = await gauge.allPoolState(1, T1PoolId)
     expect(poolState.votable).eq(true)
@@ -200,7 +205,7 @@ describe('Gauge', () => {
     // after period0,
     let period0 = await gauge.votePeriods(0)
     let timestamp = period0.end.toNumber() + 10
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
 
     await expect(gauge.setVotablePools([T1PoolId])).to.emit(gauge, "SetVotablePools").withArgs(1, [T1PoolId])
 
@@ -227,16 +232,16 @@ describe('Gauge', () => {
     // vote after period0 start
     let period = await gauge.votePeriods(0)
     let timestamp = period.start.toNumber() + Hour * 2
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
     await expect(gauge.vote(T0PoolId, 10000000000)).to.emit(gauge, "Vote").withArgs(wallet.address, 0, T0PoolId, 10000000000)
     let poolState = await gauge.allPoolState(0, T0PoolId)
 
-    let curScore = 10000000000 + calculateScore(await getCurBlockTimestamp(), 10000000000, period)
+    let curScore = 10000000000 + calculateScore(await getCurrentBlockTimestamp(), 10000000000, period)
     expect(poolState.score).eq(curScore)
 
     // vote after period0 end
     timestamp = period.end.toNumber() + 10
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
 
     let nextPeriodStart = period.end.toNumber() + voteSetWindow
     let nextPeriodEnd = nextPeriodStart + voteDuraton
@@ -266,7 +271,7 @@ describe('Gauge', () => {
       let nextPeriodStart = curPeriod.end.toNumber() + voteSetWindow
       let nextPeriodEnd = nextPeriodStart + voteDuraton
       let timestamp = curPeriod.end.toNumber() + 10
-      time.setAndMine(timestamp)
+      await setTimestamp(timestamp)
       await expect(gauge.updateVotePeriod()).to.emit(gauge, "UpdateVotePeriod").withArgs(i, nextPeriodStart, nextPeriodEnd)
       expect(await gauge.getPoolInfo(T0PoolId)).to.property("score").eq(10000000000)
     }
@@ -307,7 +312,7 @@ describe('Gauge', () => {
       let nextPeriodStart = curPeriod.end.toNumber() + voteSetWindow
       let nextPeriodEnd = nextPeriodStart + voteDuraton
       let timestamp = curPeriod.end.toNumber() + 10
-      time.setAndMine(timestamp)
+      await setTimestamp(timestamp)
       await expect(gauge.updateVotePeriod()).to.emit(gauge, "UpdateVotePeriod").withArgs(i, nextPeriodStart, nextPeriodEnd)
 
       if ((i % 2) == 0) {
@@ -352,14 +357,14 @@ describe('Gauge', () => {
     // cancel vote in period0 
     let period = await gauge.votePeriods(0)
     let timestamp = period.start.toNumber() + Hour * 2
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
     await expect(gauge.vote(T0PoolId, 10000000000)).to.emit(gauge, "Vote").withArgs(wallet.address, 0, T0PoolId, 10000000000)
-    let addedScore = calculateScore(await getCurBlockTimestamp(), 10000000000, period)
+    let addedScore = calculateScore(await getCurrentBlockTimestamp(), 10000000000, period)
 
     timestamp = period.start.toNumber() + Hour * 3
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
     await expect(gauge.cancelVote(T0PoolId, 5000000000)).to.emit(gauge, "CancelVote").withArgs(wallet.address, 0, T0PoolId, 5000000000)
-    let removedScore = calculateScore(await getCurBlockTimestamp(), 5000000000, period)
+    let removedScore = calculateScore(await getCurrentBlockTimestamp(), 5000000000, period)
 
     poolState = await gauge.allPoolState(0, T0PoolId)
     expect(poolState.score).eq(addedScore - removedScore)
@@ -368,7 +373,7 @@ describe('Gauge', () => {
 
     // cancel vote after period0 end
     timestamp = period.end.toNumber() + 10
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
 
     let nextPeriodStart = period.end.toNumber() + voteSetWindow
     let nextPeriodEnd = nextPeriodStart + voteDuraton
@@ -401,21 +406,21 @@ describe('Gauge', () => {
     await expect(gauge.setVotablePools([T0PoolId, T1PoolId])).to.emit(gauge, "SetVotablePools").withArgs(0, [T0PoolId, T1PoolId])
     let period = await gauge.votePeriods(0)
     let timestamp = period.start.toNumber() + Hour * 2
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
 
     await expect(gauge.batchVote([T0PoolId, T1PoolId], [5000000000])).to.be.reverted
 
     await expect(gauge.batchVote([T0PoolId, T1PoolId], [5000000000, 5000000000]))
       .to.emit(gauge, "BatchVote").withArgs(wallet.address, 0, [T0PoolId, T1PoolId], [5000000000, 5000000000])
 
-    let pool0AddedScore = calculateScore(await getCurBlockTimestamp(), 5000000000, period)
+    let pool0AddedScore = calculateScore(await getCurrentBlockTimestamp(), 5000000000, period)
 
     let pool0State = await gauge.allPoolState(0, T0PoolId)
     expect(pool0State.score).to.eq(pool0AddedScore)
     expect(pool0State.totalAmount).to.eq(5000000000)
 
     timestamp = period.end.toNumber() + 10
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
 
     let nextPeriodStart = period.end.toNumber() + voteSetWindow
     let nextPeriodEnd = nextPeriodStart + voteDuraton
@@ -438,33 +443,33 @@ describe('Gauge', () => {
     await expect(gauge.setVotablePools([T0PoolId, T1PoolId])).to.emit(gauge, "SetVotablePools").withArgs(0, [T0PoolId, T1PoolId])
     let period = await gauge.votePeriods(0)
     let timestamp = period.start.toNumber() + Hour * 2
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
 
     await expect(gauge.batchVote([T0PoolId, T1PoolId], [5000000000])).to.be.reverted
 
     await expect(gauge.batchVote([T0PoolId, T1PoolId], [5000000000, 5000000000]))
       .to.emit(gauge, "BatchVote").withArgs(wallet.address, 0, [T0PoolId, T1PoolId], [5000000000, 5000000000])
 
-    let pool0AddedScore = calculateScore(await getCurBlockTimestamp(), 5000000000, period)
+    let pool0AddedScore = calculateScore(await getCurrentBlockTimestamp(), 5000000000, period)
 
     let pool0State = await gauge.allPoolState(0, T0PoolId)
     expect(pool0State.score).to.eq(pool0AddedScore)
     expect(pool0State.totalAmount).to.eq(5000000000)
 
     timestamp = period.start.toNumber() + Hour * 3
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
 
     await expect(gauge.batchCancelVote([T0PoolId, T1PoolId], [2500000000, 1000000000]))
       .to.emit(gauge, "BatchCancelVote").withArgs(wallet.address, 0, [T0PoolId, T1PoolId], [2500000000, 1000000000])
 
-    let pool0RemovedScore = calculateScore(await getCurBlockTimestamp(), 2500000000, period)
+    let pool0RemovedScore = calculateScore(await getCurrentBlockTimestamp(), 2500000000, period)
 
     pool0State = await gauge.allPoolState(0, T0PoolId)
     expect(pool0State.score).to.eq(pool0AddedScore - pool0RemovedScore)
     expect(pool0State.totalAmount).to.eq(2500000000)
 
     timestamp = period.end.toNumber() + 10
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
 
     let nextPeriodStart = period.end.toNumber() + voteSetWindow
     let nextPeriodEnd = nextPeriodStart + voteDuraton
@@ -515,14 +520,14 @@ describe('Gauge', () => {
 
     let period = await gauge.votePeriods(0)
     let timestamp = period.start.toNumber() + Hour * 2
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
 
     await expect(gauge.migrateVote([2, 3], [1000000000, 2000000000], [T1PoolId, T0PoolId], [500000000, 2500000000]))
       .to.emit(gauge, "MigrateVote").withArgs(wallet.address, 0, [2, 3], [1000000000, 2000000000], [T1PoolId, T0PoolId], [500000000, 2500000000])
-    let pool2RemovedScore = calculateScore(await getCurBlockTimestamp(), 1000000000, period)
-    let pool3RemovedScore = calculateScore(await getCurBlockTimestamp(), 2000000000, period)
-    let pool0AddedScore = calculateScore(await getCurBlockTimestamp(), 2500000000, period)
-    let pool1AddedScore = calculateScore(await getCurBlockTimestamp(), 500000000, period)
+    let pool2RemovedScore = calculateScore(await getCurrentBlockTimestamp(), 1000000000, period)
+    let pool3RemovedScore = calculateScore(await getCurrentBlockTimestamp(), 2000000000, period)
+    let pool0AddedScore = calculateScore(await getCurrentBlockTimestamp(), 2500000000, period)
+    let pool1AddedScore = calculateScore(await getCurrentBlockTimestamp(), 500000000, period)
 
     pool0State = await gauge.allPoolState(0, T0PoolId)
     expect(pool0State.score).to.eq(pool0AddedScore)
@@ -541,7 +546,7 @@ describe('Gauge', () => {
     expect(pool3State.totalAmount).to.eq(5000000000 - 2000000000)
 
     timestamp = period.end.toNumber() + 10
-    time.setAndMine(timestamp)
+    await setTimestamp(timestamp)
 
     let nextPeriodStart = period.end.toNumber() + voteSetWindow
     let nextPeriodEnd = nextPeriodStart + voteDuraton
