@@ -1,34 +1,34 @@
-import { HardhatUserConfig } from 'hardhat/types';
-
-import "@nomiclabs/hardhat-ethers"
-import "@nomiclabs/hardhat-waffle"
-import "@nomiclabs/hardhat-web3"
-import "@nomiclabs/hardhat-etherscan"
-import "hardhat-gas-reporter"
-import "solidity-coverage"
+import "@nomicfoundation/hardhat-toolbox"
+import "@nomicfoundation/hardhat-chai-matchers";
 import "hardhat-deploy"
 import "hardhat-spdx-license-identifier"
 
 import dotenv from "dotenv"
 import { Deployment } from 'hardhat-deploy/types';
-import { task } from "hardhat/config"
+import { HardhatUserConfig, task } from "hardhat/config"
 
 dotenv.config()
 
-let config: HardhatUserConfig = {
+const config: HardhatUserConfig = {
   paths: {
     sources: "./contracts",
-    artifacts: "./build"
+    artifacts: "./build/artifacts",
+    cache: "./build/cache",
   },
   networks: {
     hardhat: {
-      gas: 1200000000,
-      blockGasLimit: 0x1fffffffffffff,
+      allowUnlimitedContractSize: false,
     },
     moonbase: {
       url: 'https://rpc.testnet.moonbeam.network',
       chainId: 1287,
-      deploy: ["./deploy/moonbase/"]
+      deploy: ["./deploy/moonbase/"],
+      verify: {
+        etherscan: {
+          apiUrl: 'https://api-moonbase.moonscan.io',
+          apiKey: 'NO_KEY',
+        }
+      }
     }
   },
   solidity: {

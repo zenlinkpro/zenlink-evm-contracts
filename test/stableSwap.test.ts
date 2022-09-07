@@ -1,42 +1,33 @@
-import chai, { expect } from 'chai'
-import { solidity, MockProvider, deployContract } from 'ethereum-waffle'
-import { BigNumber, Contract, ContractFactory, Signer, Wallet } from 'ethers'
-import { ethers } from 'hardhat'
-
-import TestERC20 from '../build/contracts/test/BasicToken.sol/BasicToken.json'
-import StableSwap from '../build/contracts/stableswap/StableSwap.sol/StableSwap.json'
-import StableSwapStorage from '../build/contracts/stableswap/StableSwapStorage.sol/StableSwapStorage.json'
-import MockStableSwapBorrower from '../build/contracts/test/MockStableSwapBorrower.sol/MockStableSwapBorrower.json'
+import { expect } from 'chai'
+import { BigNumber, Signer } from 'ethers'
+import { deployments, ethers } from 'hardhat'
 import {
   asyncForEach,
-  forceAdvanceOneBlock,
-  getCurrentBlockTimestamp,
   getUserTokenBalance,
   getUserTokenBalances,
-  linkBytecode,
   MAX_UINT256,
-  setNextTimestamp,
-  setTimestamp,
   TIME,
   ZERO_ADDRESS
 } from './shared/utilities'
 import snapshotGasCost from './shared/snapshotGasCost'
-
-chai.use(solidity)
-
-const overrides = {
-  gasLimit: 6100000
-}
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { BasicToken, LPToken, MockStableSwapBorrower, StableSwap } from '../typechain-types'
+import {
+  forceAdvanceOneBlock,
+  getCurrentBlockTimestamp,
+  setNextTimestamp,
+  setTimestamp
+} from './shared/time'
 
 describe('StableSwap', async () => {
-  let signers: Array<Wallet>
-  let swap: Contract
-  let firstToken: Contract
-  let secondToken: Contract
-  let swapToken: Contract
-  let owner: Wallet
-  let user1: Wallet
-  let user2: Wallet
+  let signers: Array<SignerWithAddress>
+  let swap: StableSwap
+  let firstToken: BasicToken
+  let secondToken: BasicToken
+  let swapToken: LPToken
+  let owner: SignerWithAddress
+  let user1: SignerWithAddress
+  let user2: SignerWithAddress
   let user1Address: string
   let user2Address: string
   let swapStorage: {
@@ -56,84 +47,68 @@ describe('StableSwap', async () => {
   const LP_TOKEN_NAME = "Test LP Token Name"
   const LP_TOKEN_SYMBOL = "TESTLP"
 
-  const provider = new MockProvider({
-    ganacheOptions: {
-      hardfork: 'istanbul',
-      mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-      gasLimit: 99999999999,
-    },
-  })
+  const setupTest = deployments.createFixture(
+    async ({ deployments, ethers }) => {
+      await deployments.fixture() // ensure you start from a fresh deployments
+      signers = await ethers.getSigners()
+        ;[owner, user1, user2] = signers
+      user1Address = user1.address
+      user2Address = user2.address
 
-  async function setupTest() {
-    signers = provider.getWallets()
-    owner = signers[0]
-    user1 = signers[1]
-    user2 = signers[2]
-    user1Address = user1.address
-    user2Address = user2.address
 
-    firstToken = await deployContract(
-      owner,
-      TestERC20,
-      ['First Token', 'FIRST', '18', '0']
-    )
+      const basicTokenFactory = await ethers.getContractFactory('BasicToken')
+      firstToken = (await basicTokenFactory.deploy('First Token', 'FIRST', '18', '0')) as BasicToken
+      secondToken = (await basicTokenFactory.deploy('Second Token', 'SECOND', '18', '0')) as BasicToken
 
-    secondToken = await deployContract(
-      owner,
-      TestERC20,
-      ['Second Token', 'SECOND', '18', '0']
-    )
+      await asyncForEach([owner, user1, user2], async (signer) => {
+        const address = await signer.getAddress()
+        await firstToken.setBalance(address, String(1e20))
+        await secondToken.setBalance(address, String(1e20))
+      })
 
-    await asyncForEach([owner, user1, user2], async (signer) => {
-      const address = await signer.getAddress()
-      await firstToken.setBalance(address, String(1e20))
-      await secondToken.setBalance(address, String(1e20))
-    })
+      const stableSwapStorageFactory = await ethers.getContractFactory('StableSwapStorage')
+      const stableSwapStorage = await stableSwapStorageFactory.deploy()
 
-    const swapStorageContract = await deployContract(owner, StableSwapStorage)
+      const stableSwapFactory = await ethers.getContractFactory('StableSwap', {
+        libraries: {
+          'StableSwapStorage': stableSwapStorage.address
+        }
+      })
+      swap = (await stableSwapFactory.deploy()) as StableSwap
 
-    const swapFactory = (await ethers.getContractFactory(
-      StableSwap.abi,
-      linkBytecode(StableSwap, {
-        'StableSwapStorage': swapStorageContract.address
-      }),
-      owner,
-    )) as ContractFactory
+      await swap.initialize(
+        [firstToken.address, secondToken.address],
+        [18, 18],
+        LP_TOKEN_NAME,
+        LP_TOKEN_SYMBOL,
+        INITIAL_A_VALUE,
+        SWAP_FEE,
+        ADMIN_FEE,
+        owner.address
+      )
 
-    swap = await swapFactory.deploy()
+      expect(await swap.getVirtualPrice()).to.be.eq(0)
 
-    await swap.initialize(
-      [firstToken.address, secondToken.address],
-      [18, 18],
-      LP_TOKEN_NAME,
-      LP_TOKEN_SYMBOL,
-      INITIAL_A_VALUE,
-      SWAP_FEE,
-      ADMIN_FEE,
-      owner.address
-    )
+      swapStorage = await swap.swapStorage()
 
-    expect(await swap.getVirtualPrice()).to.be.eq(0)
+      swapToken = (await ethers.getContractAt(
+        'LPToken',
+        swapStorage.lpToken,
+        owner
+      )) as LPToken
 
-    swapStorage = await swap.swapStorage()
+      await asyncForEach([owner, user1, user2], async (signer) => {
+        await firstToken.connect(signer).approve(swap.address, MAX_UINT256)
+        await secondToken.connect(signer).approve(swap.address, MAX_UINT256)
+        await swapToken.connect(signer).approve(swap.address, MAX_UINT256)
+      })
 
-    swapToken = await ethers.getContractAt(
-      'LPToken',
-      swapStorage.lpToken,
-      owner
-    )
+      await swap.addLiquidity([String(1e18), String(1e18)], 0, MAX_UINT256)
 
-    await asyncForEach([owner, user1, user2], async (signer) => {
-      await firstToken.connect(signer).approve(swap.address, MAX_UINT256)
-      await secondToken.connect(signer).approve(swap.address, MAX_UINT256)
-      await swapToken.connect(signer).approve(swap.address, MAX_UINT256)
-    })
-
-    await swap.addLiquidity([String(1e18), String(1e18)], 0, MAX_UINT256)
-
-    expect(await firstToken.balanceOf(swap.address)).to.eq(String(1e18))
-    expect(await secondToken.balanceOf(swap.address)).to.eq(String(1e18))
-  }
+      expect(await firstToken.balanceOf(swap.address)).to.eq(String(1e18))
+      expect(await secondToken.balanceOf(swap.address)).to.eq(String(1e18))
+    }
+  )
 
   beforeEach(async () => {
     await setupTest()
@@ -312,7 +287,6 @@ describe('StableSwap', async () => {
           [String(1e18), String(3e18)],
           calculatedPoolTokenAmountWithNegativeSlippage,
           MAX_UINT256,
-          overrides
         )
       )
 
@@ -361,8 +335,8 @@ describe('StableSwap', async () => {
     })
 
     it("Reverts when block is mined after deadline", async () => {
-      const currentTimestamp = await getCurrentBlockTimestamp(provider)
-      await setNextTimestamp(provider, currentTimestamp + 60 * 10)
+      const currentTimestamp = await getCurrentBlockTimestamp()
+      await setNextTimestamp(currentTimestamp + 60 * 10)
 
       await expect(
         swap
@@ -548,8 +522,8 @@ describe('StableSwap', async () => {
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256)
       const currentUser1Balance = await swapToken.balanceOf(user1Address)
 
-      const currentTimestamp = await getCurrentBlockTimestamp(provider)
-      await setNextTimestamp(provider, currentTimestamp + 60 * 10)
+      const currentTimestamp = await getCurrentBlockTimestamp()
+      await setNextTimestamp(currentTimestamp + 60 * 10)
 
       await swapToken.connect(user1).approve(swap.address, currentUser1Balance)
       await expect(
@@ -769,8 +743,8 @@ describe('StableSwap', async () => {
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256)
       const currentUser1Balance = await swapToken.balanceOf(user1Address)
 
-      const currentTimestamp = await getCurrentBlockTimestamp(provider)
-      await setNextTimestamp(provider, currentTimestamp + 60 * 10)
+      const currentTimestamp = await getCurrentBlockTimestamp()
+      await setNextTimestamp(currentTimestamp + 60 * 10)
 
       // User 1 tries removing liquidity with deadline of +5 minutes
       await swapToken.connect(user1).approve(swap.address, currentUser1Balance)
@@ -949,8 +923,8 @@ describe('StableSwap', async () => {
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256)
       const currentUser1Balance = await swapToken.balanceOf(user1Address)
 
-      const currentTimestamp = await getCurrentBlockTimestamp(provider)
-      await setNextTimestamp(provider, currentTimestamp + 60 * 10)
+      const currentTimestamp = await getCurrentBlockTimestamp()
+      await setNextTimestamp(currentTimestamp + 60 * 10)
 
       // User 1 tries removing liquidity with deadline of +5 minutes
       await swapToken.connect(user1).approve(swap.address, currentUser1Balance)
@@ -983,10 +957,11 @@ describe('StableSwap', async () => {
   })
 
   describe("flashLoan", () => {
-    let borrower: Contract
+    let borrower: MockStableSwapBorrower
 
     beforeEach(async () => {
-      borrower = await deployContract(owner, MockStableSwapBorrower)
+      const borrowerFactory = await ethers.getContractFactory('MockStableSwapBorrower')
+      borrower = (await borrowerFactory.deploy()) as MockStableSwapBorrower
     })
 
     it("should revert when contract is paused", async () => {
@@ -1125,8 +1100,8 @@ describe('StableSwap', async () => {
     })
 
     it("Reverts when block is mined after deadline", async () => {
-      const currentTimestamp = await getCurrentBlockTimestamp(provider)
-      await setNextTimestamp(provider, currentTimestamp + 60 * 10)
+      const currentTimestamp = await getCurrentBlockTimestamp()
+      await setNextTimestamp(currentTimestamp + 60 * 10)
 
       // User 1 tries swapping with deadline of +5 minutes
       await expect(
@@ -1405,14 +1380,14 @@ describe('StableSwap', async () => {
 
   describe("rampA", () => {
     beforeEach(async () => {
-      await forceAdvanceOneBlock(provider)
+      await forceAdvanceOneBlock()
     })
 
     it("Emits RampA event", async () => {
       await expect(
         swap.rampA(
           100,
-          (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1,
+          (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
         ),
       ).to.emit(swap, "RampA")
     })
@@ -1424,7 +1399,7 @@ describe('StableSwap', async () => {
 
       // call rampA(), changing A to 100 within a span of 14 days
       const endTimestamp =
-        (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
       await swap.rampA(100, endTimestamp)
 
       // +0 seconds since ramp A
@@ -1433,13 +1408,13 @@ describe('StableSwap', async () => {
       expect(await swap.getVirtualPrice()).to.be.eq("1000167146429977312")
 
       // set timestamp to +100000 seconds
-      await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 100000)
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
       expect(await swap.getA()).to.be.eq(54)
       expect(await swap.getAPrecise()).to.be.eq(5413)
       expect(await swap.getVirtualPrice()).to.be.eq("1000258443200231295")
 
       // set timestamp to the end of ramp period
-      await setTimestamp(provider, endTimestamp)
+      await setTimestamp(endTimestamp)
       expect(await swap.getA()).to.be.eq(100)
       expect(await swap.getAPrecise()).to.be.eq(10000)
       expect(await swap.getVirtualPrice()).to.be.eq("1000771363829405068")
@@ -1452,7 +1427,7 @@ describe('StableSwap', async () => {
 
       // call rampA()
       const endTimestamp =
-        (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
       await swap.rampA(25, endTimestamp)
 
       // +0 seconds since ramp A
@@ -1461,13 +1436,13 @@ describe('StableSwap', async () => {
       expect(await swap.getVirtualPrice()).to.be.eq("1000167146429977312")
 
       // set timestamp to +100000 seconds
-      await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 100000)
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
       expect(await swap.getA()).to.be.eq(47)
       expect(await swap.getAPrecise()).to.be.eq(4794)
       expect(await swap.getVirtualPrice()).to.be.eq("1000115870150391894")
 
       // set timestamp to the end of ramp period
-      await setTimestamp(provider, endTimestamp)
+      await setTimestamp(endTimestamp)
       expect(await swap.getA()).to.be.eq(25)
       expect(await swap.getAPrecise()).to.be.eq(2500)
       expect(await swap.getVirtualPrice()).to.be.eq("998999574522335473")
@@ -1477,23 +1452,23 @@ describe('StableSwap', async () => {
       await expect(
         swap
           .connect(user1)
-          .rampA(55, (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1),
+          .rampA(55, (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1),
       ).to.be.reverted
     })
 
     it("Reverts with '< rampDelay'", async () => {
       await swap.rampA(
         55,
-        (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1,
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
       )
       await expect(
-        swap.rampA(55, (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1),
+        swap.rampA(55, (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1),
       ).to.be.revertedWith("< rampDelay")
     })
 
     it("Reverts with 'outOfRange'", async () => {
       await expect(
-        swap.rampA(0, (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1),
+        swap.rampA(0, (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1),
       ).to.be.revertedWith("outOfRange")
     })
 
@@ -1501,7 +1476,7 @@ describe('StableSwap', async () => {
       await expect(
         swap.rampA(
           501,
-          (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1,
+          (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
         ),
       ).to.be.revertedWith("> maxChange")
     })
@@ -1512,7 +1487,7 @@ describe('StableSwap', async () => {
       // call rampA()
       await swap.rampA(
         100,
-        (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 100,
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 100,
       )
 
       // Stop ramp
@@ -1522,11 +1497,12 @@ describe('StableSwap', async () => {
     it("Stop ramp succeeds", async () => {
       // call rampA()
       const endTimestamp =
-        (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 100
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 100
       await swap.rampA(100, endTimestamp)
 
       // set timestamp to +100000 seconds
-      await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 100000)
+
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
       expect(await swap.getA()).to.be.eq(54)
       expect(await swap.getAPrecise()).to.be.eq(5413)
 
@@ -1536,7 +1512,7 @@ describe('StableSwap', async () => {
       expect(await swap.getAPrecise()).to.be.eq(5413)
 
       // set timestamp to endTimestamp
-      await setTimestamp(provider, endTimestamp)
+      await setTimestamp(endTimestamp)
 
       // verify ramp has stopped
       expect(await swap.getA()).to.be.eq(54)
@@ -1546,11 +1522,11 @@ describe('StableSwap', async () => {
     it("Reverts with 'Ramp is already stopped'", async () => {
       // call rampA()
       const endTimestamp =
-        (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 100
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 100
       await swap.rampA(100, endTimestamp)
 
       // set timestamp to +10000 seconds
-      await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 100000)
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
       expect(await swap.getA()).to.be.eq(54)
       expect(await swap.getAPrecise()).to.be.eq(5413)
 
@@ -1568,7 +1544,7 @@ describe('StableSwap', async () => {
 
   describe("Check for timestamp manipulations", () => {
     beforeEach(async () => {
-      await forceAdvanceOneBlock(provider)
+      await forceAdvanceOneBlock()
     })
 
     it("Check for maximum differences in A and virtual price when A is increasing", async () => {
@@ -1584,11 +1560,11 @@ describe('StableSwap', async () => {
       // Start ramp
       await swap.rampA(
         100,
-        (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1,
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
       )
 
       // Malicious miner skips 900 seconds
-      await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 900)
+      await setTimestamp((await getCurrentBlockTimestamp()) + 900)
 
       expect(await swap.getA()).to.be.eq(50)
       expect(await swap.getAPrecise()).to.be.eq(5003)
@@ -1616,11 +1592,11 @@ describe('StableSwap', async () => {
       // Start ramp
       await swap.rampA(
         25,
-        (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1,
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
       )
 
       // Malicious miner skips 900 seconds
-      await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 900)
+      await setTimestamp((await getCurrentBlockTimestamp()) + 900)
 
       expect(await swap.getA()).to.be.eq(49)
       expect(await swap.getAPrecise()).to.be.eq(4999)
@@ -1675,7 +1651,7 @@ describe('StableSwap', async () => {
         // Start ramp upwards
         await swap.rampA(
           100,
-          (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1,
+          (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
         )
         expect(await swap.getAPrecise()).to.be.eq(5000)
 
@@ -1711,7 +1687,7 @@ describe('StableSwap', async () => {
             expect(await swap.getTokenBalance(1)).to.be.eq("91408257454997694")
 
             // Malicious miner skips 900 seconds
-            await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 900)
+            await setTimestamp((await getCurrentBlockTimestamp()) + 900)
 
             // Verify A has changed upwards
             // 5000 -> 5003 (0.06%)
@@ -1781,7 +1757,7 @@ describe('StableSwap', async () => {
               .addLiquidity(
                 [String(0), String(2e18)],
                 0,
-                (await getCurrentBlockTimestamp(provider)) + 60,
+                (await getCurrentBlockTimestamp()) + 60,
               )
 
             // Check current pool balances
@@ -1815,7 +1791,7 @@ describe('StableSwap', async () => {
             )
 
             // Malicious miner skips 900 seconds
-            await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 900)
+            await setTimestamp((await getCurrentBlockTimestamp()) + 900)
 
             // Verify A has changed upwards
             // 5000 -> 5003 (0.06%)
@@ -1895,7 +1871,7 @@ describe('StableSwap', async () => {
         // Start ramp downwards
         await swap.rampA(
           25,
-          (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1,
+          (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
         )
         expect(await swap.getAPrecise()).to.be.eq(5000)
 
@@ -1934,7 +1910,7 @@ describe('StableSwap', async () => {
             expect(await swap.getTokenBalance(1)).to.be.eq("91408257454997694")
 
             // Malicious miner skips 900 seconds
-            await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 900)
+            await setTimestamp((await getCurrentBlockTimestamp()) + 900)
 
             // Verify A has changed downwards
             expect(await swap.getAPrecise()).to.be.eq(4999)
@@ -2004,7 +1980,7 @@ describe('StableSwap', async () => {
               .addLiquidity(
                 [String(0), String(2e18)],
                 0,
-                (await getCurrentBlockTimestamp(provider)) + 60,
+                (await getCurrentBlockTimestamp()) + 60,
               )
 
             // Check current pool balances
@@ -2038,7 +2014,7 @@ describe('StableSwap', async () => {
             )
 
             // Malicious miner skips 900 seconds
-            await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 900)
+            await setTimestamp((await getCurrentBlockTimestamp()) + 900)
 
             // Verify A has changed downwards
             expect(await swap.getAPrecise()).to.be.eq(4999)

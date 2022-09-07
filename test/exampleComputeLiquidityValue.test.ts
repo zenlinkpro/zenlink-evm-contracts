@@ -1,57 +1,63 @@
-import chai, { expect } from 'chai'
-import { Contract, constants } from 'ethers'
-import { solidity, MockProvider, deployContract } from 'ethereum-waffle'
-
+import { expect } from 'chai'
+import { constants } from 'ethers'
 import { expandTo18Decimals } from './shared/utilities'
-import { migratorFixture } from './shared/fixtures'
-
-import ExampleComputeLiquidityValue from '../build/contracts/examples/ExampleComputeLiquidityValue.sol/ExampleComputeLiquidityValue.json'
-
-chai.use(solidity)
-
-const overrides = {
-  gasLimit: 9999999
-}
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { deployments } from 'hardhat'
+import { BasicToken, ExampleComputeLiquidityValue, Factory, Pair, Router } from '../typechain-types'
 
 const { MaxUint256 } = constants
 
 describe('ExampleComputeLiquidityValue', () => {
-  const provider = new MockProvider({
-    ganacheOptions: {
-      hardfork: 'istanbul',
-      mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-      gasLimit: 9999999,
-    },
-  })
-  const [wallet] = provider.getWallets()
+  let signers: SignerWithAddress[]
+  let wallet: SignerWithAddress
 
-  let token0: Contract
-  let token1: Contract
-  let factory: Contract
-  let pair: Contract
-  let computeLiquidityValue: Contract
-  let router: Contract
+  let token0: BasicToken
+  let token1: BasicToken
+  let factory: Factory
+  let pair: Pair
+  let computeLiquidityValue: ExampleComputeLiquidityValue
+  let router: Router
 
-  beforeEach(async function() {
-    const fixture = await migratorFixture([wallet], provider)
-    token0 = fixture.token0
-    token1 = fixture.token1
-    factory = fixture.factoryV1
-    router = fixture.router01
-    pair = fixture.pair
+  const setupTest = deployments.createFixture(
+    async ({ deployments, ethers }) => {
+      await deployments.fixture() // ensure you start from a fresh deployments
+      signers = await ethers.getSigners()
+      wallet = signers[0]
 
-    computeLiquidityValue = await deployContract(
-      wallet,
-      ExampleComputeLiquidityValue,
-      [fixture.factoryV1.address],
-      overrides
-    )
+      const basicTokenFactory = await ethers.getContractFactory('BasicToken')
+      token0 = (await basicTokenFactory.deploy("tokenA", "tokenA", 18, expandTo18Decimals(10000))) as BasicToken
+      token1 = (await basicTokenFactory.deploy("tokenB", "tokenB", 18, expandTo18Decimals(10000))) as BasicToken
+
+      const wNativeFactory = await ethers.getContractFactory('NativeCurrency')
+      const wnative = await wNativeFactory.deploy("wnative", "wnative")
+
+      const factoryFactory = await ethers.getContractFactory('Factory')
+      factory = (await factoryFactory.deploy(wallet.address)) as Factory
+      await factory.createPair(token0.address, token1.address)
+      const pairAddress = await factory.getPair(token0.address, token1.address)
+      pair = (await ethers.getContractAt('Pair', pairAddress)) as Pair
+
+      const token0Address = await pair.token0()
+      ;[token0, token1] = token0.address === token0Address
+        ? [token0, token1]
+        : [token1, token0]
+
+      const routerFactory = await ethers.getContractFactory('Router')
+      router = (await routerFactory.deploy(factory.address, wnative.address)) as Router
+
+      const computeLiquidityValueFactory = await ethers.getContractFactory('ExampleComputeLiquidityValue')
+      computeLiquidityValue = (await computeLiquidityValueFactory.deploy(factory.address)) as ExampleComputeLiquidityValue
+    }
+  )
+
+  beforeEach(async function () {
+    await setupTest()
   })
 
   beforeEach('mint some liquidity for the pair at 1:100 (100 shares minted)', async () => {
     await token0.transfer(pair.address, expandTo18Decimals(10))
     await token1.transfer(pair.address, expandTo18Decimals(1000))
-    await pair.mint(wallet.address, overrides)
+    await pair.mint(wallet.address)
     expect(await pair.totalSupply()).to.eq(expandTo18Decimals(100))
   })
 
@@ -80,14 +86,13 @@ describe('ExampleComputeLiquidityValue', () => {
     })
 
     it('correct after swap', async () => {
-      await token0.approve(router.address, MaxUint256, overrides)
+      await token0.approve(router.address, MaxUint256)
       await router.swapExactTokensForTokens(
         expandTo18Decimals(10),
         0,
         [token0.address, token1.address],
         wallet.address,
-        MaxUint256,
-        overrides
+        MaxUint256
       )
       const [token0Amount, token1Amount] = await computeLiquidityValue.getLiquidityValue(
         token0.address,
@@ -107,19 +112,18 @@ describe('ExampleComputeLiquidityValue', () => {
       beforeEach('mint more liquidity to address zero', async () => {
         await token0.transfer(pair.address, expandTo18Decimals(10))
         await token1.transfer(pair.address, expandTo18Decimals(1000))
-        await pair.mint(wallet.address, overrides)
+        await pair.mint(wallet.address)
         expect(await pair.totalSupply()).to.eq(expandTo18Decimals(200))
       })
 
       it('correct after swap', async () => {
-        await token0.approve(router.address, MaxUint256, overrides)
+        await token0.approve(router.address, MaxUint256)
         await router.swapExactTokensForTokens(
           expandTo18Decimals(20),
           0,
           [token0.address, token1.address],
           wallet.address,
-          MaxUint256,
-          overrides
+          MaxUint256
         )
         const [token0Amount, token1Amount] = await computeLiquidityValue.getLiquidityValue(
           token0.address,
@@ -253,7 +257,7 @@ describe('ExampleComputeLiquidityValue', () => {
             100,
             expandTo18Decimals(5)
           )
-        ).to.eq('18548')
+        ).to.eq('22048')
       })
 
       it('gas higher price', async () => {
@@ -265,7 +269,7 @@ describe('ExampleComputeLiquidityValue', () => {
             105,
             expandTo18Decimals(5)
           )
-        ).to.eq('19878')
+        ).to.eq('23378')
       })
 
       it('gas lower price', async () => {
@@ -277,19 +281,18 @@ describe('ExampleComputeLiquidityValue', () => {
             95,
             expandTo18Decimals(5)
           )
-        ).to.eq('19929')
+        ).to.eq('23429')
       })
 
       describe('after a swap', () => {
         beforeEach('swap to ~1:25', async () => {
-          await token0.approve(router.address, MaxUint256, overrides)
+          await token0.approve(router.address, MaxUint256)
           await router.swapExactTokensForTokens(
             expandTo18Decimals(10),
             0,
             [token0.address, token1.address],
             wallet.address,
-            MaxUint256,
-            overrides
+            MaxUint256
           )
           const [reserve0, reserve1] = await pair.getReserves()
           expect(reserve0).to.eq('20000000000000000000')
@@ -333,7 +336,7 @@ describe('ExampleComputeLiquidityValue', () => {
       beforeEach('mint more liquidity to address zero', async () => {
         await token0.transfer(pair.address, expandTo18Decimals(10))
         await token1.transfer(pair.address, expandTo18Decimals(1000))
-        await pair.mint(wallet.address, overrides)
+        await pair.mint(wallet.address)
         expect(await pair.totalSupply()).to.eq(expandTo18Decimals(200))
       })
 
@@ -384,7 +387,7 @@ describe('ExampleComputeLiquidityValue', () => {
             100,
             expandTo18Decimals(5)
           )
-        ).to.eq('23003')
+        ).to.eq('26603')
       })
 
       it('gas higher price', async () => {
@@ -396,7 +399,7 @@ describe('ExampleComputeLiquidityValue', () => {
             105,
             expandTo18Decimals(5)
           )
-        ).to.eq('25037')
+        ).to.eq(28637)
       })
 
       it('gas lower price', async () => {
@@ -408,19 +411,18 @@ describe('ExampleComputeLiquidityValue', () => {
             95,
             expandTo18Decimals(5)
           )
-        ).to.eq('24968')
+        ).to.eq('28568')
       })
 
       describe('after a swap', () => {
         beforeEach('swap to ~1:25', async () => {
-          await token0.approve(router.address, MaxUint256, overrides)
+          await token0.approve(router.address, MaxUint256)
           await router.swapExactTokensForTokens(
             expandTo18Decimals(20),
             0,
             [token0.address, token1.address],
             wallet.address,
-            MaxUint256,
-            overrides
+            MaxUint256
           )
           const [reserve0, reserve1] = await pair.getReserves()
           expect(reserve0).to.eq('40000000000000000000')

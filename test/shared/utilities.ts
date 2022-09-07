@@ -1,6 +1,4 @@
-import { Bytes, Contract, Signer } from 'ethers'
-import { BigNumber } from '@ethersproject/bignumber'
-import { MockProvider } from 'ethereum-waffle'
+import { BigNumber, Bytes, Contract, Signer } from 'ethers'
 import { Artifact } from 'hardhat/types'
 import { ethers } from "hardhat"
 import { defaultAbiCoder, solidityPack, keccak256, toUtf8Bytes, getAddress } from 'ethers/lib/utils'
@@ -25,24 +23,6 @@ export function expandTo18Decimals(n: number): BigNumber {
 
 export function expandTo10Decimals(n: number): BigNumber {
   return BigNumber.from(n).mul(BigNumber.from(10).pow(10))
-}
-
-export async function getCurrentBlockTimestamp(provider: MockProvider): Promise<number> {
-  const block = await provider.getBlock("latest")
-  return block.timestamp
-}
-
-export async function forceAdvanceOneBlock(provider: MockProvider, timestamp?: number): Promise<any> {
-  const params = timestamp ? [timestamp] : []
-  return provider.send("evm_mine", params)
-}
-
-export async function setTimestamp(provider: MockProvider, timestamp: number): Promise<any> {
-  return forceAdvanceOneBlock(provider, timestamp)
-}
-
-export async function setNextTimestamp(provider: MockProvider, timestamp: number): Promise<any> {
-  return setTimestamp(provider, timestamp)
 }
 
 export async function getUserTokenBalances(
@@ -131,10 +111,6 @@ export async function getApprovalDigest(
       ]
     )
   )
-}
-
-export async function mineBlockWithTimestamp(provider: MockProvider, timestamp: number): Promise<void> {
-  await provider.send('evm_mine', [timestamp]);
 }
 
 export async function asyncForEach<T>(

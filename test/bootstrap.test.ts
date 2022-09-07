@@ -1,72 +1,84 @@
-import chai, { expect } from 'chai';
-import { deployContract, MockProvider, solidity } from 'ethereum-waffle';
-import { BigNumber, constants, Contract } from 'ethers';
-import { BootstrapFixture } from './shared/fixtures';
-import { createTimeMachine } from './shared/time';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { expect } from 'chai';
+import { BigNumber, constants, ContractFactory } from 'ethers';
+import { deployments, ethers } from 'hardhat';
+import { BasicToken, Bootstrap, Factory } from '../typechain-types';
+import { forceAdvanceBlocksTo, getCurrentBlock } from './shared/time';
 import { expandTo10Decimals, expandTo18Decimals } from './shared/utilities';
-
-import BasicToken from '../build/contracts/test/BasicToken.sol/BasicToken.json'
-import Pair from '../build/contracts/core/Pair.sol/Pair.json'
-
-chai.use(solidity)
-
-async function advanceEndBlock(
-  provider: MockProvider,
-  blocks: number,
-): Promise<number> {
-  const currentBlock = (await provider.getBlock('latest')).number
-
-  return currentBlock + blocks
-}
 
 function getSortedAddress(token0: string, token1: string): [string, string] {
   return token0 < token1 ? [token0, token1] : [token1, token0]
 }
 
-const overrides = { gasLimit: 4100000 }
+async function advanceEndBlock(blocks: number): Promise<number> {
+  const block = await ethers.provider.getBlock("latest")
+  return block.number + blocks
+}
 
 let endBlock = 100
 
 describe('Bootstrap', () => {
-  const provider = new MockProvider({
-    ganacheOptions: {
-      hardfork: 'istanbul',
-      mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-      gasLimit: 9999999,
-    },
-  })
-  const Time = createTimeMachine(provider)
-  const [wallet, walletTo] = provider.getWallets()
+  let signers: SignerWithAddress[]
+  let wallet: SignerWithAddress
+  let walletTo: SignerWithAddress
+  let basicTokenFactory: ContractFactory
 
-  let token0: Contract
-  let token1: Contract
-  let bootstrap: Contract
-  let factory: Contract
+  let token0: BasicToken
+  let token1: BasicToken
+  let bootstrap: Bootstrap
+  let factory: Factory
 
-  let limit0Token: Contract
-  let limit1Token: Contract
-  let reward0Token: Contract
-  let reward1Token: Contract
+  let limit0Token: BasicToken
+  let limit1Token: BasicToken
+  let reward0Token: BasicToken
+  let reward1Token: BasicToken
+
+  const setupTest = deployments.createFixture(
+    async ({ deployments, ethers }) => {
+      await deployments.fixture() // ensure you start from a fresh deployments
+      signers = await ethers.getSigners()
+      wallet = signers[0]
+      walletTo = signers[1]
+      endBlock = await advanceEndBlock(50)
+      const factoryFactory = await ethers.getContractFactory('Factory')
+      factory = (await factoryFactory.deploy(wallet.address)) as Factory
+      basicTokenFactory = await ethers.getContractFactory('BasicToken')
+      token0 = (await basicTokenFactory.deploy("TokenA", "TA", 18, expandTo18Decimals(100000))) as BasicToken
+      token1 = (await basicTokenFactory.deploy("TokenB", "TB", 18, expandTo18Decimals(100000))) as BasicToken
+      const [token0Address, token1Address] = token0.address < token1.address
+        ? [token0.address, token1.address]
+        : [token1.address, token0.address]
+      await factory.setBootstrap(token0Address, token1Address, wallet.address)
+      const bootstrapFactory = await ethers.getContractFactory('Bootstrap')
+      bootstrap = (
+        await bootstrapFactory.deploy(
+          factory.address,
+          token0Address,
+          token1Address,
+          '10000',
+          '10000',
+          '15000',
+          '20000',
+          endBlock
+        )
+      ) as Bootstrap
+
+      await token0.transfer(walletTo.address, expandTo18Decimals(50000))
+      await token1.transfer(walletTo.address, expandTo18Decimals(50000))
+      await token0.approve(bootstrap.address, constants.MaxUint256)
+      await token1.approve(bootstrap.address, constants.MaxUint256)
+      await token0.connect(walletTo).approve(bootstrap.address, constants.MaxUint256)
+      await token1.connect(walletTo).approve(bootstrap.address, constants.MaxUint256)
+
+      limit0Token = (await basicTokenFactory.deploy("Limit Token 0", "LT0", 18, expandTo10Decimals(500))) as BasicToken
+      limit1Token = (await basicTokenFactory.deploy("Limit Token 1", "LT1", 18, expandTo10Decimals(500))) as BasicToken
+      reward0Token = (await basicTokenFactory.deploy("Reward Token 0", "RT0", 18, expandTo10Decimals(500))) as BasicToken
+      reward1Token = (await basicTokenFactory.deploy("Reward Token 1", "RT1", 18, expandTo10Decimals(500))) as BasicToken
+    }
+  )
 
   beforeEach(async () => {
-    endBlock = await advanceEndBlock(provider, 50)
-    const fixture = await BootstrapFixture(wallet, endBlock)
-    token0 = fixture.token0
-    token1 = fixture.token1
-    bootstrap = fixture.bootstrap
-    factory = fixture.factory
-
-    await token0.transfer(walletTo.address, expandTo18Decimals(50000), overrides)
-    await token1.transfer(walletTo.address, expandTo18Decimals(50000), overrides)
-    await token0.approve(bootstrap.address, constants.MaxUint256, overrides)
-    await token1.approve(bootstrap.address, constants.MaxUint256, overrides)
-    await token0.connect(walletTo).approve(bootstrap.address, constants.MaxUint256, overrides)
-    await token1.connect(walletTo).approve(bootstrap.address, constants.MaxUint256, overrides)
-
-    limit0Token = await deployContract(wallet, BasicToken, ["Limit Token 0", "LT0", 18, expandTo10Decimals(500)], overrides)
-    limit1Token = await deployContract(wallet, BasicToken, ["Limit Token 1", "LT1", 18, expandTo10Decimals(500)], overrides)
-    reward0Token = await deployContract(wallet, BasicToken, ["Reward Token 0", "RT0", 18, expandTo10Decimals(500)], overrides)
-    reward1Token = await deployContract(wallet, BasicToken, ["Reward Token 1", "RT1", 18, expandTo10Decimals(500)], overrides)
+    await setupTest()
   })
 
   it('set paramaters', async () => {
@@ -80,7 +92,8 @@ describe('Bootstrap', () => {
     const currentCapAmount0 = await bootstrap.HARD_CAP_AMOUNT0()
     const currentCapAmount1 = await bootstrap.HARD_CAP_AMOUNT1()
 
-    const expectEndBlock = (await provider.getBlock('latest')).number + 200
+    
+    const expectEndBlock = (await getCurrentBlock()) + 200
     await bootstrap.setEndBlock(expectEndBlock)
     const newEndBlock = await bootstrap.END_BLOCK()
     expect(currentMinumAmount0).to.equal(BigNumber.from('10000'))
@@ -118,12 +131,8 @@ describe('Bootstrap', () => {
   })
 
   it('addProvision: fail', async () => {
-    const otherToken = await deployContract(
-      wallet,
-      BasicToken,
-      ["other Token", "OT", 18, expandTo10Decimals(500)],
-      overrides
-    )
+    const otherToken = (await basicTokenFactory.deploy("other Token", "OT", 18, expandTo10Decimals(500))) as BasicToken
+    
     const [_address0, _address1] = getSortedAddress(token0.address, otherToken.address)
     await expect(
       bootstrap.addProvision(
@@ -146,9 +155,9 @@ describe('Bootstrap', () => {
     )
       .to.be.revertedWith('INVALID_ZERO_AMOUNT')
 
-    const currentBlock = (await provider.getBlock('latest')).number
+    const currentBlock = await getCurrentBlock()
     await bootstrap.setEndBlock(currentBlock + 2)
-    await Time.advanceBlockTo(endBlock)
+    await forceAdvanceBlocksTo(endBlock)
     await expect(
       bootstrap.addProvision(
         address0,
@@ -197,15 +206,15 @@ describe('Bootstrap', () => {
     const [address0, address1] = getSortedAddress(token0.address, token1.address)
     await bootstrap.addProvision(address0, address1, '5000', '5000')
     await bootstrap.connect(walletTo).addProvision(address0, address1, '6000', '6000')
-    await Time.advanceBlockTo(endBlock)
+    await forceAdvanceBlocksTo(endBlock)
     await expect(
-      bootstrap.mintLiquidity(overrides)
+      bootstrap.mintLiquidity()
     ).to.be.revertedWith('NOT_BOOTSTRAP_OWNER')
 
     await factory.setBootstrap(address0, address1, bootstrap.address)
-    await bootstrap.mintLiquidity(overrides)
+    await bootstrap.mintLiquidity()
     const pairAddress = await factory.getPair(address0, address1)
-    const pair = new Contract(pairAddress, JSON.stringify(Pair.abi), provider).connect(wallet)
+    const pair = (await ethers.getContractAt('Pair', pairAddress)).connect(wallet)
     const liquidtyBalance = await pair.balanceOf(bootstrap.address)
     // sqrt(11000 * 11000) - 1000
     expect(liquidtyBalance).to.equal(BigNumber.from('10000'))
@@ -215,19 +224,19 @@ describe('Bootstrap', () => {
     const [address0, address1] = getSortedAddress(token0.address, token1.address)
 
     await bootstrap.addProvision(address0, address1, '11000', '19000')
-    await Time.advanceBlockTo(endBlock)
+    await forceAdvanceBlocksTo(endBlock)
     await factory.setBootstrap(address0, address1, bootstrap.address)
-    await bootstrap.mintLiquidity(overrides)
+    await bootstrap.mintLiquidity()
 
     const pairAddress = await factory.getPair(address0, address1)
-    const pair = new Contract(pairAddress, JSON.stringify(Pair.abi), provider).connect(wallet)
+    const pair = (await ethers.getContractAt('Pair', pairAddress)).connect(wallet)
     const liquidtyBalance = await pair.balanceOf(bootstrap.address)
 
     // sqrt(11000 * 19000) - 1000
     expect(liquidtyBalance).to.equal(BigNumber.from('13456'))
-    const expectLiquidity = await bootstrap.getExactLiquidity(wallet.address, overrides)
+    const expectLiquidity = await bootstrap.getExactLiquidity(wallet.address)
 
-    await bootstrap.claim(overrides)
+    await bootstrap.claim()
 
     const liquidityBalance = await pair.balanceOf(wallet.address)
     expect(expectLiquidity).to.equal(liquidityBalance.sub('1000'))
@@ -240,19 +249,19 @@ describe('Bootstrap', () => {
     const [address0, address1] = getSortedAddress(token0.address, token1.address)
 
     await bootstrap.addProvision(address0, address1, '16000', '22000')
-    await Time.advanceBlockTo(endBlock)
+    await forceAdvanceBlocksTo(endBlock)
     await factory.setBootstrap(address0, address1, bootstrap.address)
-    await bootstrap.mintLiquidity(overrides)
+    await bootstrap.mintLiquidity()
 
     const pairAddress = await factory.getPair(address0, address1)
-    const pair = new Contract(pairAddress, JSON.stringify(Pair.abi), provider).connect(wallet)
+    const pair = (await ethers.getContractAt('Pair', pairAddress)).connect(wallet)
     const liquidtyBalance = await pair.balanceOf(bootstrap.address)
 
     // sqrt(15000 * 20000) - 1000 (hard cap at 15000 and 20000)
     expect(liquidtyBalance).to.equal(BigNumber.from('16320'))
-    const expectLiquidity = await bootstrap.getExactLiquidity(wallet.address, overrides)
+    const expectLiquidity = await bootstrap.getExactLiquidity(wallet.address)
 
-    await bootstrap.claim(overrides)
+    await bootstrap.claim()
 
     const liquidityBalance = await pair.balanceOf(wallet.address)
     expect(expectLiquidity).to.equal(liquidityBalance.sub('1000'))
@@ -266,21 +275,21 @@ describe('Bootstrap', () => {
     await bootstrap.addProvision(address0, address1, '5000', '6000')
     await bootstrap.connect(walletTo).addProvision(address0, address1, '6000', '8000')
     await expect(
-      bootstrap.claim(overrides)
+      bootstrap.claim()
     ).to.be.revertedWith('NOT_ENDED_AND_CAPPED')
-    await Time.advanceBlockTo(endBlock)
+    await forceAdvanceBlocksTo(endBlock)
     await expect(
-      bootstrap.claim(overrides)
+      bootstrap.claim()
     ).to.be.revertedWith('PAIR_NOT_CREATED')
 
     await factory.setBootstrap(address0, address1, bootstrap.address)
-    await bootstrap.mintLiquidity(overrides)
+    await bootstrap.mintLiquidity()
     const pairAddress = await factory.getPair(address0, address1)
-    const pair = new Contract(pairAddress, JSON.stringify(Pair.abi), provider).connect(wallet)
-    const expectWalletLp = await bootstrap.getExactLiquidity(wallet.address, overrides)
-    const expectWalletToLp = await bootstrap.getExactLiquidity(walletTo.address, overrides)
-    await bootstrap.claim(overrides)
-    await bootstrap.connect(walletTo).claim(overrides)
+    const pair = (await ethers.getContractAt('Pair', pairAddress)).connect(wallet)
+    const expectWalletLp = await bootstrap.getExactLiquidity(wallet.address)
+    const expectWalletToLp = await bootstrap.getExactLiquidity(walletTo.address)
+    await bootstrap.claim()
+    await bootstrap.connect(walletTo).claim()
     const walletLpBalance = await pair.balanceOf(wallet.address)
     const walletToLpBalance = await pair.balanceOf(walletTo.address)
     const liquidtyBalance = await pair.balanceOf(bootstrap.address)
@@ -300,15 +309,15 @@ describe('Bootstrap', () => {
     const prevBalanceOfWalletToken1 = await token1.balanceOf(wallet.address)
     await bootstrap.addProvision(address0, address1, '5000', '6000')
     await bootstrap.connect(walletTo).addProvision(address0, address1, '3000', '1000')
-    await Time.advanceBlockTo(endBlock)
+    await forceAdvanceBlocksTo(endBlock)
     await expect(
-      bootstrap.claim(overrides)
+      bootstrap.claim()
     ).to.be.revertedWith('NOT_ENDED_AND_CAPPED')
     await factory.setBootstrap(address0, address1, bootstrap.address)
     await expect(
-      bootstrap.mintLiquidity(overrides)
+      bootstrap.mintLiquidity()
     ).to.be.revertedWith('NOT_ENDED_AND_CAPPED')
-    await bootstrap.refund(overrides)
+    await bootstrap.refund()
     const afterBalanceOfWalletToken0 = await token0.balanceOf(wallet.address)
     const afterBalanceOfWalletToken1 = await token1.balanceOf(wallet.address)
     expect(prevBalanceOfWalletToken0).to.equal(afterBalanceOfWalletToken0)
@@ -320,17 +329,12 @@ describe('Bootstrap', () => {
   })
 
   it('withdrawExtraFunds', async () => {
-    const otherToken = await deployContract(
-      wallet,
-      BasicToken,
-      ["other Token", "OT", 18, expandTo10Decimals(500)],
-      overrides
-    )
+    const otherToken = await basicTokenFactory.deploy("other Token", "OT", 18, expandTo10Decimals(500))
     const transferAmount = expandTo10Decimals(200)
-    await otherToken.transfer(bootstrap.address, transferAmount, overrides)
+    await otherToken.transfer(bootstrap.address, transferAmount)
     expect(await otherToken.balanceOf(bootstrap.address)).to.equal(transferAmount)
     expect(await otherToken.balanceOf(wallet.address)).to.equal(expandTo10Decimals(300))
-    await bootstrap.withdrawExtraFunds(otherToken.address, wallet.address, expandTo10Decimals(100), overrides)
+    await bootstrap.withdrawExtraFunds(otherToken.address, wallet.address, expandTo10Decimals(100))
     expect(await otherToken.balanceOf(bootstrap.address)).to.equal(expandTo10Decimals(100))
     expect(await otherToken.balanceOf(wallet.address)).to.equal(expandTo10Decimals(400))
   })
@@ -375,8 +379,6 @@ describe('Bootstrap', () => {
     await expect(bootstrap.charge(
       [expandTo10Decimals(100), expandTo10Decimals(200)]
     )).to.be.revertedWith('TransferHelper::transferFrom: transferFrom failed')
-
-    let rewardAmounts = await bootstrap.getRewardTokenAmounts()
 
     let reward0Balance = await reward0Token.balanceOf(bootstrap.address)
     let reward1Balance = await reward1Token.balanceOf(bootstrap.address)
@@ -590,20 +592,20 @@ describe('Bootstrap', () => {
     const secondAddedAmount1 = BigNumber.from('2000')
     await bootstrap.connect(walletTo).addProvision(address0, address1, secondAddedAmount0, secondAddedAmount1)
 
-    await Time.advanceBlockTo(endBlock)
+    await forceAdvanceBlocksTo(endBlock)
     await factory.setBootstrap(address0, address1, bootstrap.address)
-    await bootstrap.mintLiquidity(overrides)
+    await bootstrap.mintLiquidity()
 
     const pairAddress = await factory.getPair(address0, address1)
-    const pair = new Contract(pairAddress, JSON.stringify(Pair.abi), provider).connect(wallet)
+    const pair = (await ethers.getContractAt('Pair', pairAddress)).connect(wallet)
     const liquidtyBalance = await pair.balanceOf(bootstrap.address)
 
-    const expectWalletLp = await bootstrap.getExactLiquidity(wallet.address, overrides)
-    const expectWalletToLp = await bootstrap.getExactLiquidity(walletTo.address, overrides)
+    const expectWalletLp = await bootstrap.getExactLiquidity(wallet.address)
+    const expectWalletToLp = await bootstrap.getExactLiquidity(walletTo.address)
 
     let walletGetReward0Amount = expectWalletLp.mul(reward0Amount).div(liquidtyBalance.add(1000));
     let walletGetReward1Amount = expectWalletLp.mul(reward1Amount).div(liquidtyBalance.add(1000));
-    await expect(bootstrap.claim(overrides))
+    await expect(bootstrap.claim())
       .to.emit(bootstrap, 'DistributeReward')
       .withArgs(
         wallet.address,
@@ -613,7 +615,7 @@ describe('Bootstrap', () => {
 
     let walletToGetReward0Amount = expectWalletToLp.mul(reward0Amount).div(liquidtyBalance.add(1000));
     let walletToGetReward1Amount = expectWalletToLp.mul(reward1Amount).div(liquidtyBalance.add(1000));
-    await expect(bootstrap.connect(walletTo).claim(overrides))
+    await expect(bootstrap.connect(walletTo).claim())
       .to.emit(bootstrap, 'DistributeReward')
       .withArgs(
         walletTo.address,
@@ -623,8 +625,8 @@ describe('Bootstrap', () => {
 
     let walletReward0AmountAfterClaim = await reward0Token.balanceOf(wallet.address)
     let walletReward1AmountAfterClaim = await reward1Token.balanceOf(wallet.address)
-    expect(walletReward0AmountAfterClaim - reward0Wallet).to.equal(walletGetReward0Amount)
-    expect(walletReward1AmountAfterClaim - reward1Wallet).to.equal(walletGetReward1Amount)
+    expect(walletReward0AmountAfterClaim.sub(reward0Wallet)).to.equal(walletGetReward0Amount)
+    expect(walletReward1AmountAfterClaim.sub(reward1Wallet)).to.equal(walletGetReward1Amount)
 
     let walletToReward0AmountAfterClaim = await reward0Token.balanceOf(walletTo.address)
     let walletToReward1AmountAfterClaim = await reward1Token.balanceOf(walletTo.address)
@@ -665,8 +667,8 @@ describe('Bootstrap', () => {
 
     let estimateWalletRewards = await bootstrap.estimateRewardTokenAmounts(wallet.address)
 
-    const expectWalletLp = await bootstrap.getExactLiquidity(wallet.address, overrides)
-    const expectWalletToLp = await bootstrap.getExactLiquidity(walletTo.address, overrides)
+    const expectWalletLp = await bootstrap.getExactLiquidity(wallet.address)
+    const expectWalletToLp = await bootstrap.getExactLiquidity(walletTo.address)
     const totalLiquidity = await bootstrap.getTotalLiquidity()
 
     expect(estimateWalletRewards[0]).to.equal(expectWalletLp.mul(reward0Amount).div(totalLiquidity))

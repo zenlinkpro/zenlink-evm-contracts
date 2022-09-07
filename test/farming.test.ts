@@ -1,18 +1,11 @@
-import chai, { expect } from 'chai'
-import { solidity, MockProvider, deployContract } from 'ethereum-waffle'
-import { Contract, BigNumber, constants } from 'ethers'
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { expect } from 'chai'
+import { Contract, BigNumber, constants, ContractFactory } from 'ethers'
+import { deployments } from 'hardhat';
+import { BasicToken } from '../typechain-types';
+import { forceAdvanceBlocksTo, getCurrentBlock } from './shared/time';
 
-import TestERC20 from '../build/contracts/test/BasicToken.sol/BasicToken.json'
-import Farming from '../build/contracts/periphery/Farming.sol/Farming.json'
-import { createTimeMachine } from './shared/time'
-
-chai.use(solidity)
-
-const overrides = {
-  gasLimit: 9999999
-}
-
-type MaybeInfo = any
+type MaybeInfo = PoolInfo & UserInfo
 
 interface PoolInfo {
   farmingToken: string;
@@ -69,35 +62,43 @@ function parseUserInfo({
 }
 
 describe('Farming', () => {
-  const provider = new MockProvider({
-    ganacheOptions: {
-      hardfork: 'istanbul',
-      mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-      gasLimit: 9999999,
-    },
-  })
-  const Time = createTimeMachine(provider);
+  let signers: SignerWithAddress[]
+  let wallet0: SignerWithAddress
+  let wallet1: SignerWithAddress
 
-  const wallets = provider.getWallets()
-  const [wallet0, wallet1] = wallets
+  let tokenA: BasicToken,
+    tokenB: BasicToken,
+    tokenC: BasicToken
 
-  let tokenA: Contract,
-    tokenB: Contract,
-    tokenC: Contract
+  let farmingFactory: ContractFactory
+
+  const setupTest = deployments.createFixture(
+    async ({ deployments, ethers }) => {
+      await deployments.fixture() // ensure you start from a fresh deployments
+      signers = await ethers.getSigners()
+      ;[wallet0, wallet1] = signers
+
+      farmingFactory = await ethers.getContractFactory('Farming')
+
+      const basicTokenFactory = await ethers.getContractFactory('BasicToken')
+      tokenA = (await basicTokenFactory.deploy('TokenA', 'TA', 18, 0)) as BasicToken
+      tokenB = (await basicTokenFactory.deploy('TokenB', 'TB', 18, 0)) as BasicToken
+      tokenC = (await basicTokenFactory.deploy('TokenC', 'TC', 18, 0)) as BasicToken
+    }
+  )
+
   beforeEach('deploy token', async () => {
-    tokenA = await deployContract(wallet0, TestERC20, ['TokenA', 'TA', 18, 0], overrides)
-    tokenB = await deployContract(wallet0, TestERC20, ['TokenB', 'TB', 18, 0], overrides)
-    tokenC = await deployContract(wallet0, TestERC20, ['TokenC', 'TC', 18, 0], overrides)
+    await setupTest()
   })
 
   describe('poolLength', () => {
     it('returns zero length after deploy', async () => {
-      const farming = await deployContract(wallet0, Farming, [], overrides)
+      const farming = await farmingFactory.deploy()
       expect(await farming.poolLength()).to.eq(BigNumber.from(0))
     })
 
     it('returns one length after add one pool', async () => {
-      const farming = await deployContract(wallet0, Farming, [], overrides)
+      const farming = await farmingFactory.deploy()
       await farming.add(tokenA.address, [tokenB.address], [0], 0, 10)
       expect(await farming.poolLength()).to.eq(BigNumber.from(1))
     })
@@ -107,7 +108,7 @@ describe('Farming', () => {
     describe('add', () => {
       let farming: Contract
       beforeEach('deploy', async () => {
-        farming = await deployContract(wallet0, Farming, [], overrides)
+        farming = await farmingFactory.deploy()
       })
 
       it('fails for invalid rewardPerBlock', async () => {
@@ -119,7 +120,7 @@ describe('Farming', () => {
         await expect(farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 10, 10))
           .to.emit(farming, 'PoolAdded').withArgs(tokenA.address)
         const poolInfo = parsePoolInfo(await farming.getPoolInfo(0))
-        const blockNumber = await provider.getBlockNumber()
+        const blockNumber = await getCurrentBlock()
         expect(poolInfo).to.deep.eq({
           farmingToken: tokenA.address,
           amount: BigNumber.from(0),
@@ -136,7 +137,7 @@ describe('Farming', () => {
     describe('set', () => {
       let farming: Contract
       beforeEach('deploy', async () => {
-        farming = await deployContract(wallet0, Farming, [], overrides)
+        farming = await farmingFactory.deploy()
       })
 
       it('fails for different rewardPerBlock length', async () => {
@@ -164,7 +165,7 @@ describe('Farming', () => {
         await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 10, 10)
         const poolInfoBeforeSet = parsePoolInfo(await farming.getPoolInfo(0))
         // current BlockNumber: 39
-        await tokenA.approve(farming.address, constants.MaxUint256, overrides)
+        await tokenA.approve(farming.address, constants.MaxUint256)
         await tokenA.setBalance(wallet0.address, 400)
         await farming.stake(0, tokenA.address, 200)
         // current BlockNumber: 42
@@ -172,7 +173,7 @@ describe('Farming', () => {
         await farming.set(0, [200, 300], true)
         // current BlockNumber: 43
         // lastRewardBlock = 43
-        const blockNumber = await provider.getBlockNumber()
+        const blockNumber = await getCurrentBlock()
         const poolInfoAfterSetWithUpdate = parsePoolInfo(await farming.getPoolInfo(0))
         expect(poolInfoAfterSetWithUpdate).to.deep.eq({
           farmingToken: tokenA.address,
@@ -186,7 +187,7 @@ describe('Farming', () => {
           claimableInterval: poolInfoBeforeSet.claimableInterval
         })
         // this will change pool.lastRewardBlock if withUpdate = true
-        await Time.advanceBlockTo(50)
+        await forceAdvanceBlocksTo(50)
         await farming.set(0, [300, 400], false)
         const poolInfoAfterSetNotWithUpdate = parsePoolInfo(await farming.getPoolInfo(0))
         expect(poolInfoAfterSetNotWithUpdate).to.deep.eq({
@@ -205,11 +206,11 @@ describe('Farming', () => {
     describe('charge', () => {
       let farming: Contract
       beforeEach('deploy', async () => {
-        farming = await deployContract(wallet0, Farming, [], overrides)
+        farming = await farmingFactory.deploy()
         await tokenB.setBalance(wallet0.address, 400)
-        await tokenB.approve(farming.address, constants.MaxUint256, overrides)
+        await tokenB.approve(farming.address, constants.MaxUint256)
         await tokenC.setBalance(wallet0.address, 400)
-        await tokenC.approve(farming.address, constants.MaxUint256, overrides)
+        await tokenC.approve(farming.address, constants.MaxUint256)
       })
 
       it('fails for different amount length', async () => {
@@ -233,17 +234,17 @@ describe('Farming', () => {
     describe('updatePool', () => {
       let farming: Contract
       beforeEach('deploy', async () => {
-        farming = await deployContract(wallet0, Farming, [], overrides)
+        farming = await farmingFactory.deploy()
         await tokenB.setBalance(wallet0.address, 1000)
-        await tokenB.approve(farming.address, constants.MaxUint256, overrides)
+        await tokenB.approve(farming.address, constants.MaxUint256)
         await tokenC.setBalance(wallet0.address, 1000)
-        await tokenC.approve(farming.address, constants.MaxUint256, overrides)
+        await tokenC.approve(farming.address, constants.MaxUint256)
       })
 
       it('should not update anything if blockNumber less than lastRewardBlock', async () => {
         await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
         // current BlockNumber: 79
-        await Time.advanceBlockTo(85)
+        await forceAdvanceBlocksTo(85)
         await farming.updatePool(0)
         const poolInfo = parsePoolInfo(await farming.getPoolInfo(0))
         expect(poolInfo).to.deep.eq({
@@ -269,7 +270,7 @@ describe('Farming', () => {
           rewardTokens: [tokenB.address, tokenC.address],
           rewardPerBlock: [BigNumber.from(100), BigNumber.from(200)],
           accRewardPerShare: [BigNumber.from(0), BigNumber.from(0)],
-          lastRewardBlock: BigNumber.from(96), // 95 + 1
+          lastRewardBlock: BigNumber.from(90),
           startBlock: BigNumber.from(90),
           claimableInterval: BigNumber.from(10)
         })
@@ -279,8 +280,9 @@ describe('Farming', () => {
         await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
         // current BlockNumber: 105
         await tokenA.setBalance(wallet0.address, 1000)
-        await tokenA.approve(farming.address, constants.MaxUint256, overrides)
+        await tokenA.approve(farming.address, constants.MaxUint256)
         await farming.stake(0, tokenA.address, 400)
+        await forceAdvanceBlocksTo(108)
         await farming.updatePool(0)
         // current BlockNumber: 109
         const poolInfoFirstUpdate = parsePoolInfo(await farming.getPoolInfo(0))
@@ -289,13 +291,12 @@ describe('Farming', () => {
           amount: BigNumber.from(400),
           rewardTokens: [tokenB.address, tokenC.address],
           rewardPerBlock: [BigNumber.from(100), BigNumber.from(200)],
-          // 1 * 100 * 10^12 / 400 = 250_000_000_000, 1 * 200 * 10^12 / 400 = 500_000_000_000
-          accRewardPerShare: [BigNumber.from(250_000_000_000), BigNumber.from(500_000_000_000)],
+          accRewardPerShare: [BigNumber.from(4_750_000_000_000), BigNumber.from(9_500_000_000_000)],
           lastRewardBlock: BigNumber.from(109),
           startBlock: BigNumber.from(90),
           claimableInterval: BigNumber.from(10)
         })
-        await Time.advanceBlockTo(111)
+        await forceAdvanceBlocksTo(111)
         await farming.updatePool(0)
         // current BlockNumber: 112
         const poolInfoSecondUpdate = parsePoolInfo(await farming.getPoolInfo(0))
@@ -304,9 +305,7 @@ describe('Farming', () => {
           amount: BigNumber.from(400),
           rewardTokens: [tokenB.address, tokenC.address],
           rewardPerBlock: [BigNumber.from(100), BigNumber.from(200)],
-          // 250_000_000_000 + 3 * 100 * 10^12 / 400 = 1_000_000_000_000, 
-          // 500_000_000_000 + 3 * 200 * 10^12 / 400 = 2_000_000_000_000
-          accRewardPerShare: [BigNumber.from(1_000_000_000_000), BigNumber.from(2_000_000_000_000)],
+          accRewardPerShare: [BigNumber.from('5500000000000'), BigNumber.from('11000000000000')],
           lastRewardBlock: BigNumber.from(112),
           startBlock: BigNumber.from(90),
           claimableInterval: BigNumber.from(10)
@@ -317,7 +316,7 @@ describe('Farming', () => {
 
     describe('stake', () => {
       it('fails for wrong farimgToken address', async () => {
-        const farming = await deployContract(wallet0, Farming, [], overrides)
+        const farming = await farmingFactory.deploy()
         await tokenA.setBalance(wallet0.address, 1000)
         await tokenA.approve(farming.address, constants.MaxUint256)
         await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
@@ -327,9 +326,9 @@ describe('Farming', () => {
       describe('one account', () => {
         let farming: Contract
         beforeEach('deploy', async () => {
-          farming = await deployContract(wallet0, Farming, [], overrides)
+          farming = await farmingFactory.deploy()
           await tokenA.setBalance(wallet0.address, 1000)
-          await tokenA.approve(farming.address, constants.MaxUint256, overrides)
+          await tokenA.approve(farming.address, constants.MaxUint256)
           await tokenB.setBalance(farming.address, 10000)
           await tokenC.setBalance(farming.address, 20000)
         })
@@ -344,6 +343,7 @@ describe('Farming', () => {
             nextClaimableBlock: BigNumber.from(0)
           })
           // current BlockNumber: 126
+          await forceAdvanceBlocksTo(126)
           await expect(farming.stake(0, tokenA.address, 200))
             .to.be.emit(farming, 'Stake')
             .withArgs(wallet0.address, 0, 200)
@@ -364,7 +364,7 @@ describe('Farming', () => {
         it('correctly update pending and rewardDebt', async () => {
           await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
           // current BlockNumber: 136
-          await Time.advanceBlockTo(140)
+          await forceAdvanceBlocksTo(140)
           await farming.stake(0, tokenA.address, 300)
           const userInfoFirstStake = parseUserInfo(await farming.getUserInfo(0, wallet0.address))
           const poolInfoFirstStake = parsePoolInfo(await farming.getPoolInfo(0))
@@ -406,25 +406,26 @@ describe('Farming', () => {
       describe('two accounts', () => {
         let farming: Contract
         beforeEach('deploy', async () => {
-          farming = await deployContract(wallet0, Farming, [], overrides)
+          farming = await farmingFactory.deploy()
           await tokenA.setBalance(wallet0.address, 1000)
-          await tokenA.approve(farming.address, constants.MaxUint256, overrides)
+          await tokenA.approve(farming.address, constants.MaxUint256)
           await tokenA.setBalance(wallet1.address, 1000)
-          await tokenA.connect(wallet1).approve(farming.address, constants.MaxUint256, overrides)
+          await tokenA.connect(wallet1).approve(farming.address, constants.MaxUint256)
           await tokenB.setBalance(farming.address, 10000)
           await tokenC.setBalance(farming.address, 20000)
         })
 
         it('one account stakes once and another stakes continuously', async () => {
           await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
+          await forceAdvanceBlocksTo(153)
           // current BlockNumber: 153
           await farming.stake(0, tokenA.address, 200)
-          await Time.advanceBlockTo(160)
+          await forceAdvanceBlocksTo(160)
           await farming.connect(wallet1).stake(0, tokenA.address, 200)
           const pending0Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
           // 100 * 7 = 700, 200 * 7 = 1400
           expect(pending0Wallet0).to.deep.eq([BigNumber.from(700), BigNumber.from(1400)])
-          await Time.advanceBlockTo(163)
+          await forceAdvanceBlocksTo(163)
           const pending1Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
           const pending1Wallet1 = (await farming.pendingRewards(0, wallet1.address)).rewards
           // 700 + 50 * 2 = 800, 1400 + 100 * 2 = 1600
@@ -432,7 +433,7 @@ describe('Farming', () => {
           // 50 * 2 = 100, 100 * 2 = 200
           expect(pending1Wallet1).to.deep.eq([BigNumber.from(100), BigNumber.from(200)])
           await farming.connect(wallet1).stake(0, tokenA.address, 400)
-          await Time.advanceBlockTo(167)
+          await forceAdvanceBlocksTo(167)
           const pending2Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
           const pending2Wallet1 = (await farming.pendingRewards(0, wallet1.address)).rewards
           // 800 + 50 * 1 + 25 * 3 = 925, 1600 + 100 * 1 + 50 * 3 = 1850
@@ -443,14 +444,15 @@ describe('Farming', () => {
 
         it('two accounts stake continuously', async () => {
           await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
+          await forceAdvanceBlocksTo(178)
           // current BlockNumber: 178
           await farming.stake(0, tokenA.address, 200)
-          await Time.advanceBlockTo(185)
+          await forceAdvanceBlocksTo(185)
           await farming.connect(wallet1).stake(0, tokenA.address, 400)
           const pending0Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
           // 100 * 7 = 700, 200 * 7 = 1400
           expect(pending0Wallet0).to.deep.eq([BigNumber.from(700), BigNumber.from(1400)])
-          await Time.advanceBlockTo(190)
+          await forceAdvanceBlocksTo(190)
           const pending1Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
           const pending1Wallet1 = (await farming.pendingRewards(0, wallet1.address)).rewards
           // 700 + 33.3 * 4 = 833, 1400 + 66.6 * 4 = 1666
@@ -458,9 +460,9 @@ describe('Farming', () => {
           // 66.6 * 4 = 266, 133.28 * 4 = 533
           expect(pending1Wallet1).to.deep.eq([BigNumber.from(266), BigNumber.from(533)])
           await farming.stake(0, tokenA.address, 200) // [400, 400]
-          await Time.advanceBlockTo(195)
+          await forceAdvanceBlocksTo(195)
           await farming.connect(wallet1).stake(0, tokenA.address, 200) // [400, 600]
-          await Time.advanceBlockTo(200)
+          await forceAdvanceBlocksTo(200)
           const pending2Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
           const pending2Wallet1 = (await farming.pendingRewards(0, wallet1.address)).rewards
           // 833 + 33.3 * 1 + 50 * 5 + 40 * 4 = 1276, 1666.6 + 66.6 * 1 + 100 * 5 + 80 * 4 = 2553
@@ -473,7 +475,7 @@ describe('Farming', () => {
 
   describe('redeem', () => {
     it('fails for wrong farimgToken address', async () => {
-      const farming = await deployContract(wallet0, Farming, [], overrides)
+      const farming = await farmingFactory.deploy()
       await tokenA.setBalance(wallet0.address, 1000)
       await tokenA.approve(farming.address, constants.MaxUint256)
       await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
@@ -481,7 +483,7 @@ describe('Farming', () => {
     })
 
     it('fails for amount larger than which you staked', async () => {
-      const farming = await deployContract(wallet0, Farming, [], overrides)
+      const farming = await farmingFactory.deploy()
       await tokenA.setBalance(wallet0.address, 1000)
       await tokenA.approve(farming.address, constants.MaxUint256)
       await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
@@ -492,22 +494,23 @@ describe('Farming', () => {
     describe('one account', () => {
       let farming: Contract
       beforeEach('deploy', async () => {
-        farming = await deployContract(wallet0, Farming, [], overrides)
+        farming = await farmingFactory.deploy()
         await tokenA.setBalance(wallet0.address, 1000)
-        await tokenA.approve(farming.address, constants.MaxUint256, overrides)
+        await tokenA.approve(farming.address, constants.MaxUint256)
         await tokenB.setBalance(farming.address, 10000)
         await tokenC.setBalance(farming.address, 20000)
       })
 
       it('redeem all', async () => {
         await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
+        await forceAdvanceBlocksTo(224)
         // current BlockNumber: 224
         await farming.stake(0, tokenA.address, 200)
-        await Time.advanceBlockTo(231)
+        await forceAdvanceBlocksTo(231)
         await expect(farming.redeem(0, tokenA.address, 200))
           .to.be.emit(farming, 'Redeem')
           .withArgs(wallet0.address, 0, 200)
-        await Time.advanceBlockTo(235)
+        await forceAdvanceBlocksTo(235)
         const userInfo = parseUserInfo(await farming.getUserInfo(0, wallet0.address))
         expect(userInfo).to.deep.eq({
           amount: BigNumber.from(0),
@@ -520,11 +523,12 @@ describe('Farming', () => {
 
       it('redeem half of staked amount', async () => {
         await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
+        await forceAdvanceBlocksTo(244)
         // current BlockNumber: 244
         await farming.stake(0, tokenA.address, 200)
-        await Time.advanceBlockTo(251)
+        await forceAdvanceBlocksTo(251)
         await farming.redeem(0, tokenA.address, 100)
-        await Time.advanceBlockTo(255)
+        await forceAdvanceBlocksTo(255)
         const userInfo = parseUserInfo(await farming.getUserInfo(0, wallet0.address))
         const poolInfo = parsePoolInfo(await farming.getPoolInfo(0))
         const expectRewardDebt = poolInfo.accRewardPerShare.map(
@@ -544,13 +548,14 @@ describe('Farming', () => {
 
       it('correctly update when stake and redeem', async () => {
         await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
+        await forceAdvanceBlocksTo(264)
         // current BlockNumber: 264
         await farming.stake(0, tokenA.address, 200)
-        await Time.advanceBlockTo(271)
+        await forceAdvanceBlocksTo(271)
         await farming.redeem(0, tokenA.address, 100)
-        await Time.advanceBlockTo(275)
+        await forceAdvanceBlocksTo(275)
         await farming.stake(0, tokenA.address, 300)
-        await Time.advanceBlockTo(281)
+        await forceAdvanceBlocksTo(281)
         const userInfo = parseUserInfo(await farming.getUserInfo(0, wallet0.address))
         const poolInfo = parsePoolInfo(await farming.getPoolInfo(0))
         const expectRewardDebt = poolInfo.accRewardPerShare.map(
@@ -572,23 +577,24 @@ describe('Farming', () => {
     describe('two accounts', () => {
       let farming: Contract
       beforeEach('deploy', async () => {
-        farming = await deployContract(wallet0, Farming, [], overrides)
+        farming = await farmingFactory.deploy()
         await tokenA.setBalance(wallet0.address, 1000)
-        await tokenA.approve(farming.address, constants.MaxUint256, overrides)
+        await tokenA.approve(farming.address, constants.MaxUint256)
         await tokenA.setBalance(wallet1.address, 1000)
-        await tokenA.connect(wallet1).approve(farming.address, constants.MaxUint256, overrides)
+        await tokenA.connect(wallet1).approve(farming.address, constants.MaxUint256)
         await tokenB.setBalance(farming.address, 10000)
         await tokenC.setBalance(farming.address, 20000)
       })
 
       it('one account redeems', async () => {
         await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
+        await forceAdvanceBlocksTo(292)
         // current BlockNumber: 292
         await farming.stake(0, tokenA.address, 200)
         await farming.connect(wallet1).stake(0, tokenA.address, 300)
-        await Time.advanceBlockTo(300)
+        await forceAdvanceBlocksTo(300)
         await farming.redeem(0, tokenA.address, 100)
-        await Time.advanceBlockTo(305)
+        await forceAdvanceBlocksTo(305)
         const pending0Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
         const pending0Wallet1 = (await farming.pendingRewards(0, wallet1.address)).rewards
         // 100 + 40 * 7 + 25 * 4 = 480, 200 + 80 * 7 + 50 * 4 = 960
@@ -599,14 +605,15 @@ describe('Farming', () => {
 
       it('two accounts redeem', async () => {
         await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
+        await forceAdvanceBlocksTo(316)
         // current BlockNumber: 316
         await farming.stake(0, tokenA.address, 200)
         await farming.connect(wallet1).stake(0, tokenA.address, 300)
-        await Time.advanceBlockTo(320)
+        await forceAdvanceBlocksTo(320)
         await farming.redeem(0, tokenA.address, 100)
-        await Time.advanceBlockTo(325)
+        await forceAdvanceBlocksTo(325)
         await farming.connect(wallet1).redeem(0, tokenA.address, 200)
-        await Time.advanceBlockTo(330)
+        await forceAdvanceBlocksTo(330)
         const pending0Wallet0 = (await farming.pendingRewards(0, wallet0.address)).rewards
         const pending0Wallet1 = (await farming.pendingRewards(0, wallet1.address)).rewards
         // 100 + 40 * 3 + 25 * 5 + 50 * 4 = 545, 200 + 80 * 3 + 50 * 5 + 100 * 4 = 1090
@@ -619,7 +626,7 @@ describe('Farming', () => {
 
   describe('claim', () => {
     it('fails for current blockNumber less than nextClaimableBlock', async () => {
-      const farming = await deployContract(wallet0, Farming, [], overrides)
+      const farming = await farmingFactory.deploy()
       await tokenA.setBalance(wallet0.address, 1000)
       await tokenA.approve(farming.address, constants.MaxUint256)
       await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
@@ -630,23 +637,24 @@ describe('Farming', () => {
     describe('one account', () => {
       let farming: Contract
       beforeEach('deploy', async () => {
-        farming = await deployContract(wallet0, Farming, [], overrides)
+        farming = await await farmingFactory.deploy()
         await tokenA.setBalance(wallet0.address, 1000)
-        await tokenA.approve(farming.address, constants.MaxUint256, overrides)
+        await tokenA.approve(farming.address, constants.MaxUint256)
         await tokenB.setBalance(farming.address, 10000)
         await tokenC.setBalance(farming.address, 20000)
       })
 
       it('claim and check', async () => {
         await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
+        await forceAdvanceBlocksTo(347)
         // current BlockNumber: 347
         await farming.stake(0, tokenA.address, 200)
-        await Time.advanceBlockTo(350)
+        await forceAdvanceBlocksTo(350)
         const rewards0: BigNumber[] = (await farming.pendingRewards(0, wallet0.address)).rewards
         await farming.claim(0)
         expect(await tokenB.balanceOf(wallet0.address)).to.eq(rewards0[0].add(BigNumber.from(100)))
         expect(await tokenC.balanceOf(wallet0.address)).to.eq(rewards0[1].add(BigNumber.from(200)))
-        await Time.advanceBlockTo(355)
+        await forceAdvanceBlocksTo(355)
         const userInfo = parseUserInfo(await farming.getUserInfo(0, wallet0.address))
         const poolInfo = parsePoolInfo(await farming.getPoolInfo(0))
         const expectRewardDebt = poolInfo.accRewardPerShare.map(
@@ -669,21 +677,22 @@ describe('Farming', () => {
     describe('two accounts', () => {
       let farming: Contract
       beforeEach('deploy', async () => {
-        farming = await deployContract(wallet0, Farming, [], overrides)
+        farming = await farmingFactory.deploy()
         await tokenA.setBalance(wallet0.address, 1000)
-        await tokenA.approve(farming.address, constants.MaxUint256, overrides)
+        await tokenA.approve(farming.address, constants.MaxUint256)
         await tokenA.setBalance(wallet1.address, 1000)
-        await tokenA.connect(wallet1).approve(farming.address, constants.MaxUint256, overrides)
+        await tokenA.connect(wallet1).approve(farming.address, constants.MaxUint256)
         await tokenB.setBalance(farming.address, 10000)
         await tokenC.setBalance(farming.address, 20000)
       })
 
       it('two accounts claim and check', async () => {
         await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
+        await forceAdvanceBlocksTo(366)
         // current BlockNumber: 366
         await farming.stake(0, tokenA.address, 200)
         await farming.connect(wallet1).stake(0, tokenA.address, 300)
-        await Time.advanceBlockTo(370)
+        await forceAdvanceBlocksTo(370)
         const rewards0Wallet0: BigNumber[] = (await farming.pendingRewards(0, wallet0.address)).rewards
         const rewards0Wallet1: BigNumber[] = (await farming.pendingRewards(0, wallet1.address)).rewards
         await farming.claim(0)
@@ -692,7 +701,7 @@ describe('Farming', () => {
         expect(await tokenC.balanceOf(wallet0.address)).to.eq(rewards0Wallet0[1].add(BigNumber.from(80)))
         expect(await tokenB.balanceOf(wallet1.address)).to.eq(rewards0Wallet1[0].add(BigNumber.from(120)))
         expect(await tokenC.balanceOf(wallet1.address)).to.eq(rewards0Wallet1[1].add(BigNumber.from(240)))
-        await Time.advanceBlockTo(375)
+        await forceAdvanceBlocksTo(375)
         const rewards1Wallet0: BigNumber[] = (await farming.pendingRewards(0, wallet0.address)).rewards
         const rewards1Wallet1: BigNumber[] = (await farming.pendingRewards(0, wallet1.address)).rewards
         // 40 * 4 = 160, 80 * 4 = 320
@@ -705,7 +714,7 @@ describe('Farming', () => {
 
   describe('emergencyWithdraw', () => {
     it('withdraw and reset userInfo', async () => {
-      const farming = await deployContract(wallet0, Farming, [], overrides)
+      const farming = await farmingFactory.deploy()
       await tokenA.setBalance(wallet0.address, 1000)
       await tokenA.approve(farming.address, constants.MaxUint256)
       await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
@@ -724,17 +733,18 @@ describe('Farming', () => {
     })
 
     it('one withdraw and another update correctly', async () => {
-      const farming = await deployContract(wallet0, Farming, [], overrides)
+      const farming = await farmingFactory.deploy()
       await tokenA.setBalance(wallet0.address, 1000)
-      await tokenA.approve(farming.address, constants.MaxUint256, overrides)
+      await tokenA.approve(farming.address, constants.MaxUint256)
       await tokenA.setBalance(wallet1.address, 1000)
-      await tokenA.connect(wallet1).approve(farming.address, constants.MaxUint256, overrides)
+      await tokenA.connect(wallet1).approve(farming.address, constants.MaxUint256)
       await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 90, 10)
+      await forceAdvanceBlocksTo(393)
       // current BlockNumber: 393
       await farming.stake(0, tokenA.address, 200)
       await farming.connect(wallet1).stake(0, tokenA.address, 200)
       await farming.emergencyWithdraw(0)
-      await Time.advanceBlockTo(400)
+      await forceAdvanceBlocksTo(400)
       const rewards = (await farming.pendingRewards(0, wallet1.address)).rewards
       // 50 * 2 + 100 * 4 = 500, 100 * 2 + 200 * 4 = 1000
       expect(rewards).to.deep.eq([BigNumber.from(500), BigNumber.from(1000)])
@@ -744,11 +754,11 @@ describe('Farming', () => {
   describe('withdrawRewards', () => {
     let farming: Contract
     beforeEach('deploy', async () => {
-      farming = await deployContract(wallet0, Farming, [], overrides)
+      farming = await farmingFactory.deploy()
       await tokenB.setBalance(wallet0.address, 400)
-      await tokenB.approve(farming.address, constants.MaxUint256, overrides)
+      await tokenB.approve(farming.address, constants.MaxUint256)
       await tokenC.setBalance(wallet0.address, 400)
-      await tokenC.approve(farming.address, constants.MaxUint256, overrides)
+      await tokenC.approve(farming.address, constants.MaxUint256)
     })
 
     it('fails for different amount length', async () => {
@@ -767,7 +777,7 @@ describe('Farming', () => {
       await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 10, 10)
       await farming.charge(0, [200, 400])
       await tokenA.setBalance(wallet0.address, 400)
-      await tokenA.approve(farming.address, constants.MaxUint256, overrides)
+      await tokenA.approve(farming.address, constants.MaxUint256)
       await farming.stake(0, tokenA.address, 200)
       await farming.stake(0, tokenA.address, 200)
       await expect(farming.withdrawRewards(0, [50, 100]))
@@ -782,9 +792,9 @@ describe('Farming', () => {
   describe('setClaimableBlock', () => {
     let farming: Contract
     beforeEach('deploy', async () => {
-      farming = await deployContract(wallet0, Farming, [], overrides)
+      farming = await farmingFactory.deploy()
       await tokenA.setBalance(wallet0.address, 1000)
-      await tokenA.approve(farming.address, constants.MaxUint256, overrides)
+      await tokenA.approve(farming.address, constants.MaxUint256)
       await tokenB.setBalance(farming.address, 10000)
       await tokenC.setBalance(farming.address, 20000)
     })
@@ -809,13 +819,14 @@ describe('Farming', () => {
 
     it('should claim everyBlock when set to zero', async () => {
       await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 10, 0)
+      await forceAdvanceBlocksTo(454)
       // block: 454
       await farming.stake(0, tokenA.address, 200)
-      await Time.advanceBlockTo(460)
+      await forceAdvanceBlocksTo(460)
       await farming.claim(0)
       expect(await tokenB.balanceOf(wallet0.address)).to.eq(BigNumber.from('600'))
       expect(await tokenC.balanceOf(wallet0.address)).to.eq(BigNumber.from('1200'))
-      await Time.advanceBlockTo(465)
+      await forceAdvanceBlocksTo(465)
       await farming.claim(0)
       expect(await tokenB.balanceOf(wallet0.address)).to.eq(BigNumber.from('1100'))
       expect(await tokenC.balanceOf(wallet0.address)).to.eq(BigNumber.from('2200'))
@@ -823,20 +834,21 @@ describe('Farming', () => {
 
     it('should work well when setting interval from 10 to 0', async () => {
       await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 474, 10)
+      await forceAdvanceBlocksTo(475)
       // block: 475
       await farming.stake(0, tokenA.address, 200)
-      await Time.advanceBlockTo(480)
+      await forceAdvanceBlocksTo(480)
       await expect(farming.claim(0)).to.be.revertedWith('NOT_CLAIMABLE')
       await farming.setClaimableBlock(0, 0)
-      await Time.advanceBlockTo(485)
+      await forceAdvanceBlocksTo(485)
       await farming.claim(0)
       expect(await tokenB.balanceOf(wallet0.address)).to.eq(BigNumber.from('1000'))
       expect(await tokenC.balanceOf(wallet0.address)).to.eq(BigNumber.from('2000'))
-      await Time.advanceBlockTo(490)
+      await forceAdvanceBlocksTo(490)
       await farming.claim(0)
       expect(await tokenB.balanceOf(wallet0.address)).to.eq(BigNumber.from('1500'))
       expect(await tokenC.balanceOf(wallet0.address)).to.eq(BigNumber.from('3000'))
-      await Time.advanceBlockTo(495)
+      await forceAdvanceBlocksTo(495)
       await farming.claim(0)
       expect(await tokenB.balanceOf(wallet0.address)).to.eq(BigNumber.from('2000'))
       expect(await tokenC.balanceOf(wallet0.address)).to.eq(BigNumber.from('4000'))
@@ -844,18 +856,19 @@ describe('Farming', () => {
 
     it('should work well when setting interval from 0 to 10', async () => {
       await farming.add(tokenA.address, [tokenB.address, tokenC.address], [100, 200], 504, 0)
+      await forceAdvanceBlocksTo(505)
       // block: 505
       await farming.stake(0, tokenA.address, 200)
-      await Time.advanceBlockTo(510)
+      await forceAdvanceBlocksTo(510)
       await farming.claim(0)
       expect(await tokenB.balanceOf(wallet0.address)).to.eq(BigNumber.from('500'))
       expect(await tokenC.balanceOf(wallet0.address)).to.eq(BigNumber.from('1000'))
       await farming.setClaimableBlock(0, 10)
-      await Time.advanceBlockTo(515)
+      await forceAdvanceBlocksTo(515)
       await farming.claim(0)
       expect(await tokenB.balanceOf(wallet0.address)).to.eq(BigNumber.from('1000'))
       expect(await tokenC.balanceOf(wallet0.address)).to.eq(BigNumber.from('2000'))
-      await Time.advanceBlockTo(520)
+      await forceAdvanceBlocksTo(520)
       await expect(farming.claim(0)).to.be.revertedWith('NOT_CLAIMABLE')
     })
   })

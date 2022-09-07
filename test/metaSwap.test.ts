@@ -1,45 +1,37 @@
-import chai, { expect } from 'chai'
-import { solidity, MockProvider, deployContract } from 'ethereum-waffle'
-import { BigNumber, Contract, ContractFactory, Signer, Wallet } from 'ethers'
-import { ethers } from 'hardhat'
-
-import TestERC20 from '../build/contracts/test/BasicToken.sol/BasicToken.json'
-import StableSwap from '../build/contracts/stableswap/StableSwap.sol/StableSwap.json'
-import StableSwapStorage from '../build/contracts/stableswap/StableSwapStorage.sol/StableSwapStorage.json'
-import MetaSwap from '../build/contracts/stableswap/MetaSwap.sol/MetaSwap.json'
-import MetaSwapStorage from '../build/contracts/stableswap/MetaSwapStorage.sol/MetaSwapStorage.json'
-import MockStableSwapBorrower from '../build/contracts/test/MockStableSwapBorrower.sol/MockStableSwapBorrower.json'
-
+import { expect } from 'chai'
+import { BigNumber, Signer } from 'ethers'
+import { deployments, ethers } from 'hardhat'
 import {
   asyncForEach,
-  forceAdvanceOneBlock,
-  getCurrentBlockTimestamp,
   getUserTokenBalance,
   getUserTokenBalances,
-  linkBytecode,
   MAX_UINT256,
-  setNextTimestamp,
-  setTimestamp,
   TIME,
   ZERO_ADDRESS
 } from './shared/utilities'
 import snapshotGasCost from './shared/snapshotGasCost'
-
-chai.use(solidity)
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { BasicToken, LPToken, MetaSwap, MockStableSwapBorrower, StableSwap } from '../typechain-types'
+import {
+  forceAdvanceOneBlock,
+  getCurrentBlockTimestamp,
+  setNextTimestamp,
+  setTimestamp
+} from './shared/time'
 
 describe('MetaSwap', async () => {
-  let signers: Array<Wallet>
-  let baseSwap: Contract
-  let metaSwap: Contract
-  let baseLPToken: Contract
-  let metaLPToken: Contract
-  let dai: Contract
-  let usdc: Contract
-  let usdt: Contract
-  let frax: Contract
-  let owner: Wallet
-  let user1: Wallet
-  let user2: Wallet
+  let signers: Array<SignerWithAddress>
+  let baseSwap: StableSwap
+  let metaSwap: MetaSwap
+  let baseLPToken: LPToken
+  let metaLPToken: LPToken
+  let dai: BasicToken
+  let usdc: BasicToken
+  let usdt: BasicToken
+  let frax: BasicToken
+  let owner: SignerWithAddress
+  let user1: SignerWithAddress
+  let user2: SignerWithAddress
   let ownerAddress: string
   let user1Address: string
   let user2Address: string
@@ -50,140 +42,118 @@ describe('MetaSwap', async () => {
   const LP_TOKEN_NAME = "Test LP Token Name"
   const LP_TOKEN_SYMBOL = "TESTLP"
 
-  const provider = new MockProvider({
-    ganacheOptions: {
-      hardfork: 'istanbul',
-      mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-      gasLimit: 99999999999
-    },
-  })
+  const setupTest = deployments.createFixture(
+    async ({ deployments, ethers }) => {
+      await deployments.fixture() // ensure you start from a fresh deployments
+      signers = await ethers.getSigners()
+        ;[owner, user1, user2] = signers
+      ownerAddress = owner.address
+      user1Address = user1.address
+      user2Address = user2.address
 
-  async function setupTest() {
-    signers = provider.getWallets()
-    owner = signers[0]
-    user1 = signers[1]
-    user2 = signers[2]
-    ownerAddress = owner.address
-    user1Address = user1.address
-    user2Address = user2.address
 
-    dai = await deployContract(
-      owner,
-      TestERC20,
-      ['DAI', 'DAI', '18', '0']
-    )
-    usdc = await deployContract(
-      owner,
-      TestERC20,
-      ['USDC', 'USDC', '6', '0']
-    )
-    usdt = await deployContract(
-      owner,
-      TestERC20,
-      ['USDT', 'USDT', '6', '0']
-    )
-    frax = await deployContract(
-      owner,
-      TestERC20,
-      ['FRAX', 'FRAX', '18', '0']
-    )
+      const basicTokenFactory = await ethers.getContractFactory('BasicToken')
+      dai = (await basicTokenFactory.deploy('DAI', 'DAI', '18', '0')) as BasicToken
+      usdc = (await basicTokenFactory.deploy('USDC', 'USDC', '6', '0')) as BasicToken
+      usdt = (await basicTokenFactory.deploy('USDT', 'USDT', '6', '0')) as BasicToken
+      frax = (await basicTokenFactory.deploy('FRAX', 'FRAX', '18', '0')) as BasicToken
 
-    const stableSwapStorageContract = await deployContract(owner, StableSwapStorage)
-    const stableSwapFactory = (await ethers.getContractFactory(
-      StableSwap.abi,
-      linkBytecode(StableSwap, {
-        'StableSwapStorage': stableSwapStorageContract.address
-      }),
-      owner,
-    )) as ContractFactory
-    baseSwap = await stableSwapFactory.deploy()
-    
-    await baseSwap.initialize(
-      [dai.address, usdc.address, usdt.address],
-      [18, 6, 6],
-      LP_TOKEN_NAME,
-      LP_TOKEN_SYMBOL,
-      200,
-      4e6,
-      0,
-      owner.address
-    )
+      const stableSwapStorageFactory = await ethers.getContractFactory('StableSwapStorage')
+      const stableSwapStorage = await stableSwapStorageFactory.deploy()
 
-    baseLPToken = await ethers.getContractAt(
-      'LPToken',
-      (await baseSwap.swapStorage()).lpToken,
-      owner
-    )
+      const stableSwapFactory = await ethers.getContractFactory('StableSwap', {
+        libraries: {
+          'StableSwapStorage': stableSwapStorage.address
+        }
+      })
+      baseSwap = (await stableSwapFactory.deploy()) as StableSwap
+      await baseSwap.initialize(
+        [dai.address, usdc.address, usdt.address],
+        [18, 6, 6],
+        LP_TOKEN_NAME,
+        LP_TOKEN_SYMBOL,
+        200,
+        4e6,
+        0,
+        owner.address
+      )
 
-    // Mint tokens
-    await asyncForEach(
-      [ownerAddress, user1Address, user2Address],
-      async (address) => {
-        await dai.setBalance(address, BigNumber.from(10).pow(18).mul(100000))
-        await usdc.setBalance(address, BigNumber.from(10).pow(6).mul(100000))
-        await usdt.setBalance(address, BigNumber.from(10).pow(6).mul(100000))
-        await frax.setBalance(address, BigNumber.from(10).pow(18).mul(100000))
-      }
-    )
+      baseLPToken = (await ethers.getContractAt(
+        'LPToken',
+        (await baseSwap.swapStorage()).lpToken,
+        owner
+      )) as LPToken
 
-    const metaSwapStorageContract = await deployContract(owner, MetaSwapStorage)
-    const metaSwapFactory = (await ethers.getContractFactory(
-      MetaSwap.abi,
-      linkBytecode(MetaSwap, {
-        'StableSwapStorage': stableSwapStorageContract.address,
-        'MetaSwapStorage': metaSwapStorageContract.address
-      }),
-      owner,
-    )) as ContractFactory
-    metaSwap = await metaSwapFactory.deploy()
+      // Mint tokens
+      await asyncForEach(
+        [ownerAddress, user1Address, user2Address],
+        async (address) => {
+          await dai.setBalance(address, BigNumber.from(10).pow(18).mul(100000))
+          await usdc.setBalance(address, BigNumber.from(10).pow(6).mul(100000))
+          await usdt.setBalance(address, BigNumber.from(10).pow(6).mul(100000))
+          await frax.setBalance(address, BigNumber.from(10).pow(18).mul(100000))
+        }
+      )
 
-    // Set approvals
-    await asyncForEach([owner, user1, user2], async (signer) => {
-      await frax.connect(signer).approve(metaSwap.address, MAX_UINT256)
-      await dai.connect(signer).approve(metaSwap.address, MAX_UINT256)
-      await usdc.connect(signer).approve(metaSwap.address, MAX_UINT256)
-      await usdt.connect(signer).approve(metaSwap.address, MAX_UINT256)
-      await dai.connect(signer).approve(baseSwap.address, MAX_UINT256)
-      await usdc.connect(signer).approve(baseSwap.address, MAX_UINT256)
-      await usdt.connect(signer).approve(baseSwap.address, MAX_UINT256)
-      await baseLPToken.connect(signer).approve(metaSwap.address, MAX_UINT256)
+      const metaSwapStorageFactory = await ethers.getContractFactory('MetaSwapStorage')
+      const metaSwapStorage = await metaSwapStorageFactory.deploy()
 
-      // Add some liquidity to the base pool
-      await baseSwap
-        .connect(signer)
-        .addLiquidity(
-          [String(1e20), String(1e8), String(1e8)],
-          0,
-          MAX_UINT256
-        )
-    })
+      const metaSwapFactory = await ethers.getContractFactory('MetaSwap', {
+        libraries: {
+          'StableSwapStorage': stableSwapStorage.address,
+          'MetaSwapStorage': metaSwapStorage.address
+        }
+      })
+      metaSwap = (await metaSwapFactory.deploy()) as MetaSwap
 
-    // Initialize meta swap pool
-    // Manually overload the signature
-    await metaSwap.initializeMetaSwap(
-      [frax.address, baseLPToken.address],
-      [18, 18],
-      LP_TOKEN_NAME,
-      LP_TOKEN_SYMBOL,
-      INITIAL_A_VALUE,
-      SWAP_FEE,
-      0,
-      owner.address,
-      baseSwap.address
-    )
+      // Set approvals
+      await asyncForEach([owner, user1, user2], async (signer) => {
+        await frax.connect(signer).approve(metaSwap.address, MAX_UINT256)
+        await dai.connect(signer).approve(metaSwap.address, MAX_UINT256)
+        await usdc.connect(signer).approve(metaSwap.address, MAX_UINT256)
+        await usdt.connect(signer).approve(metaSwap.address, MAX_UINT256)
+        await dai.connect(signer).approve(baseSwap.address, MAX_UINT256)
+        await usdc.connect(signer).approve(baseSwap.address, MAX_UINT256)
+        await usdt.connect(signer).approve(baseSwap.address, MAX_UINT256)
+        await baseLPToken.connect(signer).approve(metaSwap.address, MAX_UINT256)
 
-    metaLPToken = await ethers.getContractAt(
-      'LPToken',
-      (await metaSwap.swapStorage()).lpToken,
-      owner
-    )
+        // Add some liquidity to the base pool
+        await baseSwap
+          .connect(signer)
+          .addLiquidity(
+            [String(1e20), String(1e8), String(1e8)],
+            0,
+            MAX_UINT256
+          )
+      })
 
-    // Add liquidity to the meta swap pool
-    await metaSwap.addLiquidity([String(1e18), String(1e18)], 0, MAX_UINT256)
-    
-    expect(await frax.balanceOf(metaSwap.address)).to.eq(String(1e18))
-    expect(await baseLPToken.balanceOf(metaSwap.address)).to.eq(String(1e18))
-  }
+      // Initialize meta swap pool
+      // Manually overload the signature
+      await metaSwap.initializeMetaSwap(
+        [frax.address, baseLPToken.address],
+        [18, 18],
+        LP_TOKEN_NAME,
+        LP_TOKEN_SYMBOL,
+        INITIAL_A_VALUE,
+        SWAP_FEE,
+        0,
+        owner.address,
+        baseSwap.address
+      )
+
+      metaLPToken = (await ethers.getContractAt(
+        'LPToken',
+        (await metaSwap.swapStorage()).lpToken,
+        owner
+      )) as LPToken
+
+      // Add liquidity to the meta swap pool
+      await metaSwap.addLiquidity([String(1e18), String(1e18)], 0, MAX_UINT256)
+
+      expect(await frax.balanceOf(metaSwap.address)).to.eq(String(1e18))
+      expect(await baseLPToken.balanceOf(metaSwap.address)).to.eq(String(1e18))
+    }
+  )
 
   beforeEach(async () => {
     await setupTest()
@@ -409,8 +379,8 @@ describe('MetaSwap', async () => {
     })
 
     it("Reverts when block is mined after deadline", async () => {
-      const currentTimestamp = await getCurrentBlockTimestamp(provider)
-      await setNextTimestamp(provider, currentTimestamp + 60 * 10)
+      const currentTimestamp = await getCurrentBlockTimestamp()
+      await setNextTimestamp(currentTimestamp + 60 * 10)
 
       await expect(
         metaSwap
@@ -608,8 +578,8 @@ describe('MetaSwap', async () => {
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256)
       const currentUser1Balance = await metaLPToken.balanceOf(user1Address)
 
-      const currentTimestamp = await getCurrentBlockTimestamp(provider)
-      await setNextTimestamp(provider, currentTimestamp + 60 * 10)
+      const currentTimestamp = await getCurrentBlockTimestamp()
+      await setNextTimestamp(currentTimestamp + 60 * 10)
 
       // User 1 tries removing liquidity with deadline of +5 minutes
       await metaLPToken
@@ -851,8 +821,8 @@ describe('MetaSwap', async () => {
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256)
       const currentUser1Balance = await metaLPToken.balanceOf(user1Address)
 
-      const currentTimestamp = await getCurrentBlockTimestamp(provider)
-      await setNextTimestamp(provider, currentTimestamp + 60 * 10)
+      const currentTimestamp = await getCurrentBlockTimestamp()
+      await setNextTimestamp(currentTimestamp + 60 * 10)
 
       // User 1 tries removing liquidity with deadline of +5 minutes
       await metaLPToken
@@ -1049,8 +1019,8 @@ describe('MetaSwap', async () => {
         .addLiquidity([String(2e18), String(1e16)], 0, MAX_UINT256)
       const currentUser1Balance = await metaLPToken.balanceOf(user1Address)
 
-      const currentTimestamp = await getCurrentBlockTimestamp(provider)
-      await setNextTimestamp(provider, currentTimestamp + 60 * 10)
+      const currentTimestamp = await getCurrentBlockTimestamp()
+      await setNextTimestamp(currentTimestamp + 60 * 10)
 
       // User 1 tries removing liquidity with deadline of +5 minutes
       await metaLPToken
@@ -1087,10 +1057,11 @@ describe('MetaSwap', async () => {
   })
 
   describe("flashLoan", () => {
-    let borrower: Contract
+    let borrower: MockStableSwapBorrower
 
     beforeEach(async () => {
-      borrower = await deployContract(owner, MockStableSwapBorrower)
+      const borrowerFactory = await ethers.getContractFactory('MockStableSwapBorrower')
+      borrower = (await borrowerFactory.deploy()) as MockStableSwapBorrower
     })
 
     it("should revert when contract is paused", async () => {
@@ -1253,8 +1224,8 @@ describe('MetaSwap', async () => {
     })
 
     it("Reverts when block is mined after deadline", async () => {
-      const currentTimestamp = await getCurrentBlockTimestamp(provider)
-      await setNextTimestamp(provider, currentTimestamp + 60 * 10)
+      const currentTimestamp = await getCurrentBlockTimestamp()
+      await setNextTimestamp(currentTimestamp + 60 * 10)
 
       // User 1 tries swapping with deadline of +5 minutes
       await expect(
@@ -1483,8 +1454,8 @@ describe('MetaSwap', async () => {
     })
 
     it("Reverts when block is mined after deadline", async () => {
-      const currentTimestamp = await getCurrentBlockTimestamp(provider)
-      await setNextTimestamp(provider, currentTimestamp + 60 * 10)
+      const currentTimestamp = await getCurrentBlockTimestamp()
+      await setNextTimestamp(currentTimestamp + 60 * 10)
 
       // User 1 tries swapping with deadline of +5 minutes
       await expect(
@@ -1808,14 +1779,14 @@ describe('MetaSwap', async () => {
 
   describe("rampA", () => {
     beforeEach(async () => {
-      await forceAdvanceOneBlock(provider)
+      await forceAdvanceOneBlock()
     })
 
     it("Emits RampA event", async () => {
       await expect(
         metaSwap.rampA(
           100,
-          (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1,
+          (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
         ),
       ).to.emit(metaSwap, "RampA")
     })
@@ -1827,7 +1798,7 @@ describe('MetaSwap', async () => {
 
       // call rampA(), changing A to 100 within a span of 14 days
       const endTimestamp =
-        (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
       await metaSwap.rampA(100, endTimestamp)
 
       // +0 seconds since ramp A
@@ -1836,13 +1807,13 @@ describe('MetaSwap', async () => {
       expect(await metaSwap.getVirtualPrice()).to.be.eq("1000167146429977312")
 
       // set timestamp to +100000 seconds
-      await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 100000)
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
       expect(await metaSwap.getA()).to.be.eq(54)
       expect(await metaSwap.getAPrecise()).to.be.eq(5413)
       expect(await metaSwap.getVirtualPrice()).to.be.eq("1000258443200231295")
 
       // set timestamp to the end of ramp period
-      await setTimestamp(provider, endTimestamp)
+      await setTimestamp(endTimestamp)
       expect(await metaSwap.getA()).to.be.eq(100)
       expect(await metaSwap.getAPrecise()).to.be.eq(10000)
       expect(await metaSwap.getVirtualPrice()).to.be.eq("1000771363829405068")
@@ -1855,7 +1826,7 @@ describe('MetaSwap', async () => {
 
       // call rampA()
       const endTimestamp =
-        (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1
       await metaSwap.rampA(25, endTimestamp)
 
       // +0 seconds since ramp A
@@ -1864,13 +1835,13 @@ describe('MetaSwap', async () => {
       expect(await metaSwap.getVirtualPrice()).to.be.eq("1000167146429977312")
 
       // set timestamp to +100000 seconds
-      await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 100000)
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
       expect(await metaSwap.getA()).to.be.eq(47)
       expect(await metaSwap.getAPrecise()).to.be.eq(4794)
       expect(await metaSwap.getVirtualPrice()).to.be.eq("1000115870150391894")
 
       // set timestamp to the end of ramp period
-      await setTimestamp(provider, endTimestamp)
+      await setTimestamp(endTimestamp)
       expect(await metaSwap.getA()).to.be.eq(25)
       expect(await metaSwap.getAPrecise()).to.be.eq(2500)
       expect(await metaSwap.getVirtualPrice()).to.be.eq("998999574522335473")
@@ -1880,19 +1851,19 @@ describe('MetaSwap', async () => {
       await expect(
         metaSwap
           .connect(user1)
-          .rampA(55, (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1),
+          .rampA(55, (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1),
       ).to.be.reverted
     })
 
     it("Reverts with 'Wait 1 day before starting ramp'", async () => {
       await metaSwap.rampA(
         55,
-        (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1,
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
       )
       await expect(
         metaSwap.rampA(
           55,
-          (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1,
+          (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
         ),
       ).to.be.revertedWith("< rampDelay")
     })
@@ -1901,7 +1872,7 @@ describe('MetaSwap', async () => {
       await expect(
         metaSwap.rampA(
           55,
-          (await getCurrentBlockTimestamp(provider)) + 1 * TIME.DAYS - 1,
+          (await getCurrentBlockTimestamp()) + 1 * TIME.DAYS - 1,
         ),
       ).to.be.revertedWith("< minRampTime")
     })
@@ -1910,7 +1881,7 @@ describe('MetaSwap', async () => {
       await expect(
         metaSwap.rampA(
           0,
-          (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1,
+          (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
         ),
       ).to.be.revertedWith("outOfRange")
     })
@@ -1921,7 +1892,7 @@ describe('MetaSwap', async () => {
       // call rampA()
       await metaSwap.rampA(
         100,
-        (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 100,
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 100,
       )
 
       // Stop ramp
@@ -1931,11 +1902,11 @@ describe('MetaSwap', async () => {
     it("Stop ramp succeeds", async () => {
       // call rampA()
       const endTimestamp =
-        (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 100
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 100
       await metaSwap.rampA(100, endTimestamp)
 
       // set timestamp to +100000 seconds
-      await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 100000)
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
       expect(await metaSwap.getA()).to.be.eq(54)
       expect(await metaSwap.getAPrecise()).to.be.eq(5413)
 
@@ -1945,7 +1916,7 @@ describe('MetaSwap', async () => {
       expect(await metaSwap.getAPrecise()).to.be.eq(5413)
 
       // set timestamp to endTimestamp
-      await setTimestamp(provider, endTimestamp)
+      await setTimestamp(endTimestamp)
 
       // verify ramp has stopped
       expect(await metaSwap.getA()).to.be.eq(54)
@@ -1955,11 +1926,11 @@ describe('MetaSwap', async () => {
     it("Reverts with 'Ramp is already stopped'", async () => {
       // call rampA()
       const endTimestamp =
-        (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 100
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 100
       await metaSwap.rampA(100, endTimestamp)
 
       // set timestamp to +10000 seconds
-      await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 100000)
+      await setTimestamp((await getCurrentBlockTimestamp()) + 100000)
       expect(await metaSwap.getA()).to.be.eq(54)
       expect(await metaSwap.getAPrecise()).to.be.eq(5413)
 
@@ -1977,7 +1948,7 @@ describe('MetaSwap', async () => {
 
   describe("Check for timestamp manipulations", () => {
     beforeEach(async () => {
-      await forceAdvanceOneBlock(provider)
+      await forceAdvanceOneBlock()
     })
 
     it("Check for maximum differences in A and virtual price when A is increasing", async () => {
@@ -1993,11 +1964,11 @@ describe('MetaSwap', async () => {
       // Start ramp
       await metaSwap.rampA(
         100,
-        (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1,
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
       )
 
       // Malicious miner skips 900 seconds
-      await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 900)
+      await setTimestamp((await getCurrentBlockTimestamp()) + 900)
 
       expect(await metaSwap.getA()).to.be.eq(50)
       expect(await metaSwap.getAPrecise()).to.be.eq(5003)
@@ -2025,11 +1996,11 @@ describe('MetaSwap', async () => {
       // Start ramp
       await metaSwap.rampA(
         25,
-        (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1,
+        (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
       )
 
       // Malicious miner skips 900 seconds
-      await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 900)
+      await setTimestamp((await getCurrentBlockTimestamp()) + 900)
 
       expect(await metaSwap.getA()).to.be.eq(49)
       expect(await metaSwap.getAPrecise()).to.be.eq(4999)
@@ -2084,7 +2055,7 @@ describe('MetaSwap', async () => {
         // Start ramp upwards
         await metaSwap.rampA(
           100,
-          (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1,
+          (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
         )
         expect(await metaSwap.getAPrecise()).to.be.eq(5000)
 
@@ -2099,7 +2070,7 @@ describe('MetaSwap', async () => {
 
       describe(
         "When tokens are priced equally: " +
-          "attacker creates massive imbalance prior to A change, and resolves it after",
+        "attacker creates massive imbalance prior to A change, and resolves it after",
         () => {
           it("Attack fails with 900 seconds between blocks", async () => {
             // Swap 1e18 of frax to lpToken, causing massive imbalance in the pool
@@ -2122,7 +2093,7 @@ describe('MetaSwap', async () => {
             )
 
             // Malicious miner skips 900 seconds
-            await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 900)
+            await setTimestamp((await getCurrentBlockTimestamp()) + 900)
 
             // Verify A has changed upwards
             // 5000 -> 5003 (0.06%)
@@ -2180,7 +2151,7 @@ describe('MetaSwap', async () => {
 
       describe(
         "When token price is unequal: " +
-          "attacker 'resolves' the imbalance prior to A change, then recreates the imbalance.",
+        "attacker 'resolves' the imbalance prior to A change, then recreates the imbalance.",
         () => {
           beforeEach(async () => {
             // Set up pool to be imbalanced prior to the attack
@@ -2189,7 +2160,7 @@ describe('MetaSwap', async () => {
               .addLiquidity(
                 [String(0), String(2e18)],
                 0,
-                (await getCurrentBlockTimestamp(provider)) + 60,
+                (await getCurrentBlockTimestamp()) + 60,
               )
 
             // Check current pool balances
@@ -2223,7 +2194,7 @@ describe('MetaSwap', async () => {
             )
 
             // Malicious miner skips 900 seconds
-            await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 900)
+            await setTimestamp((await getCurrentBlockTimestamp()) + 900)
 
             // Verify A has changed upwards
             // 5000 -> 5003 (0.06%)
@@ -2300,7 +2271,7 @@ describe('MetaSwap', async () => {
         // Start ramp downwards
         await metaSwap.rampA(
           25,
-          (await getCurrentBlockTimestamp(provider)) + 14 * TIME.DAYS + 1,
+          (await getCurrentBlockTimestamp()) + 14 * TIME.DAYS + 1,
         )
         expect(await metaSwap.getAPrecise()).to.be.eq(5000)
 
@@ -2315,7 +2286,7 @@ describe('MetaSwap', async () => {
 
       describe(
         "When tokens are priced equally: " +
-          "attacker creates massive imbalance prior to A change, and resolves it after",
+        "attacker creates massive imbalance prior to A change, and resolves it after",
         () => {
           // This attack is achieved by creating imbalance in the first block then
           // trading in reverse direction in the second block.
@@ -2341,7 +2312,7 @@ describe('MetaSwap', async () => {
             )
 
             // Malicious miner skips 900 seconds
-            await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 900)
+            await setTimestamp((await getCurrentBlockTimestamp()) + 900)
 
             // Verify A has changed downwards
             expect(await metaSwap.getAPrecise()).to.be.eq(4999)
@@ -2399,7 +2370,7 @@ describe('MetaSwap', async () => {
 
       describe(
         "When token price is unequal: " +
-          "attacker 'resolves' the imbalance prior to A change, then recreates the imbalance.",
+        "attacker 'resolves' the imbalance prior to A change, then recreates the imbalance.",
         () => {
           beforeEach(async () => {
             // Set up pool to be imbalanced prior to the attack
@@ -2408,7 +2379,7 @@ describe('MetaSwap', async () => {
               .addLiquidity(
                 [String(0), String(2e18)],
                 0,
-                (await getCurrentBlockTimestamp(provider)) + 60,
+                (await getCurrentBlockTimestamp()) + 60,
               )
 
             // Check current pool balances
@@ -2442,7 +2413,7 @@ describe('MetaSwap', async () => {
             )
 
             // Malicious miner skips 900 seconds
-            await setTimestamp(provider, (await getCurrentBlockTimestamp(provider)) + 900)
+            await setTimestamp((await getCurrentBlockTimestamp()) + 900)
 
             // Verify A has changed downwards
             expect(await metaSwap.getAPrecise()).to.be.eq(4999)

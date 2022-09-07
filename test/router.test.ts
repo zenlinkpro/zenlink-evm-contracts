@@ -1,39 +1,44 @@
-import { expect, use } from "chai";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { expect } from "chai";
 import { Contract, constants, BigNumber } from "ethers";
-import { MockProvider, solidity } from 'ethereum-waffle'
-import { routerFixture } from './shared/fixtures'
+import { deployments } from "hardhat";
+import { BasicToken, Factory, NativeCurrency, Router } from "../typechain-types";
 import { getCreate2Address, expandTo18Decimals, MINIMUM_LIQUIDITY } from './shared/utilities'
-import Pair from '../build/contracts/core/Pair.sol/Pair.json'
-
-use(solidity);
-
-const overrides = {
-  gasLimit: 6100000
-}
+import Pair from '../build/artifacts/contracts/core/Pair.sol/Pair.json'
 
 describe('Router', () => {
-  const provider = new MockProvider({
-    ganacheOptions: {
-      hardfork: 'istanbul',
-      mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-      gasLimit: 9999999,
-    },
-  })
-  const [wallet] = provider.getWallets();
+  let signers: SignerWithAddress[]
+  let wallet: SignerWithAddress
 
-  let factory: Contract;
-  let token0: Contract;
-  let token1: Contract;
-  let router: Contract;
-  let WNativeCurrency: Contract;
+  let factory: Factory;
+  let token0: BasicToken;
+  let token1: BasicToken;
+  let router: Router;
+  let WNativeCurrency: NativeCurrency;
+
+  const setupTest = deployments.createFixture(
+    async ({ deployments, ethers }) => {
+      await deployments.fixture() // ensure you start from a fresh deployments
+      signers = await ethers.getSigners()
+      ;[wallet] = signers
+
+      const factoryFactory = await ethers.getContractFactory('Factory')
+      factory = (await factoryFactory.deploy(wallet.address)) as Factory
+
+      const wnativeFactory = await ethers.getContractFactory('NativeCurrency')
+      WNativeCurrency = (await wnativeFactory.deploy("NativeCurrency", "Currency")) as NativeCurrency
+
+      const routerFactory = await ethers.getContractFactory('Router')
+      router = (await routerFactory.deploy(factory.address, WNativeCurrency.address)) as Router
+
+      const basicTokenFactory = await ethers.getContractFactory('BasicToken')
+      token0 = (await basicTokenFactory.deploy("TokenA", "TA", 18, '1549903311500105273839447')) as BasicToken
+      token1 = (await basicTokenFactory.deploy("TokenB", "TB", 18, '1403957892781062528318836')) as BasicToken
+    }
+  )
 
   beforeEach(async function () {
-    const fixture = await routerFixture(wallet)
-    factory = fixture.factory
-    token0 = fixture.token0
-    token1 = fixture.token1
-    router = fixture.router
-    WNativeCurrency = fixture.nativeCurrency
+    await setupTest()
   })
 
   it('factory, WNativeCurrency', async () => {
@@ -70,7 +75,6 @@ describe('Router', () => {
         0,
         wallet.address,
         constants.MaxUint256,
-        overrides
       )
     )
       .to.emit(tokens[0], 'Transfer')
@@ -107,7 +111,6 @@ describe('Router', () => {
       '0',
       wallet.address,
       constants.MaxUint256,
-      overrides
     )
   })
 
@@ -137,7 +140,7 @@ describe('Router', () => {
       NativeCurrencyAmount,
       wallet.address,
       constants.MaxUint256,
-      { ...overrides, value: NativeCurrencyAmount })
+      { value: NativeCurrencyAmount })
 
     await expect(router.addLiquiditySingleNativeCurrency(
       [WNativeCurrency.address, token0.address],
@@ -146,7 +149,7 @@ describe('Router', () => {
       '0',
       wallet.address,
       constants.MaxUint256,
-      { ...overrides, value: '100000000000' })
+      { value: '100000000000' })
     )
       .to.emit(WNativeCurrency, 'Transfer')  // Deposit NativeCurrency
       .withArgs(constants.AddressZero, router.address, '49147444736')
@@ -193,7 +196,7 @@ describe('Router', () => {
         NativeCurrencyAmount,
         wallet.address,
         constants.MaxUint256,
-        { ...overrides, value: NativeCurrencyAmount }
+        { value: NativeCurrencyAmount }
       )
     )
       .to.emit(pair, 'Transfer')
@@ -215,7 +218,7 @@ describe('Router', () => {
     await token0.transfer(create2Address, token0Amount)
     await token1.transfer(create2Address, token1Amount)
     const pair = new Contract(create2Address, JSON.stringify(Pair.abi), wallet);
-    await pair.mint(wallet.address, overrides)
+    await pair.mint(wallet.address)
   }
 
   async function addLiquidityWithString(token0: Contract, token1: Contract, token0Amount: string, token1Amount: string) {
@@ -226,7 +229,7 @@ describe('Router', () => {
     await token0.transfer(create2Address, token0Amount)
     await token1.transfer(create2Address, token1Amount)
     const pair = new Contract(create2Address, JSON.stringify(Pair.abi), wallet);
-    await pair.mint(wallet.address, overrides)
+    await pair.mint(wallet.address)
   }
 
   it('removeLiquidity', async () => {
@@ -253,7 +256,6 @@ describe('Router', () => {
         0,
         wallet.address,
         constants.MaxUint256,
-        overrides
       )
     )
       .to.emit(pair, 'Transfer')
@@ -279,7 +281,7 @@ describe('Router', () => {
       WNativeCurrencyAmount,
       wallet.address,
       constants.MaxUint256,
-      { ...overrides, value: WNativeCurrencyAmount }
+      { value: WNativeCurrencyAmount }
     )
 
     const bytecode = Pair.bytecode
@@ -298,7 +300,6 @@ describe('Router', () => {
         0,
         wallet.address,
         constants.MaxUint256,
-        overrides
       )
     )
       .to.emit(pair, 'Transfer')
@@ -346,7 +347,6 @@ describe('Router', () => {
       0,
       wallet.address,
       constants.MaxUint256,
-      overrides
     )
 
     let pairAddress = await factory.getPair(token1.address, token0.address)
@@ -360,7 +360,6 @@ describe('Router', () => {
         [tokens[0].address, tokens[1].address],
         wallet.address,
         constants.MaxUint256,
-        overrides
       )
     )
       .to.emit(tokens[0], 'Transfer')
@@ -396,7 +395,6 @@ describe('Router', () => {
       0,
       wallet.address,
       constants.MaxUint256,
-      overrides
     )
 
     const bytecode = Pair.bytecode
@@ -410,7 +408,6 @@ describe('Router', () => {
         [tokens[0].address, tokens[1].address],
         wallet.address,
         constants.MaxUint256,
-        overrides
       )
     )
       .to.emit(tokens[0], 'Transfer')
@@ -436,7 +433,7 @@ describe('Router', () => {
       WNativeCurrencyAmount,
       wallet.address,
       constants.MaxUint256,
-      { ...overrides, value: WNativeCurrencyAmount }
+      { value: WNativeCurrencyAmount }
     )
 
     const bytecode = Pair.bytecode
@@ -446,7 +443,6 @@ describe('Router', () => {
     const pairToken0 = await pair.token0()
     await expect(
       router.swapExactNativeCurrencyForTokens(0, [WNativeCurrency.address, token0.address], wallet.address, constants.MaxUint256, {
-        ...overrides,
         value: swapAmount
       })
     )
@@ -480,7 +476,7 @@ describe('Router', () => {
       WNativeCurrencyAmount,
       wallet.address,
       constants.MaxUint256,
-      { ...overrides, value: WNativeCurrencyAmount }
+      { value: WNativeCurrencyAmount }
     )
 
     const bytecode = Pair.bytecode
@@ -495,7 +491,6 @@ describe('Router', () => {
         [token0.address, WNativeCurrency.address],
         wallet.address,
         constants.MaxUint256,
-        overrides
       )
     )
       .to.emit(token0, 'Transfer')
@@ -527,7 +522,7 @@ describe('Router', () => {
       WNativeCurrencyAmount,
       wallet.address,
       constants.MaxUint256,
-      { ...overrides, value: WNativeCurrencyAmount }
+      { value: WNativeCurrencyAmount }
     )
 
     const bytecode = Pair.bytecode
@@ -542,7 +537,6 @@ describe('Router', () => {
         wallet.address,
         constants.MaxUint256,
         {
-          ...overrides,
           value: expectedSwapAmount
         }
       )
@@ -577,7 +571,7 @@ describe('Router', () => {
       WNativeCurrencyAmount,
       wallet.address,
       constants.MaxUint256,
-      { ...overrides, value: WNativeCurrencyAmount }
+      { value: WNativeCurrencyAmount }
     )
     const bytecode = Pair.bytecode
     const create2Address = getCreate2Address(factory.address, [token0.address, WNativeCurrency.address], bytecode)
@@ -593,7 +587,6 @@ describe('Router', () => {
         [token0.address, WNativeCurrency.address],
         wallet.address,
         constants.MaxUint256,
-        overrides
       )
     )
       .to.emit(token0, 'Transfer')

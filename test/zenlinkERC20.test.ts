@@ -1,32 +1,35 @@
-import chai, { expect } from 'chai'
-import { Contract, constants, BigNumber } from 'ethers'
-import { defaultAbiCoder, hexlify, keccak256, toUtf8Bytes } from 'ethers/lib/utils'
-import { solidity, MockProvider, deployContract } from 'ethereum-waffle'
-import { ecsign } from 'ethereumjs-util'
-
-import { expandTo18Decimals, getApprovalDigest } from './shared/utilities'
-
-import ERC20 from '../build/contracts/test/MockZenlinkERC20.sol/MockZenlinkERC20.json'
-
-chai.use(solidity)
+import { expect } from 'chai'
+import { constants } from 'ethers'
+import { defaultAbiCoder, keccak256, toUtf8Bytes } from 'ethers/lib/utils'
+import { expandTo18Decimals } from './shared/utilities'
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { deployments, getChainId } from 'hardhat'
+import { MockZenlinkERC20 } from '../typechain-types'
 
 const TOTAL_SUPPLY = expandTo18Decimals(10000)
 const TEST_AMOUNT = expandTo18Decimals(10)
 const { MaxUint256 } = constants
 
 describe('ZenlinkERC20', () => {
-  const provider = new MockProvider({
-    ganacheOptions: {
-      hardfork: 'istanbul',
-      mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-      gasLimit: 9999999,
-    },
-  })
-  const [wallet, other] = provider.getWallets()
+  let signers: SignerWithAddress[]
+  let wallet: SignerWithAddress
+  let other: SignerWithAddress
 
-  let token: Contract
+  let token: MockZenlinkERC20
+
+  const setupTest = deployments.createFixture(
+    async ({ deployments, ethers, getChainId }) => {
+      await deployments.fixture() // ensure you start from a fresh deployments
+      signers = await ethers.getSigners()
+      ;[wallet, other] = signers
+
+      const zenlinkERC20Factory = await ethers.getContractFactory('MockZenlinkERC20')
+      token = (await zenlinkERC20Factory.deploy(TOTAL_SUPPLY)) as MockZenlinkERC20
+    }
+  )
+
   beforeEach(async () => {
-    token = await deployContract(wallet, ERC20, [TOTAL_SUPPLY])
+    await setupTest()
   })
 
   it('name, symbol, decimals, totalSupply, balanceOf, DOMAIN_SEPARATOR, PERMIT_TYPEHASH', async () => {
@@ -46,7 +49,7 @@ describe('ZenlinkERC20', () => {
             ),
             keccak256(toUtf8Bytes(name)),
             keccak256(toUtf8Bytes('1')),
-            1,
+            await getChainId(),
             token.address
           ]
         )
@@ -95,24 +98,5 @@ describe('ZenlinkERC20', () => {
     expect(await token.allowance(wallet.address, other.address)).to.eq(MaxUint256)
     expect(await token.balanceOf(wallet.address)).to.eq(TOTAL_SUPPLY.sub(TEST_AMOUNT))
     expect(await token.balanceOf(other.address)).to.eq(TEST_AMOUNT)
-  })
-
-  it('permit', async () => {
-    const nonce = await token.nonces(wallet.address)
-    const deadline = MaxUint256
-    const digest = await getApprovalDigest(
-      token,
-      { owner: wallet.address, spender: other.address, value: TEST_AMOUNT },
-      nonce,
-      deadline
-    )
-
-    const { v, r, s } = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(wallet.privateKey.slice(2), 'hex'))
-
-    await expect(token.permit(wallet.address, other.address, TEST_AMOUNT, deadline, v, hexlify(r), hexlify(s)))
-      .to.emit(token, 'Approval')
-      .withArgs(wallet.address, other.address, TEST_AMOUNT)
-    expect(await token.allowance(wallet.address, other.address)).to.eq(TEST_AMOUNT)
-    expect(await token.nonces(wallet.address)).to.eq(BigNumber.from(1))
   })
 })

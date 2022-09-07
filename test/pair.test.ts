@@ -1,39 +1,46 @@
-import { expect, use } from "chai";
-import { Contract, constants, BigNumber } from "ethers";
-import { MockProvider, solidity } from "ethereum-waffle";
-import { pairFixture } from './shared/fixtures'
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { expect } from "chai";
+import { constants, BigNumber } from "ethers";
+import { deployments } from "hardhat";
+import { BasicToken, Factory, Pair } from "../typechain-types";
+import { setTimestamp } from "./shared/time";
 import { encodePrice, expandTo18Decimals, MINIMUM_LIQUIDITY } from './shared/utilities'
-import { createTimeMachine } from "./shared/time";
-
-use(solidity);
-
-const overrides = {
-  gasLimit: 4100000
-}
 
 describe('Pair', () => {
-  const provider = new MockProvider({
-    ganacheOptions: {
-      hardfork: 'istanbul',
-      mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-      gasLimit: 9999999,
-    },
-  })
-  const [wallet, walletTo] = provider.getWallets();
+  let signers: SignerWithAddress[]
+  let wallet: SignerWithAddress
+  let walletTo: SignerWithAddress
 
+  let factory: Factory;
+  let token0: BasicToken;
+  let token1: BasicToken;
+  let pair: Pair;
 
-  let factory: Contract;
-  let token0: Contract;
-  let token1: Contract;
-  let pair: Contract;
-  let time = createTimeMachine(provider)
+  const setupTest = deployments.createFixture(
+    async ({ deployments, ethers }) => {
+      await deployments.fixture() // ensure you start from a fresh deployments
+      signers = await ethers.getSigners()
+        ;[wallet, walletTo] = signers
+
+      const factoryFactory = await ethers.getContractFactory('Factory')
+      factory = (await factoryFactory.deploy(wallet.address)) as Factory
+
+      const basicTokenFactory = await ethers.getContractFactory('BasicToken')
+      const tokenA = (await basicTokenFactory.deploy("TokenA", "TA", 18, '1549903311500105273839447')) as BasicToken
+      const tokenB = (await basicTokenFactory.deploy("TokenB", "TB", 18, '1403957892781062528318836')) as BasicToken
+
+      await factory.createPair(tokenA.address, tokenB.address)
+      const pairAddress = await factory.getPair(tokenA.address, tokenB.address)
+      pair = (await ethers.getContractAt('Pair', pairAddress)) as Pair
+
+      const token0Address = (await pair.token0())
+      token0 = tokenA.address === token0Address ? tokenA : tokenB
+      token1 = tokenA.address === token0Address ? tokenB : tokenA
+    }
+  )
 
   beforeEach(async () => {
-    const fixture = await pairFixture(wallet)
-    factory = fixture.factory
-    token0 = fixture.token0
-    token1 = fixture.token1
-    pair = fixture.pair
+    await setupTest()
   });
 
   it('mint', async () => {
@@ -43,7 +50,7 @@ describe('Pair', () => {
     await token1.transfer(pair.address, token1Amount)
 
     const expectedLiquidity = expandTo18Decimals(2);
-    await expect(pair.mint(wallet.address, overrides))
+    await expect(pair.mint(wallet.address))
       .to.emit(pair, 'Transfer')
       .withArgs(constants.AddressZero, wallet.address, MINIMUM_LIQUIDITY)
       .to.emit(pair, 'Transfer')
@@ -63,7 +70,7 @@ describe('Pair', () => {
   async function addLiquidity(token0Amount: BigNumber, token1Amount: BigNumber) {
     await token0.transfer(pair.address, token0Amount)
     await token1.transfer(pair.address, token1Amount)
-    await pair.mint(wallet.address, overrides)
+    await pair.mint(wallet.address)
   }
 
   const swapTestCase: BigNumber[][] = [
@@ -82,10 +89,10 @@ describe('Pair', () => {
       const [swapAmount, token0Amount, token1Amount, expectedOutputAmount] = swapTestCase
       await addLiquidity(token0Amount, token1Amount)
       await token0.transfer(pair.address, swapAmount)
-      await expect(pair.swap(0, expectedOutputAmount.add(1), wallet.address, '0x', overrides)).to.be.revertedWith(
+      await expect(pair.swap(0, expectedOutputAmount.add(1), wallet.address, '0x')).to.be.revertedWith(
         'Pair: K'
       )
-      await pair.swap(0, expectedOutputAmount, wallet.address, '0x', overrides)
+      await pair.swap(0, expectedOutputAmount, wallet.address, '0x')
     })
   });
 
@@ -100,10 +107,10 @@ describe('Pair', () => {
       const [outputAmount, token0Amount, token1Amount, inputAmount] = optimisticTestCase
       await addLiquidity(token0Amount, token1Amount)
       await token0.transfer(pair.address, inputAmount)
-      await expect(pair.swap(outputAmount.add(1), 0, wallet.address, '0x', overrides)).to.be.revertedWith(
+      await expect(pair.swap(outputAmount.add(1), 0, wallet.address, '0x')).to.be.revertedWith(
         'Pair: K'
       )
-      await pair.swap(outputAmount, 0, wallet.address, '0x', overrides)
+      await pair.swap(outputAmount, 0, wallet.address, '0x')
     })
   })
 
@@ -115,7 +122,7 @@ describe('Pair', () => {
     const swapAmount = expandTo18Decimals(1)
     const expectedOutputAmount = BigNumber.from('1662497915624478906')
     await token0.transfer(pair.address, swapAmount)
-    await expect(pair.swap(0, expectedOutputAmount, wallet.address, '0x', overrides))
+    await expect(pair.swap(0, expectedOutputAmount, wallet.address, '0x'))
       .to.emit(token1, 'Transfer')
       .withArgs(pair.address, wallet.address, expectedOutputAmount)
       .to.emit(pair, 'Swap')
@@ -140,7 +147,7 @@ describe('Pair', () => {
     const swapAmount = expandTo18Decimals(1)
     const expectedOutputAmount = BigNumber.from('453305446940074565')
     await token1.transfer(pair.address, swapAmount)
-    await expect(pair.swap(expectedOutputAmount, 0, wallet.address, '0x', overrides))
+    await expect(pair.swap(expectedOutputAmount, 0, wallet.address, '0x'))
       .to.emit(token0, 'Transfer')
       .withArgs(pair.address, wallet.address, expectedOutputAmount)
       .to.emit(pair, 'Swap')
@@ -164,7 +171,7 @@ describe('Pair', () => {
 
     const expectedLiquidity = expandTo18Decimals(3)
     await pair.transfer(pair.address, expectedLiquidity)
-    await expect(pair.burn(wallet.address, overrides))
+    await expect(pair.burn(wallet.address))
       .to.emit(token0, 'Transfer')
       .withArgs(pair.address, wallet.address, token0Amount)
       .to.emit(token1, 'Transfer')
@@ -188,31 +195,31 @@ describe('Pair', () => {
     await addLiquidity(token0Amount, token1Amount)
 
     const blockTimestamp = (await pair.getReserves())[2]
-    await time.setAndMine(blockTimestamp + 1)
-    await pair.sync(overrides)
+    await setTimestamp(blockTimestamp + 1)
+    await pair.sync()
 
     const initialPrice = encodePrice(token0Amount, token1Amount)
-    expect(await pair.price0CumulativeLast()).to.eq(initialPrice[0])
-    expect(await pair.price1CumulativeLast()).to.eq(initialPrice[1])
-    expect((await pair.getReserves())[2]).to.eq(blockTimestamp + 1)
+    expect(await pair.price0CumulativeLast()).to.eq(initialPrice[0].mul(2))
+    expect(await pair.price1CumulativeLast()).to.eq(initialPrice[1].mul(2))
+    expect((await pair.getReserves())[2]).to.eq(blockTimestamp + 2)
 
     const swapAmount = expandTo18Decimals(3)
     await token0.transfer(pair.address, swapAmount)
-    await time.setAndMine(blockTimestamp + 10)
+    await setTimestamp(blockTimestamp + 10)
     // swap to a new price eagerly instead of syncing
-    await pair.swap(0, expandTo18Decimals(1), wallet.address, '0x', overrides) // make the price nice
+    await pair.swap(0, expandTo18Decimals(1), wallet.address, '0x') // make the price nice
 
-    expect(await pair.price0CumulativeLast()).to.eq(initialPrice[0].mul(10))
-    expect(await pair.price1CumulativeLast()).to.eq(initialPrice[1].mul(10))
-    expect((await pair.getReserves())[2]).to.eq(blockTimestamp + 10)
+    expect(await pair.price0CumulativeLast()).to.eq(initialPrice[0].mul(11))
+    expect(await pair.price1CumulativeLast()).to.eq(initialPrice[1].mul(11))
+    expect((await pair.getReserves())[2]).to.eq(blockTimestamp + 11)
 
-    await time.setAndMine(blockTimestamp + 20)
-    await pair.sync(overrides)
+    await setTimestamp(blockTimestamp + 20)
+    await pair.sync()
 
     const newPrice = encodePrice(expandTo18Decimals(6), expandTo18Decimals(2))
-    expect(await pair.price0CumulativeLast()).to.eq(initialPrice[0].mul(10).add(newPrice[0].mul(10)))
-    expect(await pair.price1CumulativeLast()).to.eq(initialPrice[1].mul(10).add(newPrice[1].mul(10)))
-    expect((await pair.getReserves())[2]).to.eq(blockTimestamp + 20)
+    expect(await pair.price0CumulativeLast()).to.eq(initialPrice[0].mul(11).add(newPrice[0].mul(10)))
+    expect(await pair.price1CumulativeLast()).to.eq(initialPrice[1].mul(11).add(newPrice[1].mul(10)))
+    expect((await pair.getReserves())[2]).to.eq(blockTimestamp + 21)
   })
 
   it('feeTo:off', async () => {
@@ -223,11 +230,11 @@ describe('Pair', () => {
     const swapAmount = expandTo18Decimals(1)
     const expectedOutputAmount = BigNumber.from('996006981039903216')
     await token1.transfer(pair.address, swapAmount)
-    await pair.swap(expectedOutputAmount, 0, wallet.address, '0x', overrides)
+    await pair.swap(expectedOutputAmount, 0, wallet.address, '0x')
 
     const expectedLiquidity = expandTo18Decimals(1000)
     await pair.transfer(pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
-    await pair.burn(wallet.address, overrides)
+    await pair.burn(wallet.address)
     expect(await pair.totalSupply()).to.eq(MINIMUM_LIQUIDITY)
   })
 
@@ -242,11 +249,11 @@ describe('Pair', () => {
     const swapAmount = expandTo18Decimals(1)
     const expectedOutputAmount = BigNumber.from('996006981039903216')
     await token1.transfer(pair.address, swapAmount)
-    await pair.swap(expectedOutputAmount, 0, wallet.address, '0x', overrides)
+    await pair.swap(expectedOutputAmount, 0, wallet.address, '0x')
 
     const expectedLiquidity = expandTo18Decimals(1000)
     await pair.transfer(pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
-    await pair.burn(wallet.address, overrides)
+    await pair.burn(wallet.address)
     expect(await pair.totalSupply()).to.eq(MINIMUM_LIQUIDITY.add('249750499251388'))
     expect(await pair.balanceOf(walletTo.address)).to.eq('249750499252388')
 
@@ -267,11 +274,11 @@ describe('Pair', () => {
     const swapAmount = expandTo18Decimals(1)
     const expectedOutputAmount = BigNumber.from('996006981039903216')
     await token1.transfer(pair.address, swapAmount)
-    await pair.swap(expectedOutputAmount, 0, wallet.address, '0x', overrides)
+    await pair.swap(expectedOutputAmount, 0, wallet.address, '0x')
 
     const expectedLiquidity = expandTo18Decimals(1000)
     await pair.transfer(pair.address, expectedLiquidity.sub(MINIMUM_LIQUIDITY))
-    await pair.burn(wallet.address, overrides)
+    await pair.burn(wallet.address)
     //(sqrt(1001E18 × (1000E18 − 996006981039903216)) − 1000E18)/((30 - 20) ×sqrt(1001E18 × (1000E18 − 996006981039903216))/20 +  1000E18) × 1000E18 = 999 002 745 509 855
     expect(await pair.totalSupply()).to.eq(BigNumber.from(1000).add('999002745509855'))
     expect(await pair.balanceOf(walletTo.address)).to.eq(BigNumber.from(1000).add('999002745509855'))
