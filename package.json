@@ -1,5 +1,5 @@
 {
-  "name": "@zenlinkpro/zenlink-evm",
+  "name": "@zenlinkpro/zenlink-evm-contracts",
   "version": "1.0.0",
   "license": "MIT",
   "keywords": [
@@ -8,7 +8,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/zenlinkpro/zenlink-evm.git"
+    "url": "https://github.com/zenlinkpro/zenlink-evm-contracts.git"
   },
   "files": [
     "build"
@@ -23,7 +23,7 @@
     "generate-merkle-root:example": "ts-node scripts/generate-merkle-root.ts --input scripts/merkle-distributor/example.json",
     "verify-merkle-root": "ts-node scripts/verify-merkle-root.ts",
     "verify-merkle-root:example": "ts-node scripts/verify-merkle-root.ts --input scripts/merkle-distributor/example_result.json",
-    "deploy": "hardhat deploy"
+    "deploy": "npx hardhat deploy"
   },
   "dependencies": {
     "dotenv": "^16.0.2"
