@@ -458,14 +458,14 @@ contract Gauge is AdminUpgradeable {
         );
     }
 
-    function setStablePools(uint256[] memory poolIds) external {
+    function setStablePools(uint256[] memory poolIds) external onlyAdmin{
         for (uint256 i = 0; i < poolIds.length; i++) {
             stablePools[poolIds[i]] = true;
         }
         emit UpdateStablePools(poolIds);
     }
 
-    function setNonStablePools(uint256[] memory poolIds) external {
+    function setNonStablePools(uint256[] memory poolIds) external onlyAdmin {
         for (uint256 i = 0; i < poolIds.length; i++) {
             stablePools[poolIds[i]] = false;
         }
