@@ -1,9 +1,11 @@
 import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { Factory } from "../../typechain-types";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const { deployments, getNamedAccounts } = hre
-  const { deploy, getOrNull, log, get } = deployments
+  const { deployments, getNamedAccounts, ethers } = hre
+  const { deploy, getOrNull, log, get, execute } = deployments
+  const { getContractAt } = ethers
   const { deployer, libraryDeployer } = await getNamedAccounts()
 
   const zenlinkMaker = await getOrNull('ZenlinkMaker')
@@ -11,6 +13,19 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   if (zenlinkMaker) {
     log(`reusing "ZenlinkMaker" at ${zenlinkMaker.address}`)
+    const factory = await getOrNull('Factory')
+    if (factory) {
+      const factoryContract = (await getContractAt('Factory', factory.address)) as Factory
+      const feeToAddress = await factoryContract.feeto()
+      if (feeToAddress !== zenlinkMaker.address) {
+        await execute(
+          'Factory',
+          { from: deployer, log: true },
+          'setFeeto',
+          zenlinkMaker.address
+        )
+      }
+    }
   } else {
     await deploy('ZenlinkMaker', {
       from: deployer,

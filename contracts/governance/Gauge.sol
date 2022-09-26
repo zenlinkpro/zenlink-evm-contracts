@@ -71,14 +71,18 @@ contract Gauge is AdminUpgradeable {
         address indexed voter,
         uint256 indexed period,
         uint256 poolId,
-        uint256 amount
+        uint256 amount,
+        uint256 poolPeriodScore,
+        uint256 poolPeriodAmount
     );
 
     event CancelVote(
         address indexed voter,
         uint256 indexed period,
         uint256 poolId,
-        uint256 amount
+        uint256 amount,
+        uint256 poolPeriodScore,
+        uint256 poolPeriodAmount
     );
 
     event InheritPool(
@@ -87,20 +91,6 @@ contract Gauge is AdminUpgradeable {
         uint256 lastPeriod,
         uint256 amount,
         bool votable
-    );
-
-    event BatchVote(
-        address indexed voter,
-        uint256 indexed periodId,
-        uint256[] poolIds,
-        uint256[] amounts
-    );
-
-    event BatchCancelVote(
-        address indexed voter,
-        uint256 indexed periodId,
-        uint256[] poolIds,
-        uint256[] amounts
     );
 
     event UpdateVotePeriod(uint256 curPeriod, uint256 start, uint256 end);
@@ -239,8 +229,6 @@ contract Gauge is AdminUpgradeable {
 
         PoolPeriodState storage curPoolState = _inheritExpiredPool(poolId);
         _vote(poolId, amount, curPoolState, currentPeriod);
-
-        emit Vote(msg.sender, curPeriodId, poolId, amount);
     }
 
     function _vote(
@@ -252,8 +240,7 @@ contract Gauge is AdminUpgradeable {
         uint256 curTimestamp = block.timestamp;
 
         if (!curPoolState.votable) revert PoolNotAllowedToVote(poolId);
-
-        IERC20(voteToken).safeTransferFrom(msg.sender, address(this), amount);
+        uint256 curPeriodId = getCurrentPeriodId();
 
         if (curTimestamp < currentPeriod.start) {
             curTimestamp = currentPeriod.start;
@@ -266,6 +253,17 @@ contract Gauge is AdminUpgradeable {
         curPoolState.totalAmount += amount;
 
         userInfos[msg.sender][poolId] += amount;
+
+        IERC20(voteToken).safeTransferFrom(msg.sender, address(this), amount);
+
+        emit Vote(
+            msg.sender, 
+            curPeriodId, 
+            poolId, 
+            amount, 
+            curPoolState.score, 
+            curPoolState.totalAmount
+        );
     }
 
     function cancelVote(uint256 poolId, uint256 amount) external {
@@ -274,8 +272,6 @@ contract Gauge is AdminUpgradeable {
 
         uint256 curPeriodId = getCurrentPeriodId();
         _cancelVote(poolId, curPeriodId, poolState, amount);
-
-        emit CancelVote(msg.sender, curPeriodId, poolId, amount);
     }
 
     function _cancelVote(
@@ -288,8 +284,6 @@ contract Gauge is AdminUpgradeable {
         if (userBalance < amount) revert InsuffientAmount(userBalance);
 
         userInfos[msg.sender][poolId] -= amount;
-
-        IERC20(voteToken).safeTransfer(msg.sender, amount);
 
         VotePeriod memory curPeriod = votePeriods[curPeriodId];
 
@@ -304,6 +298,17 @@ contract Gauge is AdminUpgradeable {
         }
 
         poolState.totalAmount -= amount;
+
+        IERC20(voteToken).safeTransfer(msg.sender, amount);
+
+        emit CancelVote(
+            msg.sender, 
+            curPeriodId, 
+            poolId, 
+            amount, 
+            poolState.score, 
+            poolState.totalAmount
+        );
     }
 
     function batchVote(uint256[] memory poolIds, uint256[] memory amounts)
@@ -321,8 +326,6 @@ contract Gauge is AdminUpgradeable {
             PoolPeriodState storage poolState = _inheritExpiredPool(poolIds[i]);
             _vote(poolIds[i], amounts[i], poolState, currentPeriod);
         }
-
-        emit BatchVote(msg.sender, curPeriodId, poolIds, amounts);
     }
 
     function batchCancelVote(uint256[] memory poolIds, uint256[] memory amounts)
@@ -337,8 +340,6 @@ contract Gauge is AdminUpgradeable {
             PoolPeriodState storage poolState = _inheritExpiredPool(poolIds[i]);
             _cancelVote(poolIds[i], curPeriodId, poolState, amounts[i]);
         }
-
-        emit BatchCancelVote(msg.sender, curPeriodId, poolIds, amounts);
     }
 
     function migrateVote(
