@@ -4,7 +4,7 @@ import { Contract, BigNumber, constants, ContractFactory } from 'ethers'
 import { deployments, ethers } from 'hardhat'
 import BalanceTree from '../scripts/merkle-distributor/balance-tree'
 import { parseBalanceMap } from '../scripts/merkle-distributor/parse-balance-map'
-import { BasicToken, MerkleDistributor } from '../typechain-types'
+import { BasicToken, MerkleDistributor } from '../types'
 
 const ZERO_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000'
 

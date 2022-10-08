@@ -11,7 +11,7 @@ import {
 } from './shared/utilities'
 import snapshotGasCost from './shared/snapshotGasCost'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { BasicToken, LPToken, MetaSwap, MockStableSwapBorrower, StableSwap } from '../typechain-types'
+import { BasicToken, LPToken, MetaSwap, MockStableSwapBorrower, StableSwap } from '../types'
 import {
   forceAdvanceOneBlock,
   getCurrentBlockTimestamp,

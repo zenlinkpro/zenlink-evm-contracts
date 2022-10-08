@@ -2,6 +2,7 @@ import "@nomicfoundation/hardhat-toolbox"
 import "@nomicfoundation/hardhat-chai-matchers";
 import "hardhat-deploy"
 import "hardhat-spdx-license-identifier"
+import "hardhat-abi-exporter"
 
 import dotenv from "dotenv"
 import { Deployment } from 'hardhat-deploy/types';
@@ -10,10 +11,24 @@ import { HardhatUserConfig, task } from "hardhat/config"
 dotenv.config()
 
 const config: HardhatUserConfig = {
+  abiExporter: {
+    path: "./abi",
+    clear: false,
+    flat: true,
+    runOnCompile: true
+  },
   paths: {
-    sources: "./contracts",
-    artifacts: "./build/artifacts",
-    cache: "./build/cache",
+    artifacts: "artifacts",
+    cache: "cache",
+    deploy: "deploy",
+    deployments: "deployments",
+    imports: "imports",
+    sources: "contracts",
+    tests: "test",
+  },
+  typechain: {
+    outDir: "types",
+    target: "ethers-v5",
   },
   networks: {
     hardhat: {

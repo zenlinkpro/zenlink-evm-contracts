@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai'
 import { Contract, BigNumber, constants, ContractFactory } from 'ethers'
 import { deployments } from 'hardhat';
-import { BasicToken } from '../typechain-types';
+import { BasicToken } from '../types';
 import { forceAdvanceBlocksTo, getCurrentBlock } from './shared/time';
 
 type MaybeInfo = PoolInfo & UserInfo

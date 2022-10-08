@@ -3,7 +3,7 @@ import { constants } from 'ethers'
 import { expandTo18Decimals } from './shared/utilities'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { deployments } from 'hardhat'
-import { BasicToken, ExampleComputeLiquidityValue, Factory, Pair, Router } from '../typechain-types'
+import { BasicToken, ExampleComputeLiquidityValue, Factory, Pair, Router } from '../types'
 
 const { MaxUint256 } = constants
 

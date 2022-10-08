@@ -4,7 +4,7 @@ import { defaultAbiCoder, keccak256, toUtf8Bytes } from 'ethers/lib/utils'
 import { expandTo18Decimals } from './shared/utilities'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { deployments, getChainId } from 'hardhat'
-import { MockZenlinkERC20 } from '../typechain-types'
+import { MockZenlinkERC20 } from '../types'
 
 const TOTAL_SUPPLY = expandTo18Decimals(10000)
 const TEST_AMOUNT = expandTo18Decimals(10)

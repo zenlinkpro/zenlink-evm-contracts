@@ -4,7 +4,7 @@ import { expandTo18Decimals } from './shared/utilities'
 import { Address } from "ethereumjs-util";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { deployments } from "hardhat";
-import { ZenlinkToken } from "../typechain-types";
+import { ZenlinkToken } from "../types";
 
 describe('ZenlinkToken', () => {
   let signers: SignerWithAddress[]

@@ -2,10 +2,10 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { Contract, BigNumber } from "ethers";
 import { deployments } from "hardhat";
-import { Factory } from "../typechain-types";
+import { Factory } from "../types";
 import { getCreate2Address } from './shared/utilities'
 
-import PairContrat from '../build/artifacts/contracts/core/Pair.sol/Pair.json'
+import PairContrat from '../artifacts/contracts/core/Pair.sol/Pair.json'
 
 const TEST_ADDRESSES: [string, string] = [
   '0x1000000000000000000000000000000000000000',

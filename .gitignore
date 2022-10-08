@@ -8,4 +8,5 @@ artifacts
 .DS_Store
 */.DS_Store
 .env
-typechain-types
+types
+abi

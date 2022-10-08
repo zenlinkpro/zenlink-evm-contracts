@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { deployments } from 'hardhat'
-import { BasicToken } from '../typechain-types'
+import { BasicToken } from '../types'
 
 describe('BasicToken', async () => {
   let signers: SignerWithAddress[]
