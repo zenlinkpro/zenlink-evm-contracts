@@ -1,7 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { deployments } from "hardhat";
-import { BasicToken, Farming, Gauge } from "../typechain-types";
+import { BasicToken, Farming, Gauge } from "../types";
 import { getCurrentBlockTimestamp, setTimestamp } from "./shared/time";
 
 const T0PoolId = 0

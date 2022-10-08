@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { constants } from 'ethers'
 import { deployments } from 'hardhat'
-import { BasicToken, Migrator, Pair, Router } from '../typechain-types'
+import { BasicToken, Migrator, Pair, Router } from '../types'
 import { expandTo18Decimals, MINIMUM_LIQUIDITY } from './shared/utilities'
 
 const { MaxUint256, AddressZero } = constants

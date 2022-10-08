@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber, constants, ContractFactory } from 'ethers';
 import { deployments, ethers } from 'hardhat';
-import { BasicToken, Bootstrap, Factory } from '../typechain-types';
+import { BasicToken, Bootstrap, Factory } from '../types';
 import { forceAdvanceBlocksTo, getCurrentBlock } from './shared/time';
 import { expandTo10Decimals, expandTo18Decimals } from './shared/utilities';
 

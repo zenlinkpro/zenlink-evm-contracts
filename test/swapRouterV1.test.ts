@@ -10,7 +10,7 @@ import {
   NativeCurrency, 
   StableSwap, 
   SwapRouterV1 
-} from '../typechain-types'
+} from '../types'
 import { asyncForEach, MAX_UINT256 } from './shared/utilities'
 
 describe('SwapRouterV1', async () => {

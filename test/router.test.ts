@@ -2,9 +2,9 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { Contract, constants, BigNumber } from "ethers";
 import { deployments } from "hardhat";
-import { BasicToken, Factory, NativeCurrency, Router } from "../typechain-types";
+import { BasicToken, Factory, NativeCurrency, Router } from "../types";
 import { getCreate2Address, expandTo18Decimals, MINIMUM_LIQUIDITY } from './shared/utilities'
-import Pair from '../build/artifacts/contracts/core/Pair.sol/Pair.json'
+import Pair from '../artifacts/contracts/core/Pair.sol/Pair.json'
 
 describe('Router', () => {
   let signers: SignerWithAddress[]

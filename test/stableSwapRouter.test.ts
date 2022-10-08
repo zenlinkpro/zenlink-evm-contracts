@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { BigNumber } from 'ethers'
 import { deployments, ethers } from 'hardhat'
-import { BasicToken, LPToken, MetaSwap, StableSwap, StableSwapRouter } from '../typechain-types'
+import { BasicToken, LPToken, MetaSwap, StableSwap, StableSwapRouter } from '../types'
 import { asyncForEach, MAX_UINT256 } from './shared/utilities'
 
 describe('StableSwapRouter', async () => {

@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { BigNumber, constants } from 'ethers'
 import { deployments } from 'hardhat'
-import { VxZenlinkTokenMock, ZenlinkToken, ZenlinkTokenLoyaltyCalculator } from '../typechain-types'
+import { VxZenlinkTokenMock, ZenlinkToken, ZenlinkTokenLoyaltyCalculator } from '../types'
 import { expandTo18Decimals } from './shared/utilities'
 
 const { MaxUint256, AddressZero } = constants
