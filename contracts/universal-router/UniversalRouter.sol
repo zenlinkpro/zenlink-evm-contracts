@@ -5,7 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {InputStream} from './InputStream.sol';
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import {SafeTransferLib} from 'lib/solmate/src/utils/SafeTransferLib.sol';
+import {SafeTransferLib} from 'solmate/src/utils/SafeTransferLib.sol';
 import {IPair} from "../core/interfaces/IPair.sol";
 import {IWETH} from "./interfaces/IWETH.sol";
 import {IStableSwapDispatcher} from "./interfaces/IStableSwapDispatcher.sol";

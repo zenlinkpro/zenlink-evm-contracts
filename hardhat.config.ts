@@ -15,7 +15,7 @@ const config: HardhatUserConfig = {
     path: "./abi",
     clear: false,
     flat: true,
-    runOnCompile: true
+    runOnCompile: false
   },
   paths: {
     artifacts: "artifacts",
