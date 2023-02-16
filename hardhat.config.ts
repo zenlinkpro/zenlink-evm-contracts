@@ -15,7 +15,8 @@ const config: HardhatUserConfig = {
     path: "./abi",
     clear: false,
     flat: true,
-    runOnCompile: false
+    runOnCompile: true,
+    except: ['ERC20.sol']
   },
   paths: {
     artifacts: "artifacts",
