@@ -2,9 +2,7 @@
 pragma solidity >=0.8.0;
 
 library InputStream {
-    function createStream(
-        bytes memory data
-    ) internal pure returns (uint256 stream) {
+    function createStream(bytes memory data) internal pure returns (uint256 stream) {
         assembly {
             stream := mload(0x40)
             mstore(0x40, add(stream, 64))
@@ -69,9 +67,7 @@ library InputStream {
         }
     }
 
-    function readBytes(
-        uint256 stream
-    ) internal pure returns (bytes memory res) {
+    function readBytes(uint256 stream) internal pure returns (bytes memory res) {
         assembly {
             let pos := mload(stream)
             res := add(pos, 32)

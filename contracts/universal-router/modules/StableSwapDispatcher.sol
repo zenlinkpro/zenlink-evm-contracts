@@ -4,13 +4,14 @@ pragma solidity >=0.8.0;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IStableSwap} from "../../stableswap/interfaces/IStableSwap.sol";
+import {IStableSwapDispatcher} from "../interfaces/IStableSwapDispatcher.sol";
 
-contract StableSwapDispatcher {
+contract StableSwapDispatcher is IStableSwapDispatcher {
     using SafeERC20 for IERC20;
 
     error InsufficientAmountIn();
 
-    function swap(address pool, address tokenIn, address tokenOut, address to) external {
+    function swap(address pool, address tokenIn, address tokenOut, address to) override external {
         uint8 tokenInIndex = IStableSwap(pool).getTokenIndex(tokenIn);
         uint8 tokenOutIndex = IStableSwap(pool).getTokenIndex(tokenOut);
         uint256 amountIn = IERC20(tokenIn).balanceOf(address(this));
