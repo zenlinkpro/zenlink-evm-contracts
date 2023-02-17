@@ -9,27 +9,52 @@ import {SafeTransferLib} from 'lib/solmate/src/utils/SafeTransferLib.sol';
 import {IPair} from "../core/interfaces/IPair.sol";
 import {IWETH} from "./interfaces/IWETH.sol";
 import {IStableSwapDispatcher} from "./interfaces/IStableSwapDispatcher.sol";
+import {IFeeSettlement} from "./interfaces/IFeeSettlement.sol" ;
+import {AdminUpgradeable} from "../libraries/AdminUpgradeable.sol";
 
 address constant NATIVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-contract UniversalRouter is ReentrancyGuard {
+contract UniversalRouter is ReentrancyGuard, AdminUpgradeable {
     using SafeERC20 for IERC20;
     using SafeTransferLib for address;
     using InputStream for uint256;
+
+    IStableSwapDispatcher public stableSwapDispatcher;
+    IFeeSettlement public feeSettlement;
 
     error InvalidCommandCode(uint8 code);
     error WrongAmountInValue(uint256 accAmount, uint256 amountIn);
     error InsufficientOutAmount();
     error InvalidPool(address pool);
 
-    IStableSwapDispatcher public immutable stableSwapDispatcher;
+    event SetStableSwapDispatcher(IStableSwapDispatcher stableSwapDispatcher);
+    event SetFeeSettlement(IFeeSettlement feeSettlement);
     
-    constructor(IStableSwapDispatcher _stableSwapDispatcher) {
+    constructor(
+        IStableSwapDispatcher _stableSwapDispatcher,
+        IFeeSettlement _feeSettlement
+    ) {
         stableSwapDispatcher = _stableSwapDispatcher;
+        feeSettlement = _feeSettlement;
+        _initializeAdmin(msg.sender);
     }
 
     /// @notice To receive ETH from WETH
     receive() external payable {}
+
+    /// @notice Set StableSwapDispatcher by admin
+    /// @param _stableSwapDispatcher StableSwapDispatcher address
+    function setStableSwapDispatcher(IStableSwapDispatcher _stableSwapDispatcher) external onlyAdmin {
+        stableSwapDispatcher = _stableSwapDispatcher;
+        emit SetStableSwapDispatcher(_stableSwapDispatcher);
+    }
+
+    /// @notice Set FeeSettlement by admin
+    /// @param _feeSettlement FeeSettlement address
+    function setFeeSettlement(IFeeSettlement _feeSettlement) external onlyAdmin {
+        feeSettlement = _feeSettlement;
+        emit SetFeeSettlement(_feeSettlement);
+    }
 
     /// @notice Decodes and executes the given route
     /// @param tokenIn Address of the input token
@@ -106,7 +131,8 @@ contract UniversalRouter is ReentrancyGuard {
         }
 
         if (amountInAcc != amountIn) revert WrongAmountInValue(amountInAcc, amountIn);
-            
+        
+        feeSettlement.processSettlement(tokenOut, amountOutMin, msg.sender, to);
         uint256 balanceFinal = tokenOut == NATIVE_ADDRESS ? 
             address(to).balance 
             : IERC20(tokenOut).balanceOf(to);

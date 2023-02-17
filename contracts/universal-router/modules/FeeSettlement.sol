@@ -21,7 +21,7 @@ contract FeeSettlement is IFeeSettlement, ReentrancyGuard, AdminUpgradeable {
     uint256 public constant BASIS_POINTS = 10000;
     uint256 public constant MAX_FEE_POINTS = 30; // 0.3%
 
-    IReferralStorage public iReferralStorage;
+    IReferralStorage public referralStorage;
     uint256 public feeShare; // e.g. 10 for 0.1%
     uint256 public feeDiscount; // e.g. 2000 for 20%
     uint256 public feeRebate; // e.g. 5000 for 50%/50%, 2500 for 75% fee/25% rebate
@@ -39,7 +39,7 @@ contract FeeSettlement is IFeeSettlement, ReentrancyGuard, AdminUpgradeable {
         uint256 discountAmount,
         uint256 rebateAmount
     );
-    event SetReferralStorage(IReferralStorage iReferralStorage);
+    event SetReferralStorage(IReferralStorage referralStorage);
     event SetFeeShare(uint256 feeShare);
     event SetFeeDiscount(uint256 feeDiscount);
     event SetFeeRebate(uint256 feeRebate);
@@ -47,14 +47,14 @@ contract FeeSettlement is IFeeSettlement, ReentrancyGuard, AdminUpgradeable {
 
     constructor(
         address _weth, 
-        IReferralStorage _iReferralStorage,
+        IReferralStorage _referralStorage,
         uint256 _feeShare,
         uint256 _feeDiscount,
         uint256 _feeRebate,
         address _feeTo
     ) {
         weth = _weth;
-        iReferralStorage = _iReferralStorage;
+        referralStorage = _referralStorage;
 
         if (_feeShare > MAX_FEE_POINTS) revert InvalidFeeShare();
         if (_feeDiscount > BASIS_POINTS) revert InvalidFeeDiscount();
@@ -85,7 +85,7 @@ contract FeeSettlement is IFeeSettlement, ReentrancyGuard, AdminUpgradeable {
             ? address(this).balance 
             : IERC20(tokenOut).balanceOf(address(this));
         if (amount < amountOutMin) revert InsufficientOutAmount();
-        (, address referrer) = iReferralStorage.getReferralInfo(from);
+        (, address referrer) = referralStorage.getReferralInfo(from);
         uint256 basisfee = (amount * feeShare) / BASIS_POINTS;
         uint256 fee = referrer == address(0) 
             ? basisfee
@@ -120,10 +120,10 @@ contract FeeSettlement is IFeeSettlement, ReentrancyGuard, AdminUpgradeable {
     }
 
     // @notice Set referralStorage by admin
-    /// @param _iReferralStorage ReferralStorage address
-    function setReferralStorage(IReferralStorage _iReferralStorage) external onlyAdmin {
-        iReferralStorage = _iReferralStorage;
-        emit SetReferralStorage(_iReferralStorage);
+    /// @param _referralStorage ReferralStorage address
+    function setReferralStorage(IReferralStorage _referralStorage) external onlyAdmin {
+        referralStorage = _referralStorage;
+        emit SetReferralStorage(_referralStorage);
     }
 
     /// @notice Set feeShare by admin
