@@ -35,10 +35,15 @@ const config: HardhatUserConfig = {
     hardhat: {
       allowUnlimitedContractSize: false,
     },
+    astar: {
+      url: 'https://astar.api.onfinality.io/public',
+      chainId: 592,
+      deploy: ['./deploy/astar/']
+    },
     moonbase: {
       url: 'https://rpc.testnet.moonbeam.network',
       chainId: 1287,
-      deploy: ["./deploy/moonbase/"],
+      deploy: ['./deploy/moonbase/'],
       verify: {
         etherscan: {
           apiUrl: 'https://api-moonbase.moonscan.io',
@@ -60,10 +65,12 @@ const config: HardhatUserConfig = {
   namedAccounts: {
     deployer: {
       default: 0,
-      1287: 0
+      592: 0,
+      1287: 0,
     },
     libraryDeployer: {
       default: 1,
+      592: 1,
       1287: 1
     }
   }
@@ -74,6 +81,10 @@ if (process.env.ACCOUNT_PRIVATE_KEYS) {
     ...config.networks,
     moonbase: {
       ...config.networks?.moonbase,
+      accounts: JSON.parse(process.env.ACCOUNT_PRIVATE_KEYS)
+    },
+    astar: {
+      ...config.networks?.astar,
       accounts: JSON.parse(process.env.ACCOUNT_PRIVATE_KEYS)
     }
   }
