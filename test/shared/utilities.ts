@@ -5,6 +5,7 @@ import { defaultAbiCoder, solidityPack, keccak256, toUtf8Bytes, getAddress } fro
 
 export const MAX_UINT256 = ethers.constants.MaxUint256
 export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+export const NATIVE_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
 export const MINIMUM_LIQUIDITY = BigNumber.from(10).pow(3)
 
 export enum TIME {
@@ -23,6 +24,10 @@ export function expandTo18Decimals(n: number): BigNumber {
 
 export function expandTo10Decimals(n: number): BigNumber {
   return BigNumber.from(n).mul(BigNumber.from(10).pow(10))
+}
+
+export function expandTo6Decimals(n: number): BigNumber {
+  return BigNumber.from(n).mul(BigNumber.from(10).pow(6))
 }
 
 export async function getUserTokenBalances(

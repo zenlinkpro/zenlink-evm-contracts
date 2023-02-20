@@ -96,9 +96,9 @@ contract FeeSettlement is IFeeSettlement, ReentrancyGuard, AdminUpgradeable {
         if (referrer != address(0)) {
             uint256 rebateAmount = (fee * feeRebate) / BASIS_POINTS;
             if (isNative) {
-                IWETH(weth).deposit{value: rebateAmount}();
-                IERC20(weth).safeTransfer(referrer, IERC20(weth).balanceOf(address(this)));
-                feeTo.safeTransferETH(fee - rebateAmount);
+                IWETH(weth).deposit{value: fee}();
+                IERC20(weth).safeTransfer(referrer, rebateAmount);
+                IERC20(weth).safeTransfer(feeTo, IERC20(weth).balanceOf(address(this)));
             } else {
                 IERC20(tokenOut).safeTransfer(referrer, rebateAmount);
                 IERC20(tokenOut).safeTransfer(feeTo, fee - rebateAmount);
@@ -106,7 +106,8 @@ contract FeeSettlement is IFeeSettlement, ReentrancyGuard, AdminUpgradeable {
             emit PayRebates(from, referrer, tokenOut, basisfee - fee, rebateAmount);
         } else {
             if (isNative) {
-                feeTo.safeTransferETH(fee);
+                IWETH(weth).deposit{value: fee}();
+                IERC20(weth).safeTransfer(feeTo, IERC20(weth).balanceOf(address(this)));
             } else {
                 IERC20(tokenOut).safeTransfer(feeTo, fee);
             }

@@ -115,7 +115,7 @@ contract UniversalRouter is ReentrancyGuard, AdminUpgradeable {
                     amountInAcc += wrapAndDistributeERC20Amounts(stream, amountIn);
                 } else if (commandCode == Commands.UNWRAP_NATIVE) {
                     // unwrap natives
-                    unwrapNative(to, stream);
+                    unwrapNative(stream);
                 } else {    
                     revert InvalidCommandCode(commandCode);
                 }
@@ -231,10 +231,10 @@ contract UniversalRouter is ReentrancyGuard, AdminUpgradeable {
     }
 
     /// @notice Unwraps the Native Token
-    /// @param receiver Destination of the unwrapped token
     /// @param stream [Token]. Token to unwrap native
-    function unwrapNative(address receiver, uint256 stream) private {
+    function unwrapNative(uint256 stream) private {
         address token = stream.readAddress();
+        address receiver = stream.readAddress();
         uint256 amount = IERC20(token).balanceOf(address(this)) - 1;
         // slot undrain protection
         IWETH(token).withdraw(amount);     
