@@ -11,8 +11,8 @@ import {IWETH} from "./interfaces/IWETH.sol";
 import {IStableSwapDispatcher} from "./interfaces/IStableSwapDispatcher.sol";
 import {IFeeSettlement} from "./interfaces/IFeeSettlement.sol" ;
 import {AdminUpgradeable} from "../libraries/AdminUpgradeable.sol";
-
-address constant NATIVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+import {Constants} from "../libraries/Constants.sol";
+import {Commands} from "./modules/Commands.sol";
 
 contract UniversalRouter is ReentrancyGuard, AdminUpgradeable {
     using SafeERC20 for IERC20;
@@ -92,7 +92,7 @@ contract UniversalRouter is ReentrancyGuard, AdminUpgradeable {
         bytes memory route
     ) private returns (uint256 amountOut) {
         uint256 amountInAcc = 0;
-        uint256 balanceInitial = tokenOut == NATIVE_ADDRESS ? 
+        uint256 balanceInitial = tokenOut == Constants.NATIVE_ADDRESS ? 
             address(to).balance 
             : IERC20(tokenOut).balanceOf(to);
 
@@ -100,32 +100,35 @@ contract UniversalRouter is ReentrancyGuard, AdminUpgradeable {
         while (stream.isNotEmpty()) {
             uint8 commandCode = stream.readUint8();
             if (commandCode < 20) {
-                if (commandCode == 10) {
+                // 0 <= command < 20
+                if (commandCode == Commands.SWAP_UNISWAPV2_POOL) {
                     // UniswapV2 pool swap
                     swapUniswapV2Pool(stream);
-                } else if (commandCode == 4) {
+                } else if (commandCode == Commands.DISTRIBUTE_ERC20_SHARES) {
                     // distribute ERC20 tokens from this router to pools
                     distributeERC20Shares(stream);
-                } else if (commandCode == 3) {
+                } else if (commandCode == Commands.DISTRIBUTE_ERC20_AMOUNTS) {
                     // initial distribution
                     amountInAcc += distributeERC20Amounts(stream, tokenIn);
-                } else if (commandCode == 5) {
+                } else if (commandCode == Commands.WRAP_AND_DISTRIBUTE_ERC20_AMOUNTS) {
                     // wrap natives and initial distribution 
                     amountInAcc += wrapAndDistributeERC20Amounts(stream, amountIn);
-                } else if (commandCode == 6) {
+                } else if (commandCode == Commands.UNWRAP_NATIVE) {
                     // unwrap natives
                     unwrapNative(to, stream);
                 } else {    
                     revert InvalidCommandCode(commandCode);
                 }
             } else if (commandCode < 24) {
-                if (commandCode == 20) {
+                // 20 <= command < 24
+                if (commandCode == Commands.SWAP_ZENLINK_STABLESWAP) {
                     // Zenlink stable pool swap
                     swapZenlinkStableSwap(stream);
                 } else {
                     revert InvalidCommandCode(commandCode);
                 }
             } else {
+                // placeholder area for commands 24-255
                 revert InvalidCommandCode(commandCode);
             }
         }
@@ -133,7 +136,7 @@ contract UniversalRouter is ReentrancyGuard, AdminUpgradeable {
         if (amountInAcc != amountIn) revert WrongAmountInValue(amountInAcc, amountIn);
         
         feeSettlement.processSettlement(tokenOut, amountOutMin, msg.sender, to);
-        uint256 balanceFinal = tokenOut == NATIVE_ADDRESS ? 
+        uint256 balanceFinal = tokenOut == Constants.NATIVE_ADDRESS ? 
             address(to).balance 
             : IERC20(tokenOut).balanceOf(to);
         if (balanceFinal < balanceInitial + amountOutMin) revert InsufficientOutAmount();

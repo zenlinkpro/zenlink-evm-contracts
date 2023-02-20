@@ -9,8 +9,7 @@ import {IWETH} from "../interfaces/IWETH.sol";
 import {IReferralStorage} from "../../referrals/interfaces/IReferralStorage.sol";
 import {AdminUpgradeable} from "../../libraries/AdminUpgradeable.sol";
 import {IFeeSettlement} from "../interfaces/IFeeSettlement.sol";
-
-address constant NATIVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+import {Constants} from "../../libraries/Constants.sol";
 
 contract FeeSettlement is IFeeSettlement, ReentrancyGuard, AdminUpgradeable {
     using SafeERC20 for IERC20;
@@ -80,7 +79,7 @@ contract FeeSettlement is IFeeSettlement, ReentrancyGuard, AdminUpgradeable {
         address from,
         address to
     ) external override nonReentrant {
-        bool isNative = tokenOut == NATIVE_ADDRESS;
+        bool isNative = tokenOut == Constants.NATIVE_ADDRESS;
         uint256 amount = isNative 
             ? address(this).balance 
             : IERC20(tokenOut).balanceOf(address(this));
