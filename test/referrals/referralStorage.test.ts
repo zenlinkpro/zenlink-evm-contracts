@@ -1,6 +1,5 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
 import { expect } from "chai"
-import { keccakFromString } from "ethereumjs-util"
 import { constants } from "ethers"
 import { keccak256 } from "ethers/lib/utils"
 import { deployments } from "hardhat"
@@ -44,17 +43,19 @@ describe("ReferralStorage", () => {
     await expect(referralStorage.connect(user0).registerCode(HashZero))
       .to.be.revertedWithCustomError(referralStorage, 'InvalidCode')
 
-    const code = keccakFromString('MY_BEST_CODE')
+    const code = keccak256("0xFF")
     expect(await referralStorage.codeOwners(code)).to.be.equal(AddressZero)
 
     await referralStorage.connect(user0).registerCode(code)
     expect(await referralStorage.codeOwners(code)).to.be.equal(user0.address)
+    expect(await referralStorage.getOwnedCodes(user0.address)).to.be.deep.eq([code])
 
     await expect(referralStorage.connect(user0).registerCode(code))
       .to.be.revertedWithCustomError(referralStorage, 'CodeAlreadyExists')
 
     const code2 = keccak256("0xFF11")
     await referralStorage.connect(user0).registerCode(code2)
+    expect(await referralStorage.getOwnedCodes(user0.address)).to.be.deep.eq([code, code2])
 
     expect(await referralStorage.codeOwners(code)).to.be.equal(user0.address)
     expect(await referralStorage.codeOwners(code2)).to.be.equal(user0.address)
@@ -65,6 +66,7 @@ describe("ReferralStorage", () => {
 
     await referralStorage.connect(user0).registerCode(code)
     expect(await referralStorage.codeOwners(code)).to.be.equal(user0.address)
+    expect(await referralStorage.getOwnedCodes(user0.address)).to.be.deep.eq([code])
 
     await expect(referralStorage.connect(user1).setCodeOwner(HashZero, user2.address))
       .to.be.revertedWithCustomError(referralStorage, 'InvalidCode')
@@ -72,6 +74,8 @@ describe("ReferralStorage", () => {
     await expect(referralStorage.connect(user1).setCodeOwner(code, user2.address))
       .to.be.revertedWithCustomError(referralStorage, 'NotCodeOwner')
     await referralStorage.connect(user0).setCodeOwner(code, user2.address)
+    expect(await referralStorage.getOwnedCodes(user0.address)).to.be.deep.eq([])
+    expect(await referralStorage.getOwnedCodes(user2.address)).to.be.deep.eq([code])
 
     expect(await referralStorage.codeOwners(code)).to.be.equal(user2.address)
   })

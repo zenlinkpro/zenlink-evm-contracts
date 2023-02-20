@@ -2,10 +2,14 @@
 pragma solidity >=0.8.0;
 
 import {IReferralStorage} from "./interfaces/IReferralStorage.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 contract ReferralStorage is IReferralStorage {
+    using EnumerableSet for EnumerableSet.Bytes32Set;
+
     mapping(bytes32 => address) public override codeOwners;
     mapping(address => bytes32) public referralCodes;
+    mapping(address => EnumerableSet.Bytes32Set) private _ownedCodes;
 
     event SetReferralCode(address account, bytes32 code);
     event RegisterCode(address account, bytes32 code);
@@ -24,6 +28,7 @@ contract ReferralStorage is IReferralStorage {
         if (codeOwners[_code] != address(0)) revert CodeAlreadyExists();
 
         codeOwners[_code] = msg.sender;
+        _ownedCodes[msg.sender].add(_code);
         emit RegisterCode(msg.sender, _code);
     }
 
@@ -34,7 +39,13 @@ contract ReferralStorage is IReferralStorage {
         if (msg.sender != account) revert NotCodeOwner();
 
         codeOwners[_code] = _newAccount;
+        _ownedCodes[msg.sender].remove(_code);
+        _ownedCodes[_newAccount].add(_code);
         emit SetCodeOwner(msg.sender, _newAccount, _code);
+    }
+
+    function getOwnedCodes(address _account) override external view returns (bytes32[] memory) {
+        return _ownedCodes[_account].values();
     }
 
     function getReferralInfo(address _account) override external view returns (bytes32, address) {
