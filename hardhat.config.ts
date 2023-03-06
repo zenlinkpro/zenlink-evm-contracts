@@ -16,7 +16,7 @@ const config: HardhatUserConfig = {
     clear: false,
     flat: true,
     runOnCompile: true,
-    except: ['ERC20.sol']
+    except: ['ERC20.sol', 'IMetaSwap.sol']
   },
   paths: {
     artifacts: "artifacts",

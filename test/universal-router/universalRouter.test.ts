@@ -59,7 +59,7 @@ describe("UniversalRouter", () => {
       feeTo.address
     )) as FeeSettlement
     const stableSwapDispatcherFactory = await ethers.getContractFactory('StableSwapDispatcher')
-    stableSwapDispatcher = (await stableSwapDispatcherFactory.deploy()) as StableSwapDispatcher
+    stableSwapDispatcher = (await stableSwapDispatcherFactory.deploy(weth.address)) as StableSwapDispatcher
     const routerFactory = await ethers.getContractFactory('UniversalRouter')
     router = (await routerFactory.deploy(stableSwapDispatcher.address, feeSettlement.address)) as UniversalRouter
 
@@ -267,9 +267,12 @@ describe("UniversalRouter", () => {
     // stableSwap
     code += new HEXer()
       .uint8(20)
-      .address(stableSwap.address)
+      .uint8(0)
       .address(PAIR_WETH_DAI.address)
-      .bytes(defaultAbiCoder.encode(['address', 'address'], [USDC.address, DAI.address]))
+      .bytes(defaultAbiCoder.encode(
+        ['address', 'bool', 'uint8', 'uint8', 'address', 'address'], 
+        [stableSwap.address, false, 0, 2, USDC.address, DAI.address])
+      )
       .toString()
       // swap
     code += new HEXer()

@@ -171,12 +171,52 @@ contract UniversalRouter is ReentrancyGuard, AdminUpgradeable {
     /// @notice Performs a Zenlink stable pool swap
     /// @param stream [Pool, To, [TokenIn, TokenOut]]
     function swapZenlinkStableSwap(uint256 stream) private {
-        address pool = stream.readAddress();
+        uint8 isMetaSwap = stream.readUint8();
         address to = stream.readAddress();
         bytes memory swapData = stream.readBytes();
-        (address tokenIn, address tokenOut) = abi.decode(swapData, (address, address));
+        
+        if (isMetaSwap == 1) {
+            (
+                address pool,
+                uint8 tokenInIndex, 
+                uint8 tokenOutIndex, 
+                address tokenIn,
+                address tokenOut
+            ) = abi.decode(
+                swapData, 
+                (address, uint8, uint8, address, address)
+            );
+            stableSwapDispatcher.swapUnderlying(
+                pool, 
+                tokenInIndex, 
+                tokenOutIndex, 
+                tokenIn, 
+                tokenOut, 
+                to
+            );
+        } else {
+            (
+                address pool,
+                bool isNativePool,
+                uint8 tokenInIndex, 
+                uint8 tokenOutIndex, 
+                address tokenIn,
+                address tokenOut
+            ) = abi.decode(
+                swapData, 
+                (address, bool, uint8, uint8, address, address)
+            );
+            stableSwapDispatcher.swap(
+                pool, 
+                isNativePool, 
+                tokenInIndex, 
+                tokenOutIndex, 
+                tokenIn, 
+                tokenOut, 
+                to
+            );
+        }
     
-        stableSwapDispatcher.swap(pool, tokenIn, tokenOut, to);
     }
 
     /// @notice Distributes input ERC20 tokens from msg.sender to addresses. Tokens should be approved
