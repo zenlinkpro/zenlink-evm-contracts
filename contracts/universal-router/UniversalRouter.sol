@@ -169,7 +169,7 @@ contract UniversalRouter is ReentrancyGuard, AdminUpgradeable {
     }
 
     /// @notice Performs a Zenlink stable pool swap
-    /// @param stream [Pool, To, [TokenIn, TokenOut]]
+    /// @param stream [isMetaSwap, To, [Pool, Option(isNativePool), TokenInIndex, TokenOutIndex, TokenIn, TokenOut]]
     function swapZenlinkStableSwap(uint256 stream) private {
         uint8 isMetaSwap = stream.readUint8();
         address to = stream.readAddress();
