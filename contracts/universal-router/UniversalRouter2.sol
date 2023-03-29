@@ -355,43 +355,17 @@ contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable {
         }
         
         if (isMetaSwap == 1) {
-            (
-                address pool,
-                uint8 tokenInIndex, 
-                uint8 tokenOutIndex, 
-                address tokenOut
-            ) = abi.decode(
+            (address pool, uint8 tokenInIndex, uint8 tokenOutIndex, address tokenOut) = abi.decode(
                 swapData, 
                 (address, uint8, uint8, address)
             );
-            stableSwapDispatcher.swapUnderlying(
-                pool, 
-                tokenInIndex, 
-                tokenOutIndex, 
-                tokenIn, 
-                tokenOut, 
-                to
-            );
+            stableSwapDispatcher.swapUnderlying(pool, tokenInIndex, tokenOutIndex, tokenIn, tokenOut, to);
         } else {
-            (
-                address pool,
-                bool isNativePool,
-                uint8 tokenInIndex, 
-                uint8 tokenOutIndex, 
-                address tokenOut
-            ) = abi.decode(
+            (address pool, bool isNativePool, uint8 tokenInIndex, uint8 tokenOutIndex, address tokenOut) = abi.decode(
                 swapData, 
                 (address, bool, uint8, uint8, address)
             );
-            stableSwapDispatcher.swap(
-                pool, 
-                isNativePool, 
-                tokenInIndex, 
-                tokenOutIndex, 
-                tokenIn, 
-                tokenOut, 
-                to
-            );
+            stableSwapDispatcher.swap(pool, isNativePool, tokenInIndex, tokenOutIndex, tokenIn, tokenOut, to);
         }
     }
 
