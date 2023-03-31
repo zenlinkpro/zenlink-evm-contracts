@@ -1,0 +1,850 @@
+{
+  "address": "0x7B1128E610ae1d461B7B8227f9FBBB39e336c515",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "contract IUniswapV3Factory",
+          "name": "factory",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenIn",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenOut",
+          "type": "address"
+        },
+        {
+          "internalType": "uint24",
+          "name": "fee",
+          "type": "uint24"
+        },
+        {
+          "internalType": "int16",
+          "name": "tickBitmapStart",
+          "type": "int16"
+        },
+        {
+          "internalType": "int16",
+          "name": "tickBitmapEnd",
+          "type": "int16"
+        }
+      ],
+      "name": "getAdditionalBitmapWithTicks",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "int16",
+              "name": "index",
+              "type": "int16"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IUniswapV3StateMulticall.TickBitMapMappings[]",
+          "name": "tickBitmap",
+          "type": "tuple[]"
+        },
+        {
+          "components": [
+            {
+              "internalType": "int24",
+              "name": "index",
+              "type": "int24"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint128",
+                  "name": "liquidityGross",
+                  "type": "uint128"
+                },
+                {
+                  "internalType": "int128",
+                  "name": "liquidityNet",
+                  "type": "int128"
+                },
+                {
+                  "internalType": "int56",
+                  "name": "tickCumulativeOutside",
+                  "type": "int56"
+                },
+                {
+                  "internalType": "uint160",
+                  "name": "secondsPerLiquidityOutsideX128",
+                  "type": "uint160"
+                },
+                {
+                  "internalType": "uint32",
+                  "name": "secondsOutside",
+                  "type": "uint32"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "initialized",
+                  "type": "bool"
+                }
+              ],
+              "internalType": "struct IUniswapV3StateMulticall.TickInfo",
+              "name": "value",
+              "type": "tuple"
+            }
+          ],
+          "internalType": "struct IUniswapV3StateMulticall.TickInfoMappings[]",
+          "name": "ticks",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IUniswapV3Factory",
+          "name": "factory",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenIn",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenOut",
+          "type": "address"
+        },
+        {
+          "internalType": "uint24",
+          "name": "fee",
+          "type": "uint24"
+        },
+        {
+          "internalType": "int16",
+          "name": "tickBitmapStart",
+          "type": "int16"
+        },
+        {
+          "internalType": "int16",
+          "name": "tickBitmapEnd",
+          "type": "int16"
+        }
+      ],
+      "name": "getAdditionalBitmapWithoutTicks",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "int16",
+              "name": "index",
+              "type": "int16"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IUniswapV3StateMulticall.TickBitMapMappings[]",
+          "name": "tickBitmap",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IUniswapV3Factory",
+          "name": "factory",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenIn",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenOut",
+          "type": "address"
+        },
+        {
+          "internalType": "uint24",
+          "name": "fee",
+          "type": "uint24"
+        },
+        {
+          "internalType": "int16",
+          "name": "tickBitmapStart",
+          "type": "int16"
+        },
+        {
+          "internalType": "int16",
+          "name": "tickBitmapEnd",
+          "type": "int16"
+        }
+      ],
+      "name": "getFullState",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IUniswapV3Pool",
+              "name": "pool",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "blockTimestamp",
+              "type": "uint256"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint160",
+                  "name": "sqrtPriceX96",
+                  "type": "uint160"
+                },
+                {
+                  "internalType": "int24",
+                  "name": "tick",
+                  "type": "int24"
+                },
+                {
+                  "internalType": "uint16",
+                  "name": "observationIndex",
+                  "type": "uint16"
+                },
+                {
+                  "internalType": "uint16",
+                  "name": "observationCardinality",
+                  "type": "uint16"
+                },
+                {
+                  "internalType": "uint16",
+                  "name": "observationCardinalityNext",
+                  "type": "uint16"
+                },
+                {
+                  "internalType": "uint8",
+                  "name": "feeProtocol",
+                  "type": "uint8"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "unlocked",
+                  "type": "bool"
+                }
+              ],
+              "internalType": "struct IUniswapV3StateMulticall.Slot0",
+              "name": "slot0",
+              "type": "tuple"
+            },
+            {
+              "internalType": "uint128",
+              "name": "liquidity",
+              "type": "uint128"
+            },
+            {
+              "internalType": "int24",
+              "name": "tickSpacing",
+              "type": "int24"
+            },
+            {
+              "internalType": "uint128",
+              "name": "maxLiquidityPerTick",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint256",
+              "name": "balance0",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "balance1",
+              "type": "uint256"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint32",
+                  "name": "blockTimestamp",
+                  "type": "uint32"
+                },
+                {
+                  "internalType": "int56",
+                  "name": "tickCumulative",
+                  "type": "int56"
+                },
+                {
+                  "internalType": "uint160",
+                  "name": "secondsPerLiquidityCumulativeX128",
+                  "type": "uint160"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "initialized",
+                  "type": "bool"
+                }
+              ],
+              "internalType": "struct IUniswapV3StateMulticall.Observation",
+              "name": "observation",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "int16",
+                  "name": "index",
+                  "type": "int16"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "value",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct IUniswapV3StateMulticall.TickBitMapMappings[]",
+              "name": "tickBitmap",
+              "type": "tuple[]"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "int24",
+                  "name": "index",
+                  "type": "int24"
+                },
+                {
+                  "components": [
+                    {
+                      "internalType": "uint128",
+                      "name": "liquidityGross",
+                      "type": "uint128"
+                    },
+                    {
+                      "internalType": "int128",
+                      "name": "liquidityNet",
+                      "type": "int128"
+                    },
+                    {
+                      "internalType": "int56",
+                      "name": "tickCumulativeOutside",
+                      "type": "int56"
+                    },
+                    {
+                      "internalType": "uint160",
+                      "name": "secondsPerLiquidityOutsideX128",
+                      "type": "uint160"
+                    },
+                    {
+                      "internalType": "uint32",
+                      "name": "secondsOutside",
+                      "type": "uint32"
+                    },
+                    {
+                      "internalType": "bool",
+                      "name": "initialized",
+                      "type": "bool"
+                    }
+                  ],
+                  "internalType": "struct IUniswapV3StateMulticall.TickInfo",
+                  "name": "value",
+                  "type": "tuple"
+                }
+              ],
+              "internalType": "struct IUniswapV3StateMulticall.TickInfoMappings[]",
+              "name": "ticks",
+              "type": "tuple[]"
+            }
+          ],
+          "internalType": "struct IUniswapV3StateMulticall.StateResult",
+          "name": "state",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IUniswapV3Factory",
+          "name": "factory",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenIn",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenOut",
+          "type": "address"
+        },
+        {
+          "internalType": "uint24",
+          "name": "fee",
+          "type": "uint24"
+        },
+        {
+          "internalType": "int16",
+          "name": "leftBitmapAmount",
+          "type": "int16"
+        },
+        {
+          "internalType": "int16",
+          "name": "rightBitmapAmount",
+          "type": "int16"
+        }
+      ],
+      "name": "getFullStateWithRelativeBitmaps",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IUniswapV3Pool",
+              "name": "pool",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "blockTimestamp",
+              "type": "uint256"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint160",
+                  "name": "sqrtPriceX96",
+                  "type": "uint160"
+                },
+                {
+                  "internalType": "int24",
+                  "name": "tick",
+                  "type": "int24"
+                },
+                {
+                  "internalType": "uint16",
+                  "name": "observationIndex",
+                  "type": "uint16"
+                },
+                {
+                  "internalType": "uint16",
+                  "name": "observationCardinality",
+                  "type": "uint16"
+                },
+                {
+                  "internalType": "uint16",
+                  "name": "observationCardinalityNext",
+                  "type": "uint16"
+                },
+                {
+                  "internalType": "uint8",
+                  "name": "feeProtocol",
+                  "type": "uint8"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "unlocked",
+                  "type": "bool"
+                }
+              ],
+              "internalType": "struct IUniswapV3StateMulticall.Slot0",
+              "name": "slot0",
+              "type": "tuple"
+            },
+            {
+              "internalType": "uint128",
+              "name": "liquidity",
+              "type": "uint128"
+            },
+            {
+              "internalType": "int24",
+              "name": "tickSpacing",
+              "type": "int24"
+            },
+            {
+              "internalType": "uint128",
+              "name": "maxLiquidityPerTick",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint256",
+              "name": "balance0",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "balance1",
+              "type": "uint256"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint32",
+                  "name": "blockTimestamp",
+                  "type": "uint32"
+                },
+                {
+                  "internalType": "int56",
+                  "name": "tickCumulative",
+                  "type": "int56"
+                },
+                {
+                  "internalType": "uint160",
+                  "name": "secondsPerLiquidityCumulativeX128",
+                  "type": "uint160"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "initialized",
+                  "type": "bool"
+                }
+              ],
+              "internalType": "struct IUniswapV3StateMulticall.Observation",
+              "name": "observation",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "int16",
+                  "name": "index",
+                  "type": "int16"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "value",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct IUniswapV3StateMulticall.TickBitMapMappings[]",
+              "name": "tickBitmap",
+              "type": "tuple[]"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "int24",
+                  "name": "index",
+                  "type": "int24"
+                },
+                {
+                  "components": [
+                    {
+                      "internalType": "uint128",
+                      "name": "liquidityGross",
+                      "type": "uint128"
+                    },
+                    {
+                      "internalType": "int128",
+                      "name": "liquidityNet",
+                      "type": "int128"
+                    },
+                    {
+                      "internalType": "int56",
+                      "name": "tickCumulativeOutside",
+                      "type": "int56"
+                    },
+                    {
+                      "internalType": "uint160",
+                      "name": "secondsPerLiquidityOutsideX128",
+                      "type": "uint160"
+                    },
+                    {
+                      "internalType": "uint32",
+                      "name": "secondsOutside",
+                      "type": "uint32"
+                    },
+                    {
+                      "internalType": "bool",
+                      "name": "initialized",
+                      "type": "bool"
+                    }
+                  ],
+                  "internalType": "struct IUniswapV3StateMulticall.TickInfo",
+                  "name": "value",
+                  "type": "tuple"
+                }
+              ],
+              "internalType": "struct IUniswapV3StateMulticall.TickInfoMappings[]",
+              "name": "ticks",
+              "type": "tuple[]"
+            }
+          ],
+          "internalType": "struct IUniswapV3StateMulticall.StateResult",
+          "name": "state",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IUniswapV3Factory",
+          "name": "factory",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenIn",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenOut",
+          "type": "address"
+        },
+        {
+          "internalType": "uint24",
+          "name": "fee",
+          "type": "uint24"
+        },
+        {
+          "internalType": "int16",
+          "name": "tickBitmapStart",
+          "type": "int16"
+        },
+        {
+          "internalType": "int16",
+          "name": "tickBitmapEnd",
+          "type": "int16"
+        }
+      ],
+      "name": "getFullStateWithoutTicks",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "contract IUniswapV3Pool",
+              "name": "pool",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "blockTimestamp",
+              "type": "uint256"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint160",
+                  "name": "sqrtPriceX96",
+                  "type": "uint160"
+                },
+                {
+                  "internalType": "int24",
+                  "name": "tick",
+                  "type": "int24"
+                },
+                {
+                  "internalType": "uint16",
+                  "name": "observationIndex",
+                  "type": "uint16"
+                },
+                {
+                  "internalType": "uint16",
+                  "name": "observationCardinality",
+                  "type": "uint16"
+                },
+                {
+                  "internalType": "uint16",
+                  "name": "observationCardinalityNext",
+                  "type": "uint16"
+                },
+                {
+                  "internalType": "uint8",
+                  "name": "feeProtocol",
+                  "type": "uint8"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "unlocked",
+                  "type": "bool"
+                }
+              ],
+              "internalType": "struct IUniswapV3StateMulticall.Slot0",
+              "name": "slot0",
+              "type": "tuple"
+            },
+            {
+              "internalType": "uint128",
+              "name": "liquidity",
+              "type": "uint128"
+            },
+            {
+              "internalType": "int24",
+              "name": "tickSpacing",
+              "type": "int24"
+            },
+            {
+              "internalType": "uint128",
+              "name": "maxLiquidityPerTick",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint256",
+              "name": "balance0",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "balance1",
+              "type": "uint256"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint32",
+                  "name": "blockTimestamp",
+                  "type": "uint32"
+                },
+                {
+                  "internalType": "int56",
+                  "name": "tickCumulative",
+                  "type": "int56"
+                },
+                {
+                  "internalType": "uint160",
+                  "name": "secondsPerLiquidityCumulativeX128",
+                  "type": "uint160"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "initialized",
+                  "type": "bool"
+                }
+              ],
+              "internalType": "struct IUniswapV3StateMulticall.Observation",
+              "name": "observation",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "int16",
+                  "name": "index",
+                  "type": "int16"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "value",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct IUniswapV3StateMulticall.TickBitMapMappings[]",
+              "name": "tickBitmap",
+              "type": "tuple[]"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "int24",
+                  "name": "index",
+                  "type": "int24"
+                },
+                {
+                  "components": [
+                    {
+                      "internalType": "uint128",
+                      "name": "liquidityGross",
+                      "type": "uint128"
+                    },
+                    {
+                      "internalType": "int128",
+                      "name": "liquidityNet",
+                      "type": "int128"
+                    },
+                    {
+                      "internalType": "int56",
+                      "name": "tickCumulativeOutside",
+                      "type": "int56"
+                    },
+                    {
+                      "internalType": "uint160",
+                      "name": "secondsPerLiquidityOutsideX128",
+                      "type": "uint160"
+                    },
+                    {
+                      "internalType": "uint32",
+                      "name": "secondsOutside",
+                      "type": "uint32"
+                    },
+                    {
+                      "internalType": "bool",
+                      "name": "initialized",
+                      "type": "bool"
+                    }
+                  ],
+                  "internalType": "struct IUniswapV3StateMulticall.TickInfo",
+                  "name": "value",
+                  "type": "tuple"
+                }
+              ],
+              "internalType": "struct IUniswapV3StateMulticall.TickInfoMappings[]",
+              "name": "ticks",
+              "type": "tuple[]"
+            }
+          ],
+          "internalType": "struct IUniswapV3StateMulticall.StateResult",
+          "name": "state",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0xaaf40bf24858f1eb34f61c279037ae6010a0ae990a537cfd4efd421264a3aee1",
+  "receipt": {
+    "to": null,
+    "from": "0x4dA60510480aC2c6768893bC18aBBBb7c141f58D",
+    "contractAddress": "0x7B1128E610ae1d461B7B8227f9FBBB39e336c515",
+    "transactionIndex": 4,
+    "gasUsed": "9196757",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0xd7115e11711a4a8f2b54f4be574b2362d584f69a43ebdc160b3188ecd7bb4d5c",
+    "transactionHash": "0xaaf40bf24858f1eb34f61c279037ae6010a0ae990a537cfd4efd421264a3aee1",
+    "logs": [],
+    "blockNumber": 75507579,
+    "cumulativeGasUsed": "10307560",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "numDeployments": 1,
+  "solcInputHash": "afca1f4930f345fa3d364dd4c17172a2",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.7+commit.e28d00a7\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"contract IUniswapV3Factory\",\"name\":\"factory\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenIn\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenOut\",\"type\":\"address\"},{\"internalType\":\"uint24\",\"name\":\"fee\",\"type\":\"uint24\"},{\"internalType\":\"int16\",\"name\":\"tickBitmapStart\",\"type\":\"int16\"},{\"internalType\":\"int16\",\"name\":\"tickBitmapEnd\",\"type\":\"int16\"}],\"name\":\"getAdditionalBitmapWithTicks\",\"outputs\":[{\"components\":[{\"internalType\":\"int16\",\"name\":\"index\",\"type\":\"int16\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"internalType\":\"struct IUniswapV3StateMulticall.TickBitMapMappings[]\",\"name\":\"tickBitmap\",\"type\":\"tuple[]\"},{\"components\":[{\"internalType\":\"int24\",\"name\":\"index\",\"type\":\"int24\"},{\"components\":[{\"internalType\":\"uint128\",\"name\":\"liquidityGross\",\"type\":\"uint128\"},{\"internalType\":\"int128\",\"name\":\"liquidityNet\",\"type\":\"int128\"},{\"internalType\":\"int56\",\"name\":\"tickCumulativeOutside\",\"type\":\"int56\"},{\"internalType\":\"uint160\",\"name\":\"secondsPerLiquidityOutsideX128\",\"type\":\"uint160\"},{\"internalType\":\"uint32\",\"name\":\"secondsOutside\",\"type\":\"uint32\"},{\"internalType\":\"bool\",\"name\":\"initialized\",\"type\":\"bool\"}],\"internalType\":\"struct IUniswapV3StateMulticall.TickInfo\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct IUniswapV3StateMulticall.TickInfoMappings[]\",\"name\":\"ticks\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contract IUniswapV3Factory\",\"name\":\"factory\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenIn\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenOut\",\"type\":\"address\"},{\"internalType\":\"uint24\",\"name\":\"fee\",\"type\":\"uint24\"},{\"internalType\":\"int16\",\"name\":\"tickBitmapStart\",\"type\":\"int16\"},{\"internalType\":\"int16\",\"name\":\"tickBitmapEnd\",\"type\":\"int16\"}],\"name\":\"getAdditionalBitmapWithoutTicks\",\"outputs\":[{\"components\":[{\"internalType\":\"int16\",\"name\":\"index\",\"type\":\"int16\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"internalType\":\"struct IUniswapV3StateMulticall.TickBitMapMappings[]\",\"name\":\"tickBitmap\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contract IUniswapV3Factory\",\"name\":\"factory\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenIn\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenOut\",\"type\":\"address\"},{\"internalType\":\"uint24\",\"name\":\"fee\",\"type\":\"uint24\"},{\"internalType\":\"int16\",\"name\":\"tickBitmapStart\",\"type\":\"int16\"},{\"internalType\":\"int16\",\"name\":\"tickBitmapEnd\",\"type\":\"int16\"}],\"name\":\"getFullState\",\"outputs\":[{\"components\":[{\"internalType\":\"contract IUniswapV3Pool\",\"name\":\"pool\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"blockTimestamp\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint160\",\"name\":\"sqrtPriceX96\",\"type\":\"uint160\"},{\"internalType\":\"int24\",\"name\":\"tick\",\"type\":\"int24\"},{\"internalType\":\"uint16\",\"name\":\"observationIndex\",\"type\":\"uint16\"},{\"internalType\":\"uint16\",\"name\":\"observationCardinality\",\"type\":\"uint16\"},{\"internalType\":\"uint16\",\"name\":\"observationCardinalityNext\",\"type\":\"uint16\"},{\"internalType\":\"uint8\",\"name\":\"feeProtocol\",\"type\":\"uint8\"},{\"internalType\":\"bool\",\"name\":\"unlocked\",\"type\":\"bool\"}],\"internalType\":\"struct IUniswapV3StateMulticall.Slot0\",\"name\":\"slot0\",\"type\":\"tuple\"},{\"internalType\":\"uint128\",\"name\":\"liquidity\",\"type\":\"uint128\"},{\"internalType\":\"int24\",\"name\":\"tickSpacing\",\"type\":\"int24\"},{\"internalType\":\"uint128\",\"name\":\"maxLiquidityPerTick\",\"type\":\"uint128\"},{\"internalType\":\"uint256\",\"name\":\"balance0\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"balance1\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint32\",\"name\":\"blockTimestamp\",\"type\":\"uint32\"},{\"internalType\":\"int56\",\"name\":\"tickCumulative\",\"type\":\"int56\"},{\"internalType\":\"uint160\",\"name\":\"secondsPerLiquidityCumulativeX128\",\"type\":\"uint160\"},{\"internalType\":\"bool\",\"name\":\"initialized\",\"type\":\"bool\"}],\"internalType\":\"struct IUniswapV3StateMulticall.Observation\",\"name\":\"observation\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"int16\",\"name\":\"index\",\"type\":\"int16\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"internalType\":\"struct IUniswapV3StateMulticall.TickBitMapMappings[]\",\"name\":\"tickBitmap\",\"type\":\"tuple[]\"},{\"components\":[{\"internalType\":\"int24\",\"name\":\"index\",\"type\":\"int24\"},{\"components\":[{\"internalType\":\"uint128\",\"name\":\"liquidityGross\",\"type\":\"uint128\"},{\"internalType\":\"int128\",\"name\":\"liquidityNet\",\"type\":\"int128\"},{\"internalType\":\"int56\",\"name\":\"tickCumulativeOutside\",\"type\":\"int56\"},{\"internalType\":\"uint160\",\"name\":\"secondsPerLiquidityOutsideX128\",\"type\":\"uint160\"},{\"internalType\":\"uint32\",\"name\":\"secondsOutside\",\"type\":\"uint32\"},{\"internalType\":\"bool\",\"name\":\"initialized\",\"type\":\"bool\"}],\"internalType\":\"struct IUniswapV3StateMulticall.TickInfo\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct IUniswapV3StateMulticall.TickInfoMappings[]\",\"name\":\"ticks\",\"type\":\"tuple[]\"}],\"internalType\":\"struct IUniswapV3StateMulticall.StateResult\",\"name\":\"state\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contract IUniswapV3Factory\",\"name\":\"factory\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenIn\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenOut\",\"type\":\"address\"},{\"internalType\":\"uint24\",\"name\":\"fee\",\"type\":\"uint24\"},{\"internalType\":\"int16\",\"name\":\"leftBitmapAmount\",\"type\":\"int16\"},{\"internalType\":\"int16\",\"name\":\"rightBitmapAmount\",\"type\":\"int16\"}],\"name\":\"getFullStateWithRelativeBitmaps\",\"outputs\":[{\"components\":[{\"internalType\":\"contract IUniswapV3Pool\",\"name\":\"pool\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"blockTimestamp\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint160\",\"name\":\"sqrtPriceX96\",\"type\":\"uint160\"},{\"internalType\":\"int24\",\"name\":\"tick\",\"type\":\"int24\"},{\"internalType\":\"uint16\",\"name\":\"observationIndex\",\"type\":\"uint16\"},{\"internalType\":\"uint16\",\"name\":\"observationCardinality\",\"type\":\"uint16\"},{\"internalType\":\"uint16\",\"name\":\"observationCardinalityNext\",\"type\":\"uint16\"},{\"internalType\":\"uint8\",\"name\":\"feeProtocol\",\"type\":\"uint8\"},{\"internalType\":\"bool\",\"name\":\"unlocked\",\"type\":\"bool\"}],\"internalType\":\"struct IUniswapV3StateMulticall.Slot0\",\"name\":\"slot0\",\"type\":\"tuple\"},{\"internalType\":\"uint128\",\"name\":\"liquidity\",\"type\":\"uint128\"},{\"internalType\":\"int24\",\"name\":\"tickSpacing\",\"type\":\"int24\"},{\"internalType\":\"uint128\",\"name\":\"maxLiquidityPerTick\",\"type\":\"uint128\"},{\"internalType\":\"uint256\",\"name\":\"balance0\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"balance1\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint32\",\"name\":\"blockTimestamp\",\"type\":\"uint32\"},{\"internalType\":\"int56\",\"name\":\"tickCumulative\",\"type\":\"int56\"},{\"internalType\":\"uint160\",\"name\":\"secondsPerLiquidityCumulativeX128\",\"type\":\"uint160\"},{\"internalType\":\"bool\",\"name\":\"initialized\",\"type\":\"bool\"}],\"internalType\":\"struct IUniswapV3StateMulticall.Observation\",\"name\":\"observation\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"int16\",\"name\":\"index\",\"type\":\"int16\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"internalType\":\"struct IUniswapV3StateMulticall.TickBitMapMappings[]\",\"name\":\"tickBitmap\",\"type\":\"tuple[]\"},{\"components\":[{\"internalType\":\"int24\",\"name\":\"index\",\"type\":\"int24\"},{\"components\":[{\"internalType\":\"uint128\",\"name\":\"liquidityGross\",\"type\":\"uint128\"},{\"internalType\":\"int128\",\"name\":\"liquidityNet\",\"type\":\"int128\"},{\"internalType\":\"int56\",\"name\":\"tickCumulativeOutside\",\"type\":\"int56\"},{\"internalType\":\"uint160\",\"name\":\"secondsPerLiquidityOutsideX128\",\"type\":\"uint160\"},{\"internalType\":\"uint32\",\"name\":\"secondsOutside\",\"type\":\"uint32\"},{\"internalType\":\"bool\",\"name\":\"initialized\",\"type\":\"bool\"}],\"internalType\":\"struct IUniswapV3StateMulticall.TickInfo\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct IUniswapV3StateMulticall.TickInfoMappings[]\",\"name\":\"ticks\",\"type\":\"tuple[]\"}],\"internalType\":\"struct IUniswapV3StateMulticall.StateResult\",\"name\":\"state\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contract IUniswapV3Factory\",\"name\":\"factory\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenIn\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"tokenOut\",\"type\":\"address\"},{\"internalType\":\"uint24\",\"name\":\"fee\",\"type\":\"uint24\"},{\"internalType\":\"int16\",\"name\":\"tickBitmapStart\",\"type\":\"int16\"},{\"internalType\":\"int16\",\"name\":\"tickBitmapEnd\",\"type\":\"int16\"}],\"name\":\"getFullStateWithoutTicks\",\"outputs\":[{\"components\":[{\"internalType\":\"contract IUniswapV3Pool\",\"name\":\"pool\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"blockTimestamp\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint160\",\"name\":\"sqrtPriceX96\",\"type\":\"uint160\"},{\"internalType\":\"int24\",\"name\":\"tick\",\"type\":\"int24\"},{\"internalType\":\"uint16\",\"name\":\"observationIndex\",\"type\":\"uint16\"},{\"internalType\":\"uint16\",\"name\":\"observationCardinality\",\"type\":\"uint16\"},{\"internalType\":\"uint16\",\"name\":\"observationCardinalityNext\",\"type\":\"uint16\"},{\"internalType\":\"uint8\",\"name\":\"feeProtocol\",\"type\":\"uint8\"},{\"internalType\":\"bool\",\"name\":\"unlocked\",\"type\":\"bool\"}],\"internalType\":\"struct IUniswapV3StateMulticall.Slot0\",\"name\":\"slot0\",\"type\":\"tuple\"},{\"internalType\":\"uint128\",\"name\":\"liquidity\",\"type\":\"uint128\"},{\"internalType\":\"int24\",\"name\":\"tickSpacing\",\"type\":\"int24\"},{\"internalType\":\"uint128\",\"name\":\"maxLiquidityPerTick\",\"type\":\"uint128\"},{\"internalType\":\"uint256\",\"name\":\"balance0\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"balance1\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint32\",\"name\":\"blockTimestamp\",\"type\":\"uint32\"},{\"internalType\":\"int56\",\"name\":\"tickCumulative\",\"type\":\"int56\"},{\"internalType\":\"uint160\",\"name\":\"secondsPerLiquidityCumulativeX128\",\"type\":\"uint160\"},{\"internalType\":\"bool\",\"name\":\"initialized\",\"type\":\"bool\"}],\"internalType\":\"struct IUniswapV3StateMulticall.Observation\",\"name\":\"observation\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"int16\",\"name\":\"index\",\"type\":\"int16\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"internalType\":\"struct IUniswapV3StateMulticall.TickBitMapMappings[]\",\"name\":\"tickBitmap\",\"type\":\"tuple[]\"},{\"components\":[{\"internalType\":\"int24\",\"name\":\"index\",\"type\":\"int24\"},{\"components\":[{\"internalType\":\"uint128\",\"name\":\"liquidityGross\",\"type\":\"uint128\"},{\"internalType\":\"int128\",\"name\":\"liquidityNet\",\"type\":\"int128\"},{\"internalType\":\"int56\",\"name\":\"tickCumulativeOutside\",\"type\":\"int56\"},{\"internalType\":\"uint160\",\"name\":\"secondsPerLiquidityOutsideX128\",\"type\":\"uint160\"},{\"internalType\":\"uint32\",\"name\":\"secondsOutside\",\"type\":\"uint32\"},{\"internalType\":\"bool\",\"name\":\"initialized\",\"type\":\"bool\"}],\"internalType\":\"struct IUniswapV3StateMulticall.TickInfo\",\"name\":\"value\",\"type\":\"tuple\"}],\"internalType\":\"struct IUniswapV3StateMulticall.TickInfoMappings[]\",\"name\":\"ticks\",\"type\":\"tuple[]\"}],\"internalType\":\"struct IUniswapV3StateMulticall.StateResult\",\"name\":\"state\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/universal-router/modules/uniswap/v3/UniswapV3StateMulticall.sol\":\"UniswapV3StateMulticall\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/universal-router/interfaces/IERC20Minimal.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity >=0.8.0;\\n\\n/// @title Minimal ERC20 interface for Uniswap\\n/// @notice Contains a subset of the full ERC20 interface that is used in Uniswap V3\\ninterface IERC20Minimal {\\n    /// @notice Returns the balance of a token\\n    /// @param account The account for which to look up the number of tokens it has, i.e. its balance\\n    /// @return The number of tokens held by the account\\n    function balanceOf(address account) external view returns (uint256);\\n\\n    /// @notice Transfers the amount of token from the `msg.sender` to the recipient\\n    /// @param recipient The account that will receive the amount transferred\\n    /// @param amount The number of tokens to send from the sender to the recipient\\n    /// @return Returns true for a successful transfer, false for an unsuccessful transfer\\n    function transfer(address recipient, uint256 amount) external returns (bool);\\n\\n    /// @notice Returns the current allowance given to a spender by an owner\\n    /// @param owner The account of the token owner\\n    /// @param spender The account of the token spender\\n    /// @return The current allowance granted by `owner` to `spender`\\n    function allowance(address owner, address spender) external view returns (uint256);\\n\\n    /// @notice Sets the allowance of a spender from the `msg.sender` to the value `amount`\\n    /// @param spender The account which will be allowed to spend a given amount of the owners tokens\\n    /// @param amount The amount of tokens allowed to be used by `spender`\\n    /// @return Returns true for a successful approval, false for unsuccessful\\n    function approve(address spender, uint256 amount) external returns (bool);\\n\\n    /// @notice Transfers `amount` tokens from `sender` to `recipient` up to the allowance given to the `msg.sender`\\n    /// @param sender The account from which the transfer will be initiated\\n    /// @param recipient The recipient of the transfer\\n    /// @param amount The amount of the transfer\\n    /// @return Returns true for a successful transfer, false for unsuccessful\\n    function transferFrom(\\n        address sender,\\n        address recipient,\\n        uint256 amount\\n    ) external returns (bool);\\n\\n    /// @notice Event emitted when tokens are transferred from one address to another, either via `#transfer` or `#transferFrom`.\\n    /// @param from The account from which the tokens were sent, i.e. the balance decreased\\n    /// @param to The account to which the tokens were sent, i.e. the balance increased\\n    /// @param value The amount of tokens that were transferred\\n    event Transfer(address indexed from, address indexed to, uint256 value);\\n\\n    /// @notice Event emitted when the approval amount for the spender of a given owner's tokens changes.\\n    /// @param owner The account that approved spending of its tokens\\n    /// @param spender The account for which the spending allowance was modified\\n    /// @param value The new allowance from the owner to the spender\\n    event Approval(address indexed owner, address indexed spender, uint256 value);\\n}\\n\",\"keccak256\":\"0x73057ad07e5bde1b8ae86001fd4dfe983a124eafa827f82123a7022686c85707\",\"license\":\"MIT\"},\"contracts/universal-router/interfaces/uniswap/v3/IUniswapV3Factory.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity >=0.8.0;\\n\\n/// @title The interface for the Uniswap V3 Factory\\n/// @notice The Uniswap V3 Factory facilitates creation of Uniswap V3 pools and control over the protocol fees\\ninterface IUniswapV3Factory {\\n    /// @notice Emitted when the owner of the factory is changed\\n    /// @param oldOwner The owner before the owner was changed\\n    /// @param newOwner The owner after the owner was changed\\n    event OwnerChanged(address indexed oldOwner, address indexed newOwner);\\n\\n    /// @notice Emitted when a pool is created\\n    /// @param token0 The first token of the pool by address sort order\\n    /// @param token1 The second token of the pool by address sort order\\n    /// @param fee The fee collected upon every swap in the pool, denominated in hundredths of a bip\\n    /// @param tickSpacing The minimum number of ticks between initialized ticks\\n    /// @param pool The address of the created pool\\n    event PoolCreated(\\n        address indexed token0,\\n        address indexed token1,\\n        uint24 indexed fee,\\n        int24 tickSpacing,\\n        address pool\\n    );\\n\\n    /// @notice Emitted when a new fee amount is enabled for pool creation via the factory\\n    /// @param fee The enabled fee, denominated in hundredths of a bip\\n    /// @param tickSpacing The minimum number of ticks between initialized ticks for pools created with the given fee\\n    event FeeAmountEnabled(uint24 indexed fee, int24 indexed tickSpacing);\\n\\n    /// @notice Returns the current owner of the factory\\n    /// @dev Can be changed by the current owner via setOwner\\n    /// @return The address of the factory owner\\n    function owner() external view returns (address);\\n\\n    /// @notice Returns the tick spacing for a given fee amount, if enabled, or 0 if not enabled\\n    /// @dev A fee amount can never be removed, so this value should be hard coded or cached in the calling context\\n    /// @param fee The enabled fee, denominated in hundredths of a bip. Returns 0 in case of unenabled fee\\n    /// @return The tick spacing\\n    function feeAmountTickSpacing(uint24 fee) external view returns (int24);\\n\\n    /// @notice Returns the pool address for a given pair of tokens and a fee, or address 0 if it does not exist\\n    /// @dev tokenA and tokenB may be passed in either token0/token1 or token1/token0 order\\n    /// @param tokenA The contract address of either token0 or token1\\n    /// @param tokenB The contract address of the other token\\n    /// @param fee The fee collected upon every swap in the pool, denominated in hundredths of a bip\\n    /// @return pool The pool address\\n    function getPool(\\n        address tokenA,\\n        address tokenB,\\n        uint24 fee\\n    ) external view returns (address pool);\\n\\n    /// @notice Creates a pool for the given two tokens and fee\\n    /// @param tokenA One of the two tokens in the desired pool\\n    /// @param tokenB The other of the two tokens in the desired pool\\n    /// @param fee The desired fee for the pool\\n    /// @dev tokenA and tokenB may be passed in either order: token0/token1 or token1/token0. tickSpacing is retrieved\\n    /// from the fee. The call will revert if the pool already exists, the fee is invalid, or the token arguments\\n    /// are invalid.\\n    /// @return pool The address of the newly created pool\\n    function createPool(\\n        address tokenA,\\n        address tokenB,\\n        uint24 fee\\n    ) external returns (address pool);\\n\\n    /// @notice Updates the owner of the factory\\n    /// @dev Must be called by the current owner\\n    /// @param _owner The new owner of the factory\\n    function setOwner(address _owner) external;\\n\\n    /// @notice Enables a fee amount with the given tickSpacing\\n    /// @dev Fee amounts may never be removed once enabled\\n    /// @param fee The fee amount to enable, denominated in hundredths of a bip (i.e. 1e-6)\\n    /// @param tickSpacing The spacing between ticks to be enforced for all pools created with the given fee amount\\n    function enableFeeAmount(uint24 fee, int24 tickSpacing) external;\\n}\\n\",\"keccak256\":\"0x983952eda97551ac71109cf6653a9371e23c48fd57839c848e5f2450e1be64d2\",\"license\":\"MIT\"},\"contracts/universal-router/interfaces/uniswap/v3/IUniswapV3Pool.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity >=0.8.0;\\n\\nimport {IUniswapV3PoolImmutables} from \\\"./IUniswapV3PoolImmutables.sol\\\";\\nimport {IUniswapV3PoolState} from \\\"./IUniswapV3PoolState.sol\\\";\\nimport {IUniswapV3PoolActions} from \\\"./IUniswapV3PoolActions.sol\\\";\\n\\n/// @title The interface for a Uniswap V3 Pool\\n/// @notice A Uniswap pool facilitates swapping and automated market making between any two assets that strictly conform\\n/// to the ERC20 specification\\n/// @dev The pool interface is broken up into many smaller pieces\\n// solhint-disable-next-line no-empty-blocks\\ninterface IUniswapV3Pool is \\n  IUniswapV3PoolImmutables, \\n  IUniswapV3PoolState,\\n  IUniswapV3PoolActions\\n{\\n    \\n}\\n\",\"keccak256\":\"0xc46ecd0b7964e185873d765a3168cbb8110d697352937a8eb8e9771bfc116e9c\",\"license\":\"MIT\"},\"contracts/universal-router/interfaces/uniswap/v3/IUniswapV3PoolActions.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity >=0.8.0;\\n\\n/// @title Permissionless pool actions\\n/// @notice Contains pool methods that can be called by anyone\\ninterface IUniswapV3PoolActions {\\n    /// @notice Sets the initial price for the pool\\n    /// @dev Price is represented as a sqrt(amountToken1/amountToken0) Q64.96 value\\n    /// @param sqrtPriceX96 the initial sqrt price of the pool as a Q64.96\\n    function initialize(uint160 sqrtPriceX96) external;\\n\\n    /// @notice Adds liquidity for the given recipient/tickLower/tickUpper position\\n    /// @dev The caller of this method receives a callback in the form of IUniswapV3MintCallback#uniswapV3MintCallback\\n    /// in which they must pay any token0 or token1 owed for the liquidity. The amount of token0/token1 due depends\\n    /// on tickLower, tickUpper, the amount of liquidity, and the current price.\\n    /// @param recipient The address for which the liquidity will be created\\n    /// @param tickLower The lower tick of the position in which to add liquidity\\n    /// @param tickUpper The upper tick of the position in which to add liquidity\\n    /// @param amount The amount of liquidity to mint\\n    /// @param data Any data that should be passed through to the callback\\n    /// @return amount0 The amount of token0 that was paid to mint the given amount of liquidity. Matches the value in the callback\\n    /// @return amount1 The amount of token1 that was paid to mint the given amount of liquidity. Matches the value in the callback\\n    function mint(\\n        address recipient,\\n        int24 tickLower,\\n        int24 tickUpper,\\n        uint128 amount,\\n        bytes calldata data\\n    ) external returns (uint256 amount0, uint256 amount1);\\n\\n    /// @notice Collects tokens owed to a position\\n    /// @dev Does not recompute fees earned, which must be done either via mint or burn of any amount of liquidity.\\n    /// Collect must be called by the position owner. To withdraw only token0 or only token1, amount0Requested or\\n    /// amount1Requested may be set to zero. To withdraw all tokens owed, caller may pass any value greater than the\\n    /// actual tokens owed, e.g. type(uint128).max. Tokens owed may be from accumulated swap fees or burned liquidity.\\n    /// @param recipient The address which should receive the fees collected\\n    /// @param tickLower The lower tick of the position for which to collect fees\\n    /// @param tickUpper The upper tick of the position for which to collect fees\\n    /// @param amount0Requested How much token0 should be withdrawn from the fees owed\\n    /// @param amount1Requested How much token1 should be withdrawn from the fees owed\\n    /// @return amount0 The amount of fees collected in token0\\n    /// @return amount1 The amount of fees collected in token1\\n    function collect(\\n        address recipient,\\n        int24 tickLower,\\n        int24 tickUpper,\\n        uint128 amount0Requested,\\n        uint128 amount1Requested\\n    ) external returns (uint128 amount0, uint128 amount1);\\n\\n    /// @notice Burn liquidity from the sender and account tokens owed for the liquidity to the position\\n    /// @dev Can be used to trigger a recalculation of fees owed to a position by calling with an amount of 0\\n    /// @dev Fees must be collected separately via a call to #collect\\n    /// @param tickLower The lower tick of the position for which to burn liquidity\\n    /// @param tickUpper The upper tick of the position for which to burn liquidity\\n    /// @param amount How much liquidity to burn\\n    /// @return amount0 The amount of token0 sent to the recipient\\n    /// @return amount1 The amount of token1 sent to the recipient\\n    function burn(\\n        int24 tickLower,\\n        int24 tickUpper,\\n        uint128 amount\\n    ) external returns (uint256 amount0, uint256 amount1);\\n\\n    /// @notice Swap token0 for token1, or token1 for token0\\n    /// @dev The caller of this method receives a callback in the form of IUniswapV3SwapCallback#uniswapV3SwapCallback\\n    /// @param recipient The address to receive the output of the swap\\n    /// @param zeroForOne The direction of the swap, true for token0 to token1, false for token1 to token0\\n    /// @param amountSpecified The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative)\\n    /// @param sqrtPriceLimitX96 The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this\\n    /// value after the swap. If one for zero, the price cannot be greater than this value after the swap\\n    /// @param data Any data to be passed through to the callback\\n    /// @return amount0 The delta of the balance of token0 of the pool, exact when negative, minimum when positive\\n    /// @return amount1 The delta of the balance of token1 of the pool, exact when negative, minimum when positive\\n    function swap(\\n        address recipient,\\n        bool zeroForOne,\\n        int256 amountSpecified,\\n        uint160 sqrtPriceLimitX96,\\n        bytes calldata data\\n    ) external returns (int256 amount0, int256 amount1);\\n\\n    /// @notice Receive token0 and/or token1 and pay it back, plus a fee, in the callback\\n    /// @dev The caller of this method receives a callback in the form of IUniswapV3FlashCallback#uniswapV3FlashCallback\\n    /// @dev Can be used to donate underlying tokens pro-rata to currently in-range liquidity providers by calling\\n    /// with 0 amount{0,1} and sending the donation amount(s) from the callback\\n    /// @param recipient The address which will receive the token0 and token1 amounts\\n    /// @param amount0 The amount of token0 to send\\n    /// @param amount1 The amount of token1 to send\\n    /// @param data Any data to be passed through to the callback\\n    function flash(\\n        address recipient,\\n        uint256 amount0,\\n        uint256 amount1,\\n        bytes calldata data\\n    ) external;\\n\\n    /// @notice Increase the maximum number of price and liquidity observations that this pool will store\\n    /// @dev This method is no-op if the pool already has an observationCardinalityNext greater than or equal to\\n    /// the input observationCardinalityNext.\\n    /// @param observationCardinalityNext The desired minimum number of observations for the pool to store\\n    function increaseObservationCardinalityNext(uint16 observationCardinalityNext) external;\\n}\\n\",\"keccak256\":\"0x3a4cd20ff1b0f40cf4c1fc3c9ea907bb66aec1cd05bcf0f23a639f2d0dcae1fa\",\"license\":\"MIT\"},\"contracts/universal-router/interfaces/uniswap/v3/IUniswapV3PoolImmutables.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity >=0.8.0;\\n\\n/// @title Pool state that never changes\\n/// @notice These parameters are fixed for a pool forever, i.e., the methods will always return the same values\\ninterface IUniswapV3PoolImmutables {\\n    /// @notice The contract that deployed the pool, which must adhere to the IUniswapV3Factory interface\\n    /// @return The contract address\\n    function factory() external view returns (address);\\n\\n    /// @notice The first of the two tokens of the pool, sorted by address\\n    /// @return The token contract address\\n    function token0() external view returns (address);\\n\\n    /// @notice The second of the two tokens of the pool, sorted by address\\n    /// @return The token contract address\\n    function token1() external view returns (address);\\n\\n    /// @notice The pool's fee in hundredths of a bip, i.e. 1e-6\\n    /// @return The fee\\n    function fee() external view returns (uint24);\\n\\n    /// @notice The pool tick spacing\\n    /// @dev Ticks can only be used at multiples of this value, minimum of 1 and always positive\\n    /// e.g.: a tickSpacing of 3 means ticks can be initialized every 3rd tick, i.e., ..., -6, -3, 0, 3, 6, ...\\n    /// This value is an int24 to avoid casting even though it is always positive.\\n    /// @return The tick spacing\\n    function tickSpacing() external view returns (int24);\\n\\n    /// @notice The maximum amount of position liquidity that can use any tick in the range\\n    /// @dev This parameter is enforced per tick to prevent liquidity from overflowing a uint128 at any point, and\\n    /// also prevents out-of-range liquidity from being used to prevent adding in-range liquidity to a pool\\n    /// @return The max amount of liquidity per tick\\n    function maxLiquidityPerTick() external view returns (uint128);\\n}\\n\",\"keccak256\":\"0x78418773c6ade3af14dd11acb081eddebc81944e868d11a2c6d23c2b1f2a123e\",\"license\":\"MIT\"},\"contracts/universal-router/interfaces/uniswap/v3/IUniswapV3PoolState.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity >=0.8.0;\\n\\n/// @title Pool state that can change\\n/// @notice These methods compose the pool's state, and can change with any frequency including multiple times\\n/// per transaction\\ninterface IUniswapV3PoolState {\\n    /// @notice The 0th storage slot in the pool stores many values, and is exposed as a single method to save gas\\n    /// when accessed externally.\\n    /// @return sqrtPriceX96 The current price of the pool as a sqrt(token1/token0) Q64.96 value\\n    /// tick The current tick of the pool, i.e. according to the last tick transition that was run.\\n    /// This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(sqrtPriceX96) if the price is on a tick\\n    /// boundary.\\n    /// observationIndex The index of the last oracle observation that was written,\\n    /// observationCardinality The current maximum number of observations stored in the pool,\\n    /// observationCardinalityNext The next maximum number of observations, to be updated when the observation.\\n    /// feeProtocol The protocol fee for both tokens of the pool.\\n    /// Encoded as two 4 bit values, where the protocol fee of token1 is shifted 4 bits and the protocol fee of token0\\n    /// is the lower 4 bits. Used as the denominator of a fraction of the swap fee, e.g. 4 means 1/4th of the swap fee.\\n    /// unlocked Whether the pool is currently locked to reentrancy\\n    function slot0()\\n        external\\n        view\\n        returns (\\n            uint160 sqrtPriceX96,\\n            int24 tick,\\n            uint16 observationIndex,\\n            uint16 observationCardinality,\\n            uint16 observationCardinalityNext,\\n            uint8 feeProtocol,\\n            bool unlocked\\n        );\\n\\n    /// @notice The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for the entire life of the pool\\n    /// @dev This value can overflow the uint256\\n    function feeGrowthGlobal0X128() external view returns (uint256);\\n\\n    /// @notice The fee growth as a Q128.128 fees of token1 collected per unit of liquidity for the entire life of the pool\\n    /// @dev This value can overflow the uint256\\n    function feeGrowthGlobal1X128() external view returns (uint256);\\n\\n    /// @notice The amounts of token0 and token1 that are owed to the protocol\\n    /// @dev Protocol fees will never exceed uint128 max in either token\\n    function protocolFees()\\n        external\\n        view\\n        returns (uint128 token0, uint128 token1);\\n\\n    /// @notice The currently in range liquidity available to the pool\\n    /// @dev This value has no relationship to the total liquidity across all ticks\\n    function liquidity() external view returns (uint128);\\n\\n    /// @notice Look up information about a specific tick in the pool\\n    /// @param tick The tick to look up\\n    /// @return liquidityGross the total amount of position liquidity that uses the pool either as tick lower or\\n    /// tick upper,\\n    /// liquidityNet how much liquidity changes when the pool price crosses the tick,\\n    /// feeGrowthOutside0X128 the fee growth on the other side of the tick from the current tick in token0,\\n    /// feeGrowthOutside1X128 the fee growth on the other side of the tick from the current tick in token1,\\n    /// tickCumulativeOutside the cumulative tick value on the other side of the tick from the current tick\\n    /// secondsPerLiquidityOutsideX128 the seconds spent per liquidity on the other side of the tick from the current tick,\\n    /// secondsOutside the seconds spent on the other side of the tick from the current tick,\\n    /// initialized Set to true if the tick is initialized, i.e. liquidityGross is greater than 0, otherwise equal to false.\\n    /// Outside values can only be used if the tick is initialized, i.e. if liquidityGross is greater than 0.\\n    /// In addition, these values are only relative and must be used only in comparison to previous snapshots for\\n    /// a specific position.\\n    function ticks(int24 tick)\\n        external\\n        view\\n        returns (\\n            uint128 liquidityGross,\\n            int128 liquidityNet,\\n            uint256 feeGrowthOutside0X128,\\n            uint256 feeGrowthOutside1X128,\\n            int56 tickCumulativeOutside,\\n            uint160 secondsPerLiquidityOutsideX128,\\n            uint32 secondsOutside,\\n            bool initialized\\n        );\\n\\n    /// @notice Returns 256 packed tick initialized boolean values. See TickBitmap for more information\\n    function tickBitmap(int16 wordPosition) external view returns (uint256);\\n\\n    /// @notice Returns the information about a position by the position's key\\n    /// @param key The position's key is a hash of a preimage composed by the owner, tickLower and tickUpper\\n    /// @return _liquidity The amount of liquidity in the position,\\n    /// Returns feeGrowthInside0LastX128 fee growth of token0 inside the tick range as of the last mint/burn/poke,\\n    /// Returns feeGrowthInside1LastX128 fee growth of token1 inside the tick range as of the last mint/burn/poke,\\n    /// Returns tokensOwed0 the computed amount of token0 owed to the position as of the last mint/burn/poke,\\n    /// Returns tokensOwed1 the computed amount of token1 owed to the position as of the last mint/burn/poke\\n    function positions(bytes32 key)\\n        external\\n        view\\n        returns (\\n            uint128 _liquidity,\\n            uint256 feeGrowthInside0LastX128,\\n            uint256 feeGrowthInside1LastX128,\\n            uint128 tokensOwed0,\\n            uint128 tokensOwed1\\n        );\\n\\n    /// @notice Returns data about a specific observation index\\n    /// @param index The element of the observations array to fetch\\n    /// @dev You most likely want to use #observe() instead of this method to get an observation as of some amount of time\\n    /// ago, rather than at a specific index in the array.\\n    /// @return blockTimestamp The timestamp of the observation,\\n    /// Returns tickCumulative the tick multiplied by seconds elapsed for the life of the pool as of the observation timestamp,\\n    /// Returns secondsPerLiquidityCumulativeX128 the seconds per in range liquidity for the life of the pool as of the observation timestamp,\\n    /// Returns initialized whether the observation has been initialized and the values are safe to use\\n    function observations(uint256 index)\\n        external\\n        view\\n        returns (\\n            uint32 blockTimestamp,\\n            int56 tickCumulative,\\n            uint160 secondsPerLiquidityCumulativeX128,\\n            bool initialized\\n        );\\n}\\n\",\"keccak256\":\"0xef712b2f9ec7edef1bff872532564f55682373105e9ba3c7208db805a2d5ad12\",\"license\":\"MIT\"},\"contracts/universal-router/interfaces/uniswap/v3/IUniswapV3StateMulticall.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity >=0.8.0;\\n\\nimport {IUniswapV3Pool} from \\\"./IUniswapV3Pool.sol\\\";\\nimport {IUniswapV3Factory} from \\\"./IUniswapV3Factory.sol\\\";\\n\\ninterface IUniswapV3StateMulticall {\\n    struct Slot0 {\\n        uint160 sqrtPriceX96;\\n        int24 tick;\\n        uint16 observationIndex;\\n        uint16 observationCardinality;\\n        uint16 observationCardinalityNext;\\n        uint8 feeProtocol;\\n        bool unlocked;\\n    }\\n\\n    struct TickBitMapMappings {\\n        int16 index;\\n        uint256 value;\\n    }\\n\\n    struct TickInfo {\\n        uint128 liquidityGross;\\n        int128 liquidityNet;\\n        int56 tickCumulativeOutside;\\n        uint160 secondsPerLiquidityOutsideX128;\\n        uint32 secondsOutside;\\n        bool initialized;\\n    }\\n\\n    struct TickInfoMappings {\\n        int24 index;\\n        TickInfo value;\\n    }\\n\\n    struct Observation {\\n        uint32 blockTimestamp;\\n        int56 tickCumulative;\\n        uint160 secondsPerLiquidityCumulativeX128;\\n        bool initialized;\\n    }\\n\\n    struct StateResult {\\n        IUniswapV3Pool pool;\\n        uint256 blockTimestamp;\\n        Slot0 slot0;\\n        uint128 liquidity;\\n        int24 tickSpacing;\\n        uint128 maxLiquidityPerTick;\\n        uint256 balance0;\\n        uint256 balance1;\\n        Observation observation;\\n        TickBitMapMappings[] tickBitmap;\\n        TickInfoMappings[] ticks;\\n    }\\n\\n    function getFullState(\\n        IUniswapV3Factory factory,\\n        address tokenIn,\\n        address tokenOut,\\n        uint24 fee,\\n        int16 tickBitmapStart,\\n        int16 tickBitmapEnd\\n    ) external view returns (StateResult memory state);\\n\\n    function getFullStateWithoutTicks(\\n        IUniswapV3Factory factory,\\n        address tokenIn,\\n        address tokenOut,\\n        uint24 fee,\\n        int16 tickBitmapStart,\\n        int16 tickBitmapEnd\\n    ) external view returns (StateResult memory state);\\n\\n    function getFullStateWithRelativeBitmaps(\\n        IUniswapV3Factory factory,\\n        address tokenIn,\\n        address tokenOut,\\n        uint24 fee,\\n        int16 leftBitmapAmount,\\n        int16 rightBitmapAmount\\n    ) external view returns (StateResult memory state);\\n\\n    function getAdditionalBitmapWithTicks(\\n        IUniswapV3Factory factory,\\n        address tokenIn,\\n        address tokenOut,\\n        uint24 fee,\\n        int16 tickBitmapStart,\\n        int16 tickBitmapEnd\\n    )\\n        external\\n        view\\n        returns (\\n            TickBitMapMappings[] memory tickBitmap,\\n            TickInfoMappings[] memory ticks\\n        );\\n\\n    function getAdditionalBitmapWithoutTicks(\\n        IUniswapV3Factory factory,\\n        address tokenIn,\\n        address tokenOut,\\n        uint24 fee,\\n        int16 tickBitmapStart,\\n        int16 tickBitmapEnd\\n    ) external view returns (TickBitMapMappings[] memory tickBitmap);\\n}\\n\",\"keccak256\":\"0x75d06d40fe3fdce02e7f473165e660be5f34eb959d7453b3c038d8cf4c0f0911\",\"license\":\"MIT\"},\"contracts/universal-router/modules/uniswap/v3/UniswapV3StateMulticall.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity >=0.8.0;\\n\\nimport {IUniswapV3Pool} from \\\"../../../interfaces/uniswap/v3/IUniswapV3Pool.sol\\\";\\nimport {IUniswapV3Factory} from \\\"../../../interfaces/uniswap/v3/IUniswapV3Factory.sol\\\";\\nimport {IUniswapV3StateMulticall} from \\\"../../../interfaces/uniswap/v3/IUniswapV3StateMulticall.sol\\\";\\nimport {IERC20Minimal} from \\\"../../../interfaces/IERC20Minimal.sol\\\";\\n\\ncontract UniswapV3StateMulticall is IUniswapV3StateMulticall {\\n    function getFullState(\\n        IUniswapV3Factory factory,\\n        address tokenIn,\\n        address tokenOut,\\n        uint24 fee,\\n        int16 tickBitmapStart,\\n        int16 tickBitmapEnd\\n    ) external view override returns (StateResult memory state) {\\n        require(\\n            tickBitmapEnd >= tickBitmapStart,\\n            \\\"tickBitmapEnd < tickBitmapStart\\\"\\n        );\\n\\n        state = _fillStateWithoutTicks(\\n            factory,\\n            tokenIn,\\n            tokenOut,\\n            fee,\\n            tickBitmapStart,\\n            tickBitmapEnd\\n        );\\n        state.ticks = _calcTicksFromBitMap(\\n            factory,\\n            tokenIn,\\n            tokenOut,\\n            fee,\\n            state.tickBitmap\\n        );\\n    }\\n\\n    function getFullStateWithoutTicks(\\n        IUniswapV3Factory factory,\\n        address tokenIn,\\n        address tokenOut,\\n        uint24 fee,\\n        int16 tickBitmapStart,\\n        int16 tickBitmapEnd\\n    ) external view override returns (StateResult memory state) {\\n        require(\\n            tickBitmapEnd >= tickBitmapStart,\\n            \\\"tickBitmapEnd < tickBitmapStart\\\"\\n        );\\n\\n        return\\n            _fillStateWithoutTicks(\\n                factory,\\n                tokenIn,\\n                tokenOut,\\n                fee,\\n                tickBitmapStart,\\n                tickBitmapEnd\\n            );\\n    }\\n\\n    function getFullStateWithRelativeBitmaps(\\n        IUniswapV3Factory factory,\\n        address tokenIn,\\n        address tokenOut,\\n        uint24 fee,\\n        int16 leftBitmapAmount,\\n        int16 rightBitmapAmount\\n    ) external view override returns (StateResult memory state) {\\n        require(leftBitmapAmount > 0, \\\"leftBitmapAmount <= 0\\\");\\n        require(rightBitmapAmount > 0, \\\"rightBitmapAmount <= 0\\\");\\n\\n        state = _fillStateWithoutBitmapsAndTicks(\\n            factory,\\n            tokenIn,\\n            tokenOut,\\n            fee\\n        );\\n        int16 currentBitmapIndex = _getBitmapIndexFromTick(\\n            state.slot0.tick / state.tickSpacing\\n        );\\n\\n        state.tickBitmap = _calcTickBitmaps(\\n            factory,\\n            tokenIn,\\n            tokenOut,\\n            fee,\\n            currentBitmapIndex - leftBitmapAmount,\\n            currentBitmapIndex + rightBitmapAmount\\n        );\\n    }\\n\\n    function getAdditionalBitmapWithTicks(\\n        IUniswapV3Factory factory,\\n        address tokenIn,\\n        address tokenOut,\\n        uint24 fee,\\n        int16 tickBitmapStart,\\n        int16 tickBitmapEnd\\n    )\\n        external\\n        view\\n        override\\n        returns (\\n            TickBitMapMappings[] memory tickBitmap,\\n            TickInfoMappings[] memory ticks\\n        )\\n    {\\n        require(\\n            tickBitmapEnd >= tickBitmapStart,\\n            \\\"tickBitmapEnd < tickBitmapStart\\\"\\n        );\\n\\n        tickBitmap = _calcTickBitmaps(\\n            factory,\\n            tokenIn,\\n            tokenOut,\\n            fee,\\n            tickBitmapStart,\\n            tickBitmapEnd\\n        );\\n        ticks = _calcTicksFromBitMap(\\n            factory,\\n            tokenIn,\\n            tokenOut,\\n            fee,\\n            tickBitmap\\n        );\\n    }\\n\\n    function getAdditionalBitmapWithoutTicks(\\n        IUniswapV3Factory factory,\\n        address tokenIn,\\n        address tokenOut,\\n        uint24 fee,\\n        int16 tickBitmapStart,\\n        int16 tickBitmapEnd\\n    ) external view override returns (TickBitMapMappings[] memory tickBitmap) {\\n        require(\\n            tickBitmapEnd >= tickBitmapStart,\\n            \\\"tickBitmapEnd < tickBitmapStart\\\"\\n        );\\n\\n        return\\n            _calcTickBitmaps(\\n                factory,\\n                tokenIn,\\n                tokenOut,\\n                fee,\\n                tickBitmapStart,\\n                tickBitmapEnd\\n            );\\n    }\\n\\n    function _fillStateWithoutTicks(\\n        IUniswapV3Factory factory,\\n        address tokenIn,\\n        address tokenOut,\\n        uint24 fee,\\n        int16 tickBitmapStart,\\n        int16 tickBitmapEnd\\n    ) internal view returns (StateResult memory state) {\\n        state = _fillStateWithoutBitmapsAndTicks(\\n            factory,\\n            tokenIn,\\n            tokenOut,\\n            fee\\n        );\\n        state.tickBitmap = _calcTickBitmaps(\\n            factory,\\n            tokenIn,\\n            tokenOut,\\n            fee,\\n            tickBitmapStart,\\n            tickBitmapEnd\\n        );\\n    }\\n\\n    function _fillStateWithoutBitmapsAndTicks(\\n        IUniswapV3Factory factory,\\n        address tokenIn,\\n        address tokenOut,\\n        uint24 fee\\n    ) internal view returns (StateResult memory state) {\\n        IUniswapV3Pool pool = _getPool(factory, tokenIn, tokenOut, fee);\\n\\n        state.pool = pool;\\n        state.blockTimestamp = block.timestamp;\\n        state.liquidity = pool.liquidity();\\n        state.tickSpacing = pool.tickSpacing();\\n        state.maxLiquidityPerTick = pool.maxLiquidityPerTick();\\n        state.balance0 = _getBalance(pool.token0(), address(pool));\\n        state.balance1= _getBalance(pool.token1(), address(pool));\\n\\n        (\\n            state.slot0.sqrtPriceX96,\\n            state.slot0.tick,\\n            state.slot0.observationIndex,\\n            state.slot0.observationCardinality,\\n            state.slot0.observationCardinalityNext,\\n            state.slot0.feeProtocol,\\n            state.slot0.unlocked\\n        ) = pool.slot0();\\n\\n        (\\n            state.observation.blockTimestamp,\\n            state.observation.tickCumulative,\\n            state.observation.secondsPerLiquidityCumulativeX128,\\n            state.observation.initialized\\n        ) = pool.observations(state.slot0.observationIndex);\\n    }\\n\\n    function _calcTickBitmaps(\\n        IUniswapV3Factory factory,\\n        address tokenIn,\\n        address tokenOut,\\n        uint24 fee,\\n        int16 tickBitmapStart,\\n        int16 tickBitmapEnd\\n    ) internal view returns (TickBitMapMappings[] memory tickBitmap) {\\n        IUniswapV3Pool pool = _getPool(factory, tokenIn, tokenOut, fee);\\n        uint256 numberOfPopulatedBitmaps = 0;\\n        for (int256 i = tickBitmapStart; i <= tickBitmapEnd; i++) {\\n            uint256 bitmap = pool.tickBitmap(int16(i));\\n            if (bitmap == 0) continue;\\n            numberOfPopulatedBitmaps++;\\n        }\\n\\n        tickBitmap = new TickBitMapMappings[](numberOfPopulatedBitmaps);\\n        uint256 globalIndex = 0;\\n        for (int256 i = tickBitmapStart; i <= tickBitmapEnd; i++) {\\n            int16 index = int16(i);\\n            uint256 bitmap = pool.tickBitmap(index);\\n            if (bitmap == 0) continue;\\n\\n            tickBitmap[globalIndex] = TickBitMapMappings({\\n                index: index,\\n                value: bitmap\\n            });\\n            globalIndex++;\\n        }\\n    }\\n\\n    function _calcTicksFromBitMap(\\n        IUniswapV3Factory factory,\\n        address tokenIn,\\n        address tokenOut,\\n        uint24 fee,\\n        TickBitMapMappings[] memory tickBitmap\\n    ) internal view returns (TickInfoMappings[] memory ticks) {\\n        IUniswapV3Pool pool = _getPool(factory, tokenIn, tokenOut, fee);\\n\\n        uint256 numberOfPopulatedTicks = 0;\\n        for (uint256 i = 0; i < tickBitmap.length; i++) {\\n            uint256 bitmap = tickBitmap[i].value;\\n\\n            for (uint256 j = 0; j < 256; j++) {\\n                if (bitmap & (1 << j) > 0) numberOfPopulatedTicks++;\\n            }\\n        }\\n\\n        ticks = new TickInfoMappings[](numberOfPopulatedTicks);\\n        int24 tickSpacing = pool.tickSpacing();\\n\\n        uint256 globalIndex = 0;\\n        for (uint256 i = 0; i < tickBitmap.length; i++) {\\n            uint256 bitmap = tickBitmap[i].value;\\n\\n            for (uint256 j = 0; j < 256; j++) {\\n                if (bitmap & (1 << j) > 0) {\\n                    int24 populatedTick = ((int24(tickBitmap[i].index) << 8) +\\n                        int24(uint24(j))) * tickSpacing;\\n\\n                    ticks[globalIndex].index = populatedTick;\\n                    TickInfo memory newTickInfo = ticks[globalIndex].value;\\n\\n                    (\\n                        newTickInfo.liquidityGross,\\n                        newTickInfo.liquidityNet,\\n                        ,\\n                        ,\\n                        newTickInfo.tickCumulativeOutside,\\n                        newTickInfo.secondsPerLiquidityOutsideX128,\\n                        newTickInfo.secondsOutside,\\n                        newTickInfo.initialized\\n                    ) = pool.ticks(populatedTick);\\n\\n                    globalIndex++;\\n                }\\n            }\\n        }\\n    }\\n\\n    function _getPool(\\n        IUniswapV3Factory factory,\\n        address tokenIn,\\n        address tokenOut,\\n        uint24 fee\\n    ) internal view returns (IUniswapV3Pool pool) {\\n        pool = IUniswapV3Pool(factory.getPool(tokenIn, tokenOut, fee));\\n        require(address(pool) != address(0), \\\"Pool does not exist\\\");\\n    }\\n\\n    function _getBitmapIndexFromTick(int24 tick) internal pure returns (int16) {\\n        return int16(tick >> 8);\\n    }\\n\\n    function _getBalance(address token, address pool) internal view returns (uint256) {\\n        (bool success, bytes memory data) = token.staticcall(\\n            abi.encodeWithSelector(IERC20Minimal.balanceOf.selector, pool)\\n        );\\n        require(success && data.length >= 32);\\n        return abi.decode(data, (uint256));\\n    }\\n}\\n\",\"keccak256\":\"0xc082af7ee4cdc48f8d8b8f0eeb5b4c71308dae47469f98d842978a1677aa6b89\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b506117cf806100206000396000f3fe608060405234801561001057600080fd5b50600436106100575760003560e01c806318a1c5851461005c5780631d5167f41461008557806346c6c47e146100a6578063db529c65146100b9578063ea086e4f146100d9575b600080fd5b61006f61006a366004611023565b6100ec565b60405161007c91906113fe565b60405180910390f35b610098610093366004611023565b610155565b60405161007c9291906113a2565b61006f6100b4366004611023565b6101a8565b6100cc6100c7366004611023565b6101ef565b60405161007c919061138f565b61006f6100e7366004611023565b610225565b6100f4610ec5565b8260010b8260010b12156101235760405162461bcd60e51b815260040161011a906113c7565b60405180910390fd5b61013187878787878761032b565b90506101458787878785610120015161035f565b6101408201529695505050505050565b6060808360010b8360010b121561017e5760405162461bcd60e51b815260040161011a906113c7565b61018c8888888888886106d7565b915061019b888888888661035f565b9050965096945050505050565b6101b0610ec5565b8260010b8260010b12156101d65760405162461bcd60e51b815260040161011a906113c7565b6101e487878787878761032b565b979650505050505050565b60608260010b8260010b12156102175760405162461bcd60e51b815260040161011a906113c7565b6101e48787878787876106d7565b61022d610ec5565b60008360010b136102785760405162461bcd60e51b815260206004820152601560248201527406c6566744269746d6170416d6f756e74203c3d203605c1b604482015260640161011a565b60008260010b136102c45760405162461bcd60e51b8152602060048201526016602482015275072696768744269746d6170416d6f756e74203c3d20360541b604482015260640161011a565b6102d08787878761090f565b905060006102f882608001518360400151602001516102ef91906115f4565b60020b60081d90565b905061031a8888888861030b89876116c9565b6103158988611571565b6106d7565b610120830152509695505050505050565b610333610ec5565b61033f8787878761090f565b905061034f8787878787876106d7565b6101208201529695505050505050565b6060600061036f87878787610d0b565b90506000805b84518110156103ed57600085828151811061039257610392611755565b602002602001015160200151905060005b6101008110156103d8576001811b8216156103c657836103c28161172f565b9450505b806103d08161172f565b9150506103a3565b505080806103e59061172f565b915050610375565b508067ffffffffffffffff8111156104075761040761176b565b60405190808252806020026020018201604052801561048057816020015b61046d6040805180820182526000808252825160c0810184528181526020818101839052938101829052606081018290526080810182905260a0810191909152909182015290565b8152602001906001900390816104255790505b5092506000826001600160a01b031663d0c93a7c6040518163ffffffff1660e01b815260040160206040518083038186803b1580156104be57600080fd5b505afa1580156104d2573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906104f691906110a7565b90506000805b86518110156106c957600087828151811061051957610519611755565b602002602001015160200151905060005b6101008110156106b4576001811b8216156106a2576000858260088c878151811061055757610557611755565b60200260200101516000015160010b60020b901b61057591906115b6565b61057f919061163c565b90508089868151811061059457610594611755565b60200260200101516000019060020b908160020b8152505060008986815181106105c0576105c0611755565b602090810291909101810151015160405163f30dba9360e01b8152600284900b60048201529091506001600160a01b038a169063f30dba93906024016101006040518083038186803b15801561061557600080fd5b505afa158015610629573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061064d91906110dd565b151560a089015263ffffffff1660808801526001600160a01b03166060870152600690810b900b60408601525050600f90810b900b60208301526001600160801b031681528561069c8161172f565b96505050505b806106ac8161172f565b91505061052a565b505080806106c19061172f565b9150506104fc565b505050505095945050505050565b606060006106e788888888610d0b565b90506000600185900b5b8460010b81136107a75760405163299ce14b60e11b8152600182900b60048201526000906001600160a01b03851690635339c2969060240160206040518083038186803b15801561074157600080fd5b505afa158015610755573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906107799190611201565b9050806107865750610795565b826107908161172f565b935050505b8061079f8161170f565b9150506106f1565b508067ffffffffffffffff8111156107c1576107c161176b565b60405190808252806020026020018201604052801561080657816020015b60408051808201909152600080825260208201528152602001906001900390816107df5790505b5092506000600186900b5b8560010b81136109015760405163299ce14b60e11b8152600182900b600482015281906000906001600160a01b03871690635339c2969060240160206040518083038186803b15801561086357600080fd5b505afa158015610877573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061089b9190611201565b9050806108a95750506108ef565b60405180604001604052808360010b8152602001828152508785815181106108d3576108d3611755565b602002602001018190525083806108e99061172f565b94505050505b806108f98161170f565b915050610811565b505050509695505050505050565b610917610ec5565b600061092586868686610d0b565b6001600160a01b0381168084524260208086019190915260408051630d34328160e11b815290519394509192631a686502926004808201939291829003018186803b15801561097357600080fd5b505afa158015610987573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906109ab91906110c2565b6001600160801b03166060830152604080516334324e9f60e21b815290516001600160a01b0383169163d0c93a7c916004808301926020929190829003018186803b1580156109f957600080fd5b505afa158015610a0d573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610a3191906110a7565b826080019060020b908160020b81525050806001600160a01b03166370cf754a6040518163ffffffff1660e01b815260040160206040518083038186803b158015610a7b57600080fd5b505afa158015610a8f573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610ab391906110c2565b8260a001906001600160801b031690816001600160801b031681525050610b4a816001600160a01b0316630dfe16816040518163ffffffff1660e01b815260040160206040518083038186803b158015610b0c57600080fd5b505afa158015610b20573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610b449190610fff565b82610df1565b8260c0018181525050610b8f816001600160a01b031663d21220a76040518163ffffffff1660e01b815260040160206040518083038186803b158015610b0c57600080fd5b8260e0018181525050806001600160a01b0316633850c7bd6040518163ffffffff1660e01b815260040160e06040518083038186803b158015610bd157600080fd5b505afa158015610be5573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610c099190611171565b6040898101805192151560c084015260ff9390931660a083015261ffff9384166080830152938316606082015293821684840152600294850b90940b60208401526001600160a01b039485169092529151820151915163252c09d760e01b8152911660048201529082169063252c09d79060240160806040518083038186803b158015610c9557600080fd5b505afa158015610ca9573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610ccd919061121a565b61010086015190151560608201526001600160a01b039091166040820152600691820b90910b602082015263ffffffff909116905250949350505050565b604051630b4c774160e11b81526001600160a01b038481166004830152838116602483015262ffffff8316604483015260009190861690631698ee829060640160206040518083038186803b158015610d6357600080fd5b505afa158015610d77573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610d9b9190610fff565b90506001600160a01b038116610de95760405162461bcd60e51b8152602060048201526013602482015272141bdbdb08191bd95cc81b9bdd08195e1a5cdd606a1b604482015260640161011a565b949350505050565b604080516001600160a01b0383811660248084019190915283518084039091018152604490920183526020820180516001600160e01b03166370a0823160e01b17905291516000928392839291871691610e4b9190611354565b600060405180830381855afa9150503d8060008114610e86576040519150601f19603f3d011682016040523d82523d6000602084013e610e8b565b606091505b5091509150818015610e9f57506020815110155b610ea857600080fd5b80806020019051810190610ebc9190611201565b95945050505050565b604080516101608101825260008082526020808301829052835160e081018552828152908101829052808401829052606081018290526080810182905260a0810182905260c0810191909152909182019081526000602080830182905260408084018390526060808501849052608080860185905260a086018590528251908101835284815292830184905290820183905281019190915260c090910190815260200160608152602001606081525090565b80518015158114610f8757600080fd5b919050565b8035600181900b8114610f8757600080fd5b8051600281900b8114610f8757600080fd5b8051600681900b8114610f8757600080fd5b80516001600160801b0381168114610f8757600080fd5b805161ffff81168114610f8757600080fd5b805163ffffffff81168114610f8757600080fd5b60006020828403121561101157600080fd5b815161101c81611781565b9392505050565b60008060008060008060c0878903121561103c57600080fd5b863561104781611781565b9550602087013561105781611781565b9450604087013561106781611781565b9350606087013562ffffff8116811461107f57600080fd5b925061108d60808801610f8c565b915061109b60a08801610f8c565b90509295509295509295565b6000602082840312156110b957600080fd5b61101c82610f9e565b6000602082840312156110d457600080fd5b61101c82610fc2565b600080600080600080600080610100898b0312156110fa57600080fd5b61110389610fc2565b9750602089015180600f0b811461111957600080fd5b60408a015160608b01519198509650945061113660808a01610fb0565b935060a089015161114681611781565b925061115460c08a01610feb565b915061116260e08a01610f77565b90509295985092959890939650565b600080600080600080600060e0888a03121561118c57600080fd5b875161119781611781565b96506111a560208901610f9e565b95506111b360408901610fd9565b94506111c160608901610fd9565b93506111cf60808901610fd9565b925060a088015160ff811681146111e557600080fd5b91506111f360c08901610f77565b905092959891949750929550565b60006020828403121561121357600080fd5b5051919050565b6000806000806080858703121561123057600080fd5b61123985610feb565b935061124760208601610fb0565b9250604085015161125781611781565b915061126560608601610f77565b905092959194509250565b600081518084526020808501945080840160005b838110156112b1578151805160010b88526020908101519088015260408701965090820190600101611284565b509495945050505050565b600081518084526020808501945080840160005b838110156112b1578151805160020b885283015180516001600160801b03168489015280840151600f0b6040808a019190915281015160060b6060808a01919091528101516001600160a01b03166080808a019190915281015163ffffffff1660a0808a01919091520151151560c088015260e090960195908201906001016112d0565b6000825160005b81811015611375576020818601810151858301520161135b565b81811115611384576000828501525b509190910192915050565b60208152600061101c6020830184611270565b6040815260006113b56040830185611270565b8281036020840152610ebc81856112bc565b6020808252601f908201527f7469636b4269746d6170456e64203c207469636b4269746d6170537461727400604082015260600190565b602081526114186020820183516001600160a01b03169052565b6020820151604082015260006040830151611491606084018260018060a01b038151168252602081015160020b6020830152604081015161ffff8082166040850152806060840151166060850152806080840151166080850152505060ff60a08201511660a083015260c0810151151560c08301525050565b5060608301516101406114ae818501836001600160801b03169052565b608085015191506114c561016085018360020b9052565b60a08501516001600160801b031661018085015260c08501516101a085015260e08501516101c0850152610100850151805163ffffffff166101e0860152602081015160060b61020086015260408101516001600160a01b031661022086015260600151151561024085015261012085015161028061026086018190529092506115536102a0860184611270565b9250818601519150601f19858403018186015250610ebc82826112bc565b60008160010b8360010b6000821282617fff038213811516156115965761159661173f565b82617fff190382128116156115ad576115ad61173f565b50019392505050565b60008160020b8360020b6000821282627fffff038213811516156115dc576115dc61173f565b82627fffff190382128116156115ad576115ad61173f565b60008160020b8360020b8061161957634e487b7160e01b600052601260045260246000fd5b627fffff198214600019821416156116335761163361173f565b90059392505050565b60008160020b8360020b627fffff6000821360008413838304851182821616156116685761166861173f565b627fffff1960008512828116878305871216156116875761168761173f565b600087129250858205871284841616156116a3576116a361173f565b858505871281841616156116b9576116b961173f565b5050509290910295945050505050565b60008160010b8360010b6000811281617fff19018312811516156116ef576116ef61173f565b81617fff0183138116156117055761170561173f565b5090039392505050565b60006001600160ff1b038214156117285761172861173f565b5060010190565b6000600019821415611728576117285b634e487b7160e01b600052601160045260246000fd5b634e487b7160e01b600052603260045260246000fd5b634e487b7160e01b600052604160045260246000fd5b6001600160a01b038116811461179657600080fd5b5056fea26469706673582212200883b25a8ea43f96b630afbbd62f93e1141813cb823f330dfb4b1dac363d69c064736f6c63430008070033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100575760003560e01c806318a1c5851461005c5780631d5167f41461008557806346c6c47e146100a6578063db529c65146100b9578063ea086e4f146100d9575b600080fd5b61006f61006a366004611023565b6100ec565b60405161007c91906113fe565b60405180910390f35b610098610093366004611023565b610155565b60405161007c9291906113a2565b61006f6100b4366004611023565b6101a8565b6100cc6100c7366004611023565b6101ef565b60405161007c919061138f565b61006f6100e7366004611023565b610225565b6100f4610ec5565b8260010b8260010b12156101235760405162461bcd60e51b815260040161011a906113c7565b60405180910390fd5b61013187878787878761032b565b90506101458787878785610120015161035f565b6101408201529695505050505050565b6060808360010b8360010b121561017e5760405162461bcd60e51b815260040161011a906113c7565b61018c8888888888886106d7565b915061019b888888888661035f565b9050965096945050505050565b6101b0610ec5565b8260010b8260010b12156101d65760405162461bcd60e51b815260040161011a906113c7565b6101e487878787878761032b565b979650505050505050565b60608260010b8260010b12156102175760405162461bcd60e51b815260040161011a906113c7565b6101e48787878787876106d7565b61022d610ec5565b60008360010b136102785760405162461bcd60e51b815260206004820152601560248201527406c6566744269746d6170416d6f756e74203c3d203605c1b604482015260640161011a565b60008260010b136102c45760405162461bcd60e51b8152602060048201526016602482015275072696768744269746d6170416d6f756e74203c3d20360541b604482015260640161011a565b6102d08787878761090f565b905060006102f882608001518360400151602001516102ef91906115f4565b60020b60081d90565b905061031a8888888861030b89876116c9565b6103158988611571565b6106d7565b610120830152509695505050505050565b610333610ec5565b61033f8787878761090f565b905061034f8787878787876106d7565b6101208201529695505050505050565b6060600061036f87878787610d0b565b90506000805b84518110156103ed57600085828151811061039257610392611755565b602002602001015160200151905060005b6101008110156103d8576001811b8216156103c657836103c28161172f565b9450505b806103d08161172f565b9150506103a3565b505080806103e59061172f565b915050610375565b508067ffffffffffffffff8111156104075761040761176b565b60405190808252806020026020018201604052801561048057816020015b61046d6040805180820182526000808252825160c0810184528181526020818101839052938101829052606081018290526080810182905260a0810191909152909182015290565b8152602001906001900390816104255790505b5092506000826001600160a01b031663d0c93a7c6040518163ffffffff1660e01b815260040160206040518083038186803b1580156104be57600080fd5b505afa1580156104d2573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906104f691906110a7565b90506000805b86518110156106c957600087828151811061051957610519611755565b602002602001015160200151905060005b6101008110156106b4576001811b8216156106a2576000858260088c878151811061055757610557611755565b60200260200101516000015160010b60020b901b61057591906115b6565b61057f919061163c565b90508089868151811061059457610594611755565b60200260200101516000019060020b908160020b8152505060008986815181106105c0576105c0611755565b602090810291909101810151015160405163f30dba9360e01b8152600284900b60048201529091506001600160a01b038a169063f30dba93906024016101006040518083038186803b15801561061557600080fd5b505afa158015610629573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061064d91906110dd565b151560a089015263ffffffff1660808801526001600160a01b03166060870152600690810b900b60408601525050600f90810b900b60208301526001600160801b031681528561069c8161172f565b96505050505b806106ac8161172f565b91505061052a565b505080806106c19061172f565b9150506104fc565b505050505095945050505050565b606060006106e788888888610d0b565b90506000600185900b5b8460010b81136107a75760405163299ce14b60e11b8152600182900b60048201526000906001600160a01b03851690635339c2969060240160206040518083038186803b15801561074157600080fd5b505afa158015610755573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906107799190611201565b9050806107865750610795565b826107908161172f565b935050505b8061079f8161170f565b9150506106f1565b508067ffffffffffffffff8111156107c1576107c161176b565b60405190808252806020026020018201604052801561080657816020015b60408051808201909152600080825260208201528152602001906001900390816107df5790505b5092506000600186900b5b8560010b81136109015760405163299ce14b60e11b8152600182900b600482015281906000906001600160a01b03871690635339c2969060240160206040518083038186803b15801561086357600080fd5b505afa158015610877573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061089b9190611201565b9050806108a95750506108ef565b60405180604001604052808360010b8152602001828152508785815181106108d3576108d3611755565b602002602001018190525083806108e99061172f565b94505050505b806108f98161170f565b915050610811565b505050509695505050505050565b610917610ec5565b600061092586868686610d0b565b6001600160a01b0381168084524260208086019190915260408051630d34328160e11b815290519394509192631a686502926004808201939291829003018186803b15801561097357600080fd5b505afa158015610987573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906109ab91906110c2565b6001600160801b03166060830152604080516334324e9f60e21b815290516001600160a01b0383169163d0c93a7c916004808301926020929190829003018186803b1580156109f957600080fd5b505afa158015610a0d573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610a3191906110a7565b826080019060020b908160020b81525050806001600160a01b03166370cf754a6040518163ffffffff1660e01b815260040160206040518083038186803b158015610a7b57600080fd5b505afa158015610a8f573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610ab391906110c2565b8260a001906001600160801b031690816001600160801b031681525050610b4a816001600160a01b0316630dfe16816040518163ffffffff1660e01b815260040160206040518083038186803b158015610b0c57600080fd5b505afa158015610b20573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610b449190610fff565b82610df1565b8260c0018181525050610b8f816001600160a01b031663d21220a76040518163ffffffff1660e01b815260040160206040518083038186803b158015610b0c57600080fd5b8260e0018181525050806001600160a01b0316633850c7bd6040518163ffffffff1660e01b815260040160e06040518083038186803b158015610bd157600080fd5b505afa158015610be5573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610c099190611171565b6040898101805192151560c084015260ff9390931660a083015261ffff9384166080830152938316606082015293821684840152600294850b90940b60208401526001600160a01b039485169092529151820151915163252c09d760e01b8152911660048201529082169063252c09d79060240160806040518083038186803b158015610c9557600080fd5b505afa158015610ca9573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610ccd919061121a565b61010086015190151560608201526001600160a01b039091166040820152600691820b90910b602082015263ffffffff909116905250949350505050565b604051630b4c774160e11b81526001600160a01b038481166004830152838116602483015262ffffff8316604483015260009190861690631698ee829060640160206040518083038186803b158015610d6357600080fd5b505afa158015610d77573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610d9b9190610fff565b90506001600160a01b038116610de95760405162461bcd60e51b8152602060048201526013602482015272141bdbdb08191bd95cc81b9bdd08195e1a5cdd606a1b604482015260640161011a565b949350505050565b604080516001600160a01b0383811660248084019190915283518084039091018152604490920183526020820180516001600160e01b03166370a0823160e01b17905291516000928392839291871691610e4b9190611354565b600060405180830381855afa9150503d8060008114610e86576040519150601f19603f3d011682016040523d82523d6000602084013e610e8b565b606091505b5091509150818015610e9f57506020815110155b610ea857600080fd5b80806020019051810190610ebc9190611201565b95945050505050565b604080516101608101825260008082526020808301829052835160e081018552828152908101829052808401829052606081018290526080810182905260a0810182905260c0810191909152909182019081526000602080830182905260408084018390526060808501849052608080860185905260a086018590528251908101835284815292830184905290820183905281019190915260c090910190815260200160608152602001606081525090565b80518015158114610f8757600080fd5b919050565b8035600181900b8114610f8757600080fd5b8051600281900b8114610f8757600080fd5b8051600681900b8114610f8757600080fd5b80516001600160801b0381168114610f8757600080fd5b805161ffff81168114610f8757600080fd5b805163ffffffff81168114610f8757600080fd5b60006020828403121561101157600080fd5b815161101c81611781565b9392505050565b60008060008060008060c0878903121561103c57600080fd5b863561104781611781565b9550602087013561105781611781565b9450604087013561106781611781565b9350606087013562ffffff8116811461107f57600080fd5b925061108d60808801610f8c565b915061109b60a08801610f8c565b90509295509295509295565b6000602082840312156110b957600080fd5b61101c82610f9e565b6000602082840312156110d457600080fd5b61101c82610fc2565b600080600080600080600080610100898b0312156110fa57600080fd5b61110389610fc2565b9750602089015180600f0b811461111957600080fd5b60408a015160608b01519198509650945061113660808a01610fb0565b935060a089015161114681611781565b925061115460c08a01610feb565b915061116260e08a01610f77565b90509295985092959890939650565b600080600080600080600060e0888a03121561118c57600080fd5b875161119781611781565b96506111a560208901610f9e565b95506111b360408901610fd9565b94506111c160608901610fd9565b93506111cf60808901610fd9565b925060a088015160ff811681146111e557600080fd5b91506111f360c08901610f77565b905092959891949750929550565b60006020828403121561121357600080fd5b5051919050565b6000806000806080858703121561123057600080fd5b61123985610feb565b935061124760208601610fb0565b9250604085015161125781611781565b915061126560608601610f77565b905092959194509250565b600081518084526020808501945080840160005b838110156112b1578151805160010b88526020908101519088015260408701965090820190600101611284565b509495945050505050565b600081518084526020808501945080840160005b838110156112b1578151805160020b885283015180516001600160801b03168489015280840151600f0b6040808a019190915281015160060b6060808a01919091528101516001600160a01b03166080808a019190915281015163ffffffff1660a0808a01919091520151151560c088015260e090960195908201906001016112d0565b6000825160005b81811015611375576020818601810151858301520161135b565b81811115611384576000828501525b509190910192915050565b60208152600061101c6020830184611270565b6040815260006113b56040830185611270565b8281036020840152610ebc81856112bc565b6020808252601f908201527f7469636b4269746d6170456e64203c207469636b4269746d6170537461727400604082015260600190565b602081526114186020820183516001600160a01b03169052565b6020820151604082015260006040830151611491606084018260018060a01b038151168252602081015160020b6020830152604081015161ffff8082166040850152806060840151166060850152806080840151166080850152505060ff60a08201511660a083015260c0810151151560c08301525050565b5060608301516101406114ae818501836001600160801b03169052565b608085015191506114c561016085018360020b9052565b60a08501516001600160801b031661018085015260c08501516101a085015260e08501516101c0850152610100850151805163ffffffff166101e0860152602081015160060b61020086015260408101516001600160a01b031661022086015260600151151561024085015261012085015161028061026086018190529092506115536102a0860184611270565b9250818601519150601f19858403018186015250610ebc82826112bc565b60008160010b8360010b6000821282617fff038213811516156115965761159661173f565b82617fff190382128116156115ad576115ad61173f565b50019392505050565b60008160020b8360020b6000821282627fffff038213811516156115dc576115dc61173f565b82627fffff190382128116156115ad576115ad61173f565b60008160020b8360020b8061161957634e487b7160e01b600052601260045260246000fd5b627fffff198214600019821416156116335761163361173f565b90059392505050565b60008160020b8360020b627fffff6000821360008413838304851182821616156116685761166861173f565b627fffff1960008512828116878305871216156116875761168761173f565b600087129250858205871284841616156116a3576116a361173f565b858505871281841616156116b9576116b961173f565b5050509290910295945050505050565b60008160010b8360010b6000811281617fff19018312811516156116ef576116ef61173f565b81617fff0183138116156117055761170561173f565b5090039392505050565b60006001600160ff1b038214156117285761172861173f565b5060010190565b6000600019821415611728576117285b634e487b7160e01b600052601160045260246000fd5b634e487b7160e01b600052603260045260246000fd5b634e487b7160e01b600052604160045260246000fd5b6001600160a01b038116811461179657600080fd5b5056fea26469706673582212200883b25a8ea43f96b630afbbd62f93e1141813cb823f330dfb4b1dac363d69c064736f6c63430008070033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  }
+}

@@ -1,0 +1,363 @@
+{
+  "address": "0xb0Fa056fFFb74c0FB215F86D691c94Ed45b686Aa",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "CodeAlreadyExists",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "code",
+          "type": "bytes32"
+        }
+      ],
+      "name": "InvalidCode",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotCodeOwner",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "code",
+          "type": "bytes32"
+        }
+      ],
+      "name": "RegisterCode",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "newAccount",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "code",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SetCodeOwner",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "code",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SetReferralCode",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "codeOwners",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_account",
+          "type": "address"
+        }
+      ],
+      "name": "getOwnedCodes",
+      "outputs": [
+        {
+          "internalType": "bytes32[]",
+          "name": "",
+          "type": "bytes32[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_account",
+          "type": "address"
+        }
+      ],
+      "name": "getReferralInfo",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "referralCodes",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_code",
+          "type": "bytes32"
+        }
+      ],
+      "name": "registerCode",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_code",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "_newAccount",
+          "type": "address"
+        }
+      ],
+      "name": "setCodeOwner",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_code",
+          "type": "bytes32"
+        }
+      ],
+      "name": "setReferralCodeByUser",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x55ac58dca15bfa59c713ed77d44bf3e4b4bd758d8cc9cdd1ce277201045ca2a4",
+  "receipt": {
+    "to": null,
+    "from": "0x4dA60510480aC2c6768893bC18aBBBb7c141f58D",
+    "contractAddress": "0xb0Fa056fFFb74c0FB215F86D691c94Ed45b686Aa",
+    "transactionIndex": 1,
+    "gasUsed": "3360547",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0xb701f496fd64823de7977cb977847983cde98c1dd91f47ae2dcda6f62fd44705",
+    "transactionHash": "0x55ac58dca15bfa59c713ed77d44bf3e4b4bd758d8cc9cdd1ce277201045ca2a4",
+    "logs": [],
+    "blockNumber": 75512904,
+    "cumulativeGasUsed": "3360547",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "numDeployments": 1,
+  "solcInputHash": "e7d32ad761bf66c0a571fdd2cd61e3b3",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.7+commit.e28d00a7\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"CodeAlreadyExists\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"code\",\"type\":\"bytes32\"}],\"name\":\"InvalidCode\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotCodeOwner\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"code\",\"type\":\"bytes32\"}],\"name\":\"RegisterCode\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newAccount\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"code\",\"type\":\"bytes32\"}],\"name\":\"SetCodeOwner\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"code\",\"type\":\"bytes32\"}],\"name\":\"SetReferralCode\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"codeOwners\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_account\",\"type\":\"address\"}],\"name\":\"getOwnedCodes\",\"outputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"\",\"type\":\"bytes32[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_account\",\"type\":\"address\"}],\"name\":\"getReferralInfo\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"referralCodes\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_code\",\"type\":\"bytes32\"}],\"name\":\"registerCode\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_code\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_newAccount\",\"type\":\"address\"}],\"name\":\"setCodeOwner\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_code\",\"type\":\"bytes32\"}],\"name\":\"setReferralCodeByUser\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/referrals/ReferralStorage.sol\":\"ReferralStorage\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/utils/structs/EnumerableSet.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.7.0) (utils/structs/EnumerableSet.sol)\\n\\npragma solidity ^0.8.0;\\n\\n/**\\n * @dev Library for managing\\n * https://en.wikipedia.org/wiki/Set_(abstract_data_type)[sets] of primitive\\n * types.\\n *\\n * Sets have the following properties:\\n *\\n * - Elements are added, removed, and checked for existence in constant time\\n * (O(1)).\\n * - Elements are enumerated in O(n). No guarantees are made on the ordering.\\n *\\n * ```\\n * contract Example {\\n *     // Add the library methods\\n *     using EnumerableSet for EnumerableSet.AddressSet;\\n *\\n *     // Declare a set state variable\\n *     EnumerableSet.AddressSet private mySet;\\n * }\\n * ```\\n *\\n * As of v3.3.0, sets of type `bytes32` (`Bytes32Set`), `address` (`AddressSet`)\\n * and `uint256` (`UintSet`) are supported.\\n *\\n * [WARNING]\\n * ====\\n *  Trying to delete such a structure from storage will likely result in data corruption, rendering the structure unusable.\\n *  See https://github.com/ethereum/solidity/pull/11843[ethereum/solidity#11843] for more info.\\n *\\n *  In order to clean an EnumerableSet, you can either remove all elements one by one or create a fresh instance using an array of EnumerableSet.\\n * ====\\n */\\nlibrary EnumerableSet {\\n    // To implement this library for multiple types with as little code\\n    // repetition as possible, we write it in terms of a generic Set type with\\n    // bytes32 values.\\n    // The Set implementation uses private functions, and user-facing\\n    // implementations (such as AddressSet) are just wrappers around the\\n    // underlying Set.\\n    // This means that we can only create new EnumerableSets for types that fit\\n    // in bytes32.\\n\\n    struct Set {\\n        // Storage of set values\\n        bytes32[] _values;\\n        // Position of the value in the `values` array, plus 1 because index 0\\n        // means a value is not in the set.\\n        mapping(bytes32 => uint256) _indexes;\\n    }\\n\\n    /**\\n     * @dev Add a value to a set. O(1).\\n     *\\n     * Returns true if the value was added to the set, that is if it was not\\n     * already present.\\n     */\\n    function _add(Set storage set, bytes32 value) private returns (bool) {\\n        if (!_contains(set, value)) {\\n            set._values.push(value);\\n            // The value is stored at length-1, but we add 1 to all indexes\\n            // and use 0 as a sentinel value\\n            set._indexes[value] = set._values.length;\\n            return true;\\n        } else {\\n            return false;\\n        }\\n    }\\n\\n    /**\\n     * @dev Removes a value from a set. O(1).\\n     *\\n     * Returns true if the value was removed from the set, that is if it was\\n     * present.\\n     */\\n    function _remove(Set storage set, bytes32 value) private returns (bool) {\\n        // We read and store the value's index to prevent multiple reads from the same storage slot\\n        uint256 valueIndex = set._indexes[value];\\n\\n        if (valueIndex != 0) {\\n            // Equivalent to contains(set, value)\\n            // To delete an element from the _values array in O(1), we swap the element to delete with the last one in\\n            // the array, and then remove the last element (sometimes called as 'swap and pop').\\n            // This modifies the order of the array, as noted in {at}.\\n\\n            uint256 toDeleteIndex = valueIndex - 1;\\n            uint256 lastIndex = set._values.length - 1;\\n\\n            if (lastIndex != toDeleteIndex) {\\n                bytes32 lastValue = set._values[lastIndex];\\n\\n                // Move the last value to the index where the value to delete is\\n                set._values[toDeleteIndex] = lastValue;\\n                // Update the index for the moved value\\n                set._indexes[lastValue] = valueIndex; // Replace lastValue's index to valueIndex\\n            }\\n\\n            // Delete the slot where the moved value was stored\\n            set._values.pop();\\n\\n            // Delete the index for the deleted slot\\n            delete set._indexes[value];\\n\\n            return true;\\n        } else {\\n            return false;\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns true if the value is in the set. O(1).\\n     */\\n    function _contains(Set storage set, bytes32 value) private view returns (bool) {\\n        return set._indexes[value] != 0;\\n    }\\n\\n    /**\\n     * @dev Returns the number of values on the set. O(1).\\n     */\\n    function _length(Set storage set) private view returns (uint256) {\\n        return set._values.length;\\n    }\\n\\n    /**\\n     * @dev Returns the value stored at position `index` in the set. O(1).\\n     *\\n     * Note that there are no guarantees on the ordering of values inside the\\n     * array, and it may change when more values are added or removed.\\n     *\\n     * Requirements:\\n     *\\n     * - `index` must be strictly less than {length}.\\n     */\\n    function _at(Set storage set, uint256 index) private view returns (bytes32) {\\n        return set._values[index];\\n    }\\n\\n    /**\\n     * @dev Return the entire set in an array\\n     *\\n     * WARNING: This operation will copy the entire storage to memory, which can be quite expensive. This is designed\\n     * to mostly be used by view accessors that are queried without any gas fees. Developers should keep in mind that\\n     * this function has an unbounded cost, and using it as part of a state-changing function may render the function\\n     * uncallable if the set grows to a point where copying to memory consumes too much gas to fit in a block.\\n     */\\n    function _values(Set storage set) private view returns (bytes32[] memory) {\\n        return set._values;\\n    }\\n\\n    // Bytes32Set\\n\\n    struct Bytes32Set {\\n        Set _inner;\\n    }\\n\\n    /**\\n     * @dev Add a value to a set. O(1).\\n     *\\n     * Returns true if the value was added to the set, that is if it was not\\n     * already present.\\n     */\\n    function add(Bytes32Set storage set, bytes32 value) internal returns (bool) {\\n        return _add(set._inner, value);\\n    }\\n\\n    /**\\n     * @dev Removes a value from a set. O(1).\\n     *\\n     * Returns true if the value was removed from the set, that is if it was\\n     * present.\\n     */\\n    function remove(Bytes32Set storage set, bytes32 value) internal returns (bool) {\\n        return _remove(set._inner, value);\\n    }\\n\\n    /**\\n     * @dev Returns true if the value is in the set. O(1).\\n     */\\n    function contains(Bytes32Set storage set, bytes32 value) internal view returns (bool) {\\n        return _contains(set._inner, value);\\n    }\\n\\n    /**\\n     * @dev Returns the number of values in the set. O(1).\\n     */\\n    function length(Bytes32Set storage set) internal view returns (uint256) {\\n        return _length(set._inner);\\n    }\\n\\n    /**\\n     * @dev Returns the value stored at position `index` in the set. O(1).\\n     *\\n     * Note that there are no guarantees on the ordering of values inside the\\n     * array, and it may change when more values are added or removed.\\n     *\\n     * Requirements:\\n     *\\n     * - `index` must be strictly less than {length}.\\n     */\\n    function at(Bytes32Set storage set, uint256 index) internal view returns (bytes32) {\\n        return _at(set._inner, index);\\n    }\\n\\n    /**\\n     * @dev Return the entire set in an array\\n     *\\n     * WARNING: This operation will copy the entire storage to memory, which can be quite expensive. This is designed\\n     * to mostly be used by view accessors that are queried without any gas fees. Developers should keep in mind that\\n     * this function has an unbounded cost, and using it as part of a state-changing function may render the function\\n     * uncallable if the set grows to a point where copying to memory consumes too much gas to fit in a block.\\n     */\\n    function values(Bytes32Set storage set) internal view returns (bytes32[] memory) {\\n        return _values(set._inner);\\n    }\\n\\n    // AddressSet\\n\\n    struct AddressSet {\\n        Set _inner;\\n    }\\n\\n    /**\\n     * @dev Add a value to a set. O(1).\\n     *\\n     * Returns true if the value was added to the set, that is if it was not\\n     * already present.\\n     */\\n    function add(AddressSet storage set, address value) internal returns (bool) {\\n        return _add(set._inner, bytes32(uint256(uint160(value))));\\n    }\\n\\n    /**\\n     * @dev Removes a value from a set. O(1).\\n     *\\n     * Returns true if the value was removed from the set, that is if it was\\n     * present.\\n     */\\n    function remove(AddressSet storage set, address value) internal returns (bool) {\\n        return _remove(set._inner, bytes32(uint256(uint160(value))));\\n    }\\n\\n    /**\\n     * @dev Returns true if the value is in the set. O(1).\\n     */\\n    function contains(AddressSet storage set, address value) internal view returns (bool) {\\n        return _contains(set._inner, bytes32(uint256(uint160(value))));\\n    }\\n\\n    /**\\n     * @dev Returns the number of values in the set. O(1).\\n     */\\n    function length(AddressSet storage set) internal view returns (uint256) {\\n        return _length(set._inner);\\n    }\\n\\n    /**\\n     * @dev Returns the value stored at position `index` in the set. O(1).\\n     *\\n     * Note that there are no guarantees on the ordering of values inside the\\n     * array, and it may change when more values are added or removed.\\n     *\\n     * Requirements:\\n     *\\n     * - `index` must be strictly less than {length}.\\n     */\\n    function at(AddressSet storage set, uint256 index) internal view returns (address) {\\n        return address(uint160(uint256(_at(set._inner, index))));\\n    }\\n\\n    /**\\n     * @dev Return the entire set in an array\\n     *\\n     * WARNING: This operation will copy the entire storage to memory, which can be quite expensive. This is designed\\n     * to mostly be used by view accessors that are queried without any gas fees. Developers should keep in mind that\\n     * this function has an unbounded cost, and using it as part of a state-changing function may render the function\\n     * uncallable if the set grows to a point where copying to memory consumes too much gas to fit in a block.\\n     */\\n    function values(AddressSet storage set) internal view returns (address[] memory) {\\n        bytes32[] memory store = _values(set._inner);\\n        address[] memory result;\\n\\n        /// @solidity memory-safe-assembly\\n        assembly {\\n            result := store\\n        }\\n\\n        return result;\\n    }\\n\\n    // UintSet\\n\\n    struct UintSet {\\n        Set _inner;\\n    }\\n\\n    /**\\n     * @dev Add a value to a set. O(1).\\n     *\\n     * Returns true if the value was added to the set, that is if it was not\\n     * already present.\\n     */\\n    function add(UintSet storage set, uint256 value) internal returns (bool) {\\n        return _add(set._inner, bytes32(value));\\n    }\\n\\n    /**\\n     * @dev Removes a value from a set. O(1).\\n     *\\n     * Returns true if the value was removed from the set, that is if it was\\n     * present.\\n     */\\n    function remove(UintSet storage set, uint256 value) internal returns (bool) {\\n        return _remove(set._inner, bytes32(value));\\n    }\\n\\n    /**\\n     * @dev Returns true if the value is in the set. O(1).\\n     */\\n    function contains(UintSet storage set, uint256 value) internal view returns (bool) {\\n        return _contains(set._inner, bytes32(value));\\n    }\\n\\n    /**\\n     * @dev Returns the number of values on the set. O(1).\\n     */\\n    function length(UintSet storage set) internal view returns (uint256) {\\n        return _length(set._inner);\\n    }\\n\\n    /**\\n     * @dev Returns the value stored at position `index` in the set. O(1).\\n     *\\n     * Note that there are no guarantees on the ordering of values inside the\\n     * array, and it may change when more values are added or removed.\\n     *\\n     * Requirements:\\n     *\\n     * - `index` must be strictly less than {length}.\\n     */\\n    function at(UintSet storage set, uint256 index) internal view returns (uint256) {\\n        return uint256(_at(set._inner, index));\\n    }\\n\\n    /**\\n     * @dev Return the entire set in an array\\n     *\\n     * WARNING: This operation will copy the entire storage to memory, which can be quite expensive. This is designed\\n     * to mostly be used by view accessors that are queried without any gas fees. Developers should keep in mind that\\n     * this function has an unbounded cost, and using it as part of a state-changing function may render the function\\n     * uncallable if the set grows to a point where copying to memory consumes too much gas to fit in a block.\\n     */\\n    function values(UintSet storage set) internal view returns (uint256[] memory) {\\n        bytes32[] memory store = _values(set._inner);\\n        uint256[] memory result;\\n\\n        /// @solidity memory-safe-assembly\\n        assembly {\\n            result := store\\n        }\\n\\n        return result;\\n    }\\n}\\n\",\"keccak256\":\"0x5050943b32b6a8f282573d166b2e9d87ab7eb4dbba4ab6acf36ecb54fe6995e4\",\"license\":\"MIT\"},\"contracts/referrals/ReferralStorage.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity >=0.8.0;\\n\\nimport {IReferralStorage} from \\\"./interfaces/IReferralStorage.sol\\\";\\nimport {EnumerableSet} from \\\"@openzeppelin/contracts/utils/structs/EnumerableSet.sol\\\";\\n\\ncontract ReferralStorage is IReferralStorage {\\n    using EnumerableSet for EnumerableSet.Bytes32Set;\\n\\n    mapping(bytes32 => address) public override codeOwners;\\n    mapping(address => bytes32) public referralCodes;\\n    mapping(address => EnumerableSet.Bytes32Set) private _ownedCodes;\\n\\n    event SetReferralCode(address account, bytes32 code);\\n    event RegisterCode(address account, bytes32 code);\\n    event SetCodeOwner(address account, address newAccount, bytes32 code);\\n\\n    error InvalidCode(bytes32 code);\\n    error CodeAlreadyExists();\\n    error NotCodeOwner();\\n\\n    function setReferralCodeByUser(bytes32 _code) override external {\\n        _setReferralCode(msg.sender, _code);\\n    }\\n\\n    function registerCode(bytes32 _code) external {\\n        if (_code == bytes32(0)) revert InvalidCode(_code);\\n        if (codeOwners[_code] != address(0)) revert CodeAlreadyExists();\\n\\n        codeOwners[_code] = msg.sender;\\n        _ownedCodes[msg.sender].add(_code);\\n        emit RegisterCode(msg.sender, _code);\\n    }\\n\\n    function setCodeOwner(bytes32 _code, address _newAccount) external {\\n        if (_code == bytes32(0)) revert InvalidCode(_code);\\n\\n        address account = codeOwners[_code];\\n        if (msg.sender != account) revert NotCodeOwner();\\n\\n        codeOwners[_code] = _newAccount;\\n        _ownedCodes[msg.sender].remove(_code);\\n        _ownedCodes[_newAccount].add(_code);\\n        emit SetCodeOwner(msg.sender, _newAccount, _code);\\n    }\\n\\n    function getOwnedCodes(address _account) override external view returns (bytes32[] memory) {\\n        return _ownedCodes[_account].values();\\n    }\\n\\n    function getReferralInfo(address _account) override external view returns (bytes32, address) {\\n        bytes32 code = referralCodes[_account];\\n        address referrer;\\n        if (code != bytes32(0)) {\\n            referrer = codeOwners[code];\\n        }\\n        return (code, referrer);\\n    }\\n\\n    function _setReferralCode(address _account, bytes32 _code) private {\\n        referralCodes[_account] = _code;\\n        emit SetReferralCode(_account, _code);\\n    }\\n}\\n\",\"keccak256\":\"0x2f5d57c302288362863f510794700385fe8388833ae6bd5a30361faef63e2e57\",\"license\":\"MIT\"},\"contracts/referrals/interfaces/IReferralStorage.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity >=0.8.0;\\n\\ninterface IReferralStorage {\\n    function codeOwners(bytes32 _code) external view returns (address);\\n    function getReferralInfo(address _account) external view returns (bytes32, address);\\n    function getOwnedCodes(address _account) external view returns (bytes32[] memory);\\n    function setReferralCodeByUser(bytes32 _code) external;\\n}\\n\",\"keccak256\":\"0x992b57818692467efeb439ee9b0a64641e88977f9e4238ea02be3089eeb533e3\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b5061073a806100206000396000f3fe608060405234801561001057600080fd5b506004361061007d5760003560e01c806336def2c81161005b57806336def2c8146100ec5780639534dd3e146100ff578063c8b3c4601461012d578063ed8431341461016e57600080fd5b8063170018fe1461008257806321874ae2146100975780632da116b2146100cc575b600080fd5b61009561009036600461062a565b610181565b005b6100aa6100a536600461060f565b61018e565b604080519283526001600160a01b039091166020830152015b60405180910390f35b6100df6100da36600461060f565b6101d4565b6040516100c3919061066f565b6100956100fa36600461062a565b6101fe565b61011f61010d36600461060f565b60016020526000908152604090205481565b6040519081526020016100c3565b61015661013b36600461062a565b6000602081905290815260409020546001600160a01b031681565b6040516001600160a01b0390911681526020016100c3565b61009561017c366004610643565b6102cc565b61018b33826103d3565b50565b6001600160a01b03811660009081526001602052604081205481908181156101ca57506000818152602081905260409020546001600160a01b03165b9094909350915050565b6001600160a01b03811660009081526002602052604090206060906101f89061042b565b92915050565b806102245760405163e33ab65360e01b8152600481018290526024015b60405180910390fd5b6000818152602081905260409020546001600160a01b03161561025a57604051636b3d055d60e11b815260040160405180910390fd5b60008181526020818152604080832080546001600160a01b0319163390811790915583526002909152902061028f9082610436565b5060408051338152602081018390527f04f82286a2a3b2ee5c8555de8304dfe2ea70991613213184b73a9e408d2d8029910160405180910390a150565b816102ed5760405163e33ab65360e01b81526004810183905260240161021b565b6000828152602081905260409020546001600160a01b031633811461032557604051635b774fb360e01b815260040160405180910390fd5b60008381526020818152604080832080546001600160a01b0319166001600160a01b038716179055338352600290915290206103619084610449565b506001600160a01b03821660009081526002602052604090206103849084610436565b50604080513381526001600160a01b03841660208201529081018490527f5640856798d41ce9ca0a109b54c20a06eb99ba9c36ab4547115dafb8473cf3979060600160405180910390a1505050565b6001600160a01b038216600081815260016020908152604091829020849055815192835282018390527f60750994fdf9995c19bee1ac3f38a6fbf271ecd405e8bd0d55c99f7f14f86e0f910160405180910390a15050565b60606101f882610455565b600061044283836104b1565b9392505050565b60006104428383610500565b6060816000018054806020026020016040519081016040528092919081815260200182805480156104a557602002820191906000526020600020905b815481526020019060010190808311610491575b50505050509050919050565b60008181526001830160205260408120546104f8575081546001818101845560008481526020808220909301849055845484825282860190935260409020919091556101f8565b5060006101f8565b600081815260018301602052604081205480156105e95760006105246001836106b3565b8554909150600090610538906001906106b3565b905081811461059d576000866000018281548110610558576105586106ee565b906000526020600020015490508087600001848154811061057b5761057b6106ee565b6000918252602080832090910192909255918252600188019052604090208390555b85548690806105ae576105ae6106d8565b6001900381819060005260206000200160009055905585600101600086815260200190815260200160002060009055600193505050506101f8565b60009150506101f8565b80356001600160a01b038116811461060a57600080fd5b919050565b60006020828403121561062157600080fd5b610442826105f3565b60006020828403121561063c57600080fd5b5035919050565b6000806040838503121561065657600080fd5b82359150610666602084016105f3565b90509250929050565b6020808252825182820181905260009190848201906040850190845b818110156106a75783518352928401929184019160010161068b565b50909695505050505050565b6000828210156106d357634e487b7160e01b600052601160045260246000fd5b500390565b634e487b7160e01b600052603160045260246000fd5b634e487b7160e01b600052603260045260246000fdfea2646970667358221220ae81b98e48a2d389e496d297b2f0f10f82f7404699c60823b47abcb50bec54e264736f6c63430008070033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061007d5760003560e01c806336def2c81161005b57806336def2c8146100ec5780639534dd3e146100ff578063c8b3c4601461012d578063ed8431341461016e57600080fd5b8063170018fe1461008257806321874ae2146100975780632da116b2146100cc575b600080fd5b61009561009036600461062a565b610181565b005b6100aa6100a536600461060f565b61018e565b604080519283526001600160a01b039091166020830152015b60405180910390f35b6100df6100da36600461060f565b6101d4565b6040516100c3919061066f565b6100956100fa36600461062a565b6101fe565b61011f61010d36600461060f565b60016020526000908152604090205481565b6040519081526020016100c3565b61015661013b36600461062a565b6000602081905290815260409020546001600160a01b031681565b6040516001600160a01b0390911681526020016100c3565b61009561017c366004610643565b6102cc565b61018b33826103d3565b50565b6001600160a01b03811660009081526001602052604081205481908181156101ca57506000818152602081905260409020546001600160a01b03165b9094909350915050565b6001600160a01b03811660009081526002602052604090206060906101f89061042b565b92915050565b806102245760405163e33ab65360e01b8152600481018290526024015b60405180910390fd5b6000818152602081905260409020546001600160a01b03161561025a57604051636b3d055d60e11b815260040160405180910390fd5b60008181526020818152604080832080546001600160a01b0319163390811790915583526002909152902061028f9082610436565b5060408051338152602081018390527f04f82286a2a3b2ee5c8555de8304dfe2ea70991613213184b73a9e408d2d8029910160405180910390a150565b816102ed5760405163e33ab65360e01b81526004810183905260240161021b565b6000828152602081905260409020546001600160a01b031633811461032557604051635b774fb360e01b815260040160405180910390fd5b60008381526020818152604080832080546001600160a01b0319166001600160a01b038716179055338352600290915290206103619084610449565b506001600160a01b03821660009081526002602052604090206103849084610436565b50604080513381526001600160a01b03841660208201529081018490527f5640856798d41ce9ca0a109b54c20a06eb99ba9c36ab4547115dafb8473cf3979060600160405180910390a1505050565b6001600160a01b038216600081815260016020908152604091829020849055815192835282018390527f60750994fdf9995c19bee1ac3f38a6fbf271ecd405e8bd0d55c99f7f14f86e0f910160405180910390a15050565b60606101f882610455565b600061044283836104b1565b9392505050565b60006104428383610500565b6060816000018054806020026020016040519081016040528092919081815260200182805480156104a557602002820191906000526020600020905b815481526020019060010190808311610491575b50505050509050919050565b60008181526001830160205260408120546104f8575081546001818101845560008481526020808220909301849055845484825282860190935260409020919091556101f8565b5060006101f8565b600081815260018301602052604081205480156105e95760006105246001836106b3565b8554909150600090610538906001906106b3565b905081811461059d576000866000018281548110610558576105586106ee565b906000526020600020015490508087600001848154811061057b5761057b6106ee565b6000918252602080832090910192909255918252600188019052604090208390555b85548690806105ae576105ae6106d8565b6001900381819060005260206000200160009055905585600101600086815260200190815260200160002060009055600193505050506101f8565b60009150506101f8565b80356001600160a01b038116811461060a57600080fd5b919050565b60006020828403121561062157600080fd5b610442826105f3565b60006020828403121561063c57600080fd5b5035919050565b6000806040838503121561065657600080fd5b82359150610666602084016105f3565b90509250929050565b6020808252825182820181905260009190848201906040850190845b818110156106a75783518352928401929184019160010161068b565b50909695505050505050565b6000828210156106d357634e487b7160e01b600052601160045260246000fd5b500390565b634e487b7160e01b600052603160045260246000fd5b634e487b7160e01b600052603260045260246000fdfea2646970667358221220ae81b98e48a2d389e496d297b2f0f10f82f7404699c60823b47abcb50bec54e264736f6c63430008070033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 1438,
+        "contract": "contracts/referrals/ReferralStorage.sol:ReferralStorage",
+        "label": "codeOwners",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_mapping(t_bytes32,t_address)"
+      },
+      {
+        "astId": 1442,
+        "contract": "contracts/referrals/ReferralStorage.sol:ReferralStorage",
+        "label": "referralCodes",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_mapping(t_address,t_bytes32)"
+      },
+      {
+        "astId": 1447,
+        "contract": "contracts/referrals/ReferralStorage.sol:ReferralStorage",
+        "label": "_ownedCodes",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_mapping(t_address,t_struct(Bytes32Set)934_storage)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_array(t_bytes32)dyn_storage": {
+        "base": "t_bytes32",
+        "encoding": "dynamic_array",
+        "label": "bytes32[]",
+        "numberOfBytes": "32"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_mapping(t_address,t_bytes32)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => bytes32)",
+        "numberOfBytes": "32",
+        "value": "t_bytes32"
+      },
+      "t_mapping(t_address,t_struct(Bytes32Set)934_storage)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => struct EnumerableSet.Bytes32Set)",
+        "numberOfBytes": "32",
+        "value": "t_struct(Bytes32Set)934_storage"
+      },
+      "t_mapping(t_bytes32,t_address)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => address)",
+        "numberOfBytes": "32",
+        "value": "t_address"
+      },
+      "t_mapping(t_bytes32,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_struct(Bytes32Set)934_storage": {
+        "encoding": "inplace",
+        "label": "struct EnumerableSet.Bytes32Set",
+        "members": [
+          {
+            "astId": 933,
+            "contract": "contracts/referrals/ReferralStorage.sol:ReferralStorage",
+            "label": "_inner",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_struct(Set)740_storage"
+          }
+        ],
+        "numberOfBytes": "64"
+      },
+      "t_struct(Set)740_storage": {
+        "encoding": "inplace",
+        "label": "struct EnumerableSet.Set",
+        "members": [
+          {
+            "astId": 735,
+            "contract": "contracts/referrals/ReferralStorage.sol:ReferralStorage",
+            "label": "_values",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_array(t_bytes32)dyn_storage"
+          },
+          {
+            "astId": 739,
+            "contract": "contracts/referrals/ReferralStorage.sol:ReferralStorage",
+            "label": "_indexes",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_bytes32,t_uint256)"
+          }
+        ],
+        "numberOfBytes": "64"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}
