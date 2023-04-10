@@ -29,6 +29,7 @@ contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable {
     error MinimalInputBalanceViolation();
     error MinimalOutputBalanceViolation();
     error InvalidPool(address pool);
+    error UnexpectedAddress(address addr);
     error UnexpectedUniV3Swap();
 
     event SetStableSwapDispatcher(IStableSwapDispatcher stableSwapDispatcher);
@@ -268,13 +269,18 @@ contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable {
         bool zeroForOne = stream.readUint8() > 0;
         address recipient = stream.readAddress();
 
+        if (from != address(this)) {
+            if (from !=  msg.sender) revert UnexpectedAddress(from);
+            IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
+        }
+
         lastCalledPool = pool;
         IUniswapV3Pool(pool).swap(
             recipient,
             zeroForOne,
             int256(amountIn),
             zeroForOne ? Constants.MIN_SQRT_RATIO + 1 : Constants.MAX_SQRT_RATIO - 1,
-            abi.encode(tokenIn, from)
+            abi.encode(tokenIn)
         );
         if (lastCalledPool != Constants.IMPOSSIBLE_POOL_ADDRESS) revert UnexpectedUniV3Swap();
     }
@@ -295,14 +301,10 @@ contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable {
     ) external {
         if (msg.sender != lastCalledPool) revert UnexpectedUniV3Swap();
         lastCalledPool = Constants.IMPOSSIBLE_POOL_ADDRESS;
-        (address tokenIn, address from) = abi.decode(data, (address, address));
+        (address tokenIn) = abi.decode(data, (address));
         int256 amount = amount0Delta > 0 ? amount0Delta : amount1Delta;
         if (amount <= 0) revert UnexpectedUniV3Swap();
-        if (from == address(this)) {
-            IERC20(tokenIn).safeTransfer(msg.sender, uint256(amount));
-        } else {
-            IERC20(tokenIn).safeTransferFrom(from, msg.sender, uint256(amount));
-        }
+        IERC20(tokenIn).safeTransfer(msg.sender, uint256(amount));
     }
 
     /// @notice Wraps/unwraps native token
