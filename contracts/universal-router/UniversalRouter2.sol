@@ -14,8 +14,10 @@ import {AdminUpgradeable} from "../libraries/AdminUpgradeable.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {IUniswapV3Pool} from "./interfaces/uniswap/v3/IUniswapV3Pool.sol";
 import {IVault} from "./interfaces/gmx/IVault.sol";
+import {ILBPair} from "./interfaces/joe/v2/ILBPair.sol";
+import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 
-contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable {
+contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable, Pausable {
     using SafeERC20 for IERC20;
     using SafeTransferLib for address;
     using InputStream for uint256;
@@ -77,7 +79,7 @@ contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable {
         uint256 amountOutMin,
         address to,
         bytes memory route
-    ) external payable nonReentrant returns (uint256 amountOut) {
+    ) external payable nonReentrant whenNotPaused returns (uint256 amountOut) {
         return processRouteInternal(tokenIn, amountIn, tokenOut, amountOutMin, to, route);
     }
 
@@ -90,7 +92,7 @@ contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable {
         uint256 amountOutMin,
         address to,
         bytes memory route
-    ) external payable nonReentrant returns (uint256 amountOut) {
+    ) external payable nonReentrant whenNotPaused returns (uint256 amountOut) {
         transferValueTo.safeTransferETH(amountValueTransfer);
         return processRouteInternal(tokenIn, amountIn, tokenOut, amountOutMin, to, route);
     }
@@ -212,6 +214,7 @@ contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable {
         else if (poolType == 2) _wrapNative(stream, from, tokenIn, amountIn);
         else if (poolType == 3) _swapStableSwap(stream, from, tokenIn, amountIn);
         else if (poolType == 4) _swapGmx(stream, from, tokenIn, amountIn);
+        else if (poolType == 5) _swapJoeV2(stream, from, tokenIn, amountIn);
         else revert UnknownPoolType(poolType);
     }
 
@@ -396,5 +399,39 @@ contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable {
             amountIn = IERC20(tokenIn).balanceOf(vault) - IVault(vault).tokenBalances(tokenIn);  // tokens already were transferred
         }
         IVault(vault).swap(tokenIn, tokenOut, receiver);
+    }
+
+    /// @notice Trader Joe V2 swap
+    /// @param stream [pool, swapForY, receiver]
+    /// @param from Where to take liquidity for swap
+    /// @param tokenIn Input token
+    /// @param amountIn Amount of tokenIn to take for swap
+    function _swapJoeV2(
+        uint256 stream, 
+        address from, 
+        address tokenIn, 
+        uint256 amountIn
+    ) private {
+        address pool = stream.readAddress();
+        bool swapForY = stream.readUint8() > 0;
+        address recipient = stream.readAddress();
+
+        (uint128 reserveX, uint128 reserveY) = ILBPair(pool).getReserves();
+        if (reserveX == 0 || reserveY == 0) revert InvalidPool(pool);
+        (uint256 reserveIn, ) = swapForY
+            ? (reserveX, reserveY) 
+            : (reserveY, reserveX);
+
+        if (amountIn != 0) {
+            if (from == address(this)) {
+                IERC20(tokenIn).safeTransfer(pool, amountIn);
+            } else {
+                IERC20(tokenIn).safeTransferFrom(from, pool, amountIn);
+            }
+        } else {
+            amountIn = IERC20(tokenIn).balanceOf(pool) - reserveIn;  // tokens already were transferred
+        }
+
+        ILBPair(pool).swap(swapForY, recipient);
     }
 }
