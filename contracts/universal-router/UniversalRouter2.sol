@@ -13,6 +13,7 @@ import {IFeeSettlement} from "./interfaces/IFeeSettlement.sol";
 import {AdminUpgradeable} from "../libraries/AdminUpgradeable.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {IUniswapV3Pool} from "./interfaces/uniswap/v3/IUniswapV3Pool.sol";
+import {IAlgebraPool} from "./interfaces/algebra/IAlgebraPool.sol";
 import {IVault} from "./interfaces/gmx/IVault.sol";
 import {ILBPair} from "./interfaces/joe/v2/ILBPair.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
@@ -33,6 +34,7 @@ contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable, Pausable {
     error InvalidPool(address pool);
     error UnexpectedAddress(address addr);
     error UnexpectedUniV3Swap();
+    error UnexpectedAlgebraSwap();
 
     event SetStableSwapDispatcher(IStableSwapDispatcher stableSwapDispatcher);
     event SetFeeSettlement(IFeeSettlement feeSettlement);
@@ -215,6 +217,7 @@ contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable, Pausable {
         else if (poolType == 3) _swapStableSwap(stream, from, tokenIn, amountIn);
         else if (poolType == 4) _swapGmx(stream, from, tokenIn, amountIn);
         else if (poolType == 5) _swapJoeV2(stream, from, tokenIn, amountIn);
+        else if (poolType == 6) _swapAlgebra(stream, from, tokenIn, amountIn);
         else revert UnknownPoolType(poolType);
     }
 
@@ -307,6 +310,59 @@ contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable, Pausable {
         (address tokenIn) = abi.decode(data, (address));
         int256 amount = amount0Delta > 0 ? amount0Delta : amount1Delta;
         if (amount <= 0) revert UnexpectedUniV3Swap();
+        IERC20(tokenIn).safeTransfer(msg.sender, uint256(amount));
+    }
+
+    /// @notice Algebra pool swap
+    /// @param stream [pool, direction, recipient]
+    /// @param from Where to take liquidity for swap
+    /// @param tokenIn Input token
+    /// @param amountIn Amount of tokenIn to take for swap
+    function _swapAlgebra(
+        uint256 stream,
+        address from,
+        address tokenIn,
+        uint256 amountIn
+    ) private {
+        address pool = stream.readAddress();
+        bool zeroForOne = stream.readUint8() > 0;
+        address recipient = stream.readAddress();
+
+        if (from != address(this)) {
+            if (from !=  msg.sender) revert UnexpectedAddress(from);
+            IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
+        }
+
+        lastCalledPool = pool;
+        IAlgebraPool(pool).swap(
+            recipient,
+            zeroForOne,
+            int256(amountIn),
+            zeroForOne ? Constants.MIN_SQRT_RATIO + 1 : Constants.MAX_SQRT_RATIO - 1,
+            abi.encode(tokenIn)
+        );
+        if (lastCalledPool != Constants.IMPOSSIBLE_POOL_ADDRESS) revert UnexpectedUniV3Swap();
+    }
+
+    /// @notice Called to `msg.sender` after executing a swap via IAlgebraPool#swap.
+    /// @dev In the implementation you must pay the pool tokens owed for the swap.
+    /// The caller of this method must be checked to be an AlgebraPool deployed by the canonical AlgebraFactory.
+    /// amount0Delta and amount1Delta can both be 0 if no tokens were swapped.
+    /// @param amount0Delta The amount of token0 that was sent (negative) or must be received (positive) by the pool by
+    /// the end of the swap. If positive, the callback must send that amount of token0 to the pool.
+    /// @param amount1Delta The amount of token1 that was sent (negative) or must be received (positive) by the pool by
+    /// the end of the swap. If positive, the callback must send that amount of token1 to the pool.
+    /// @param data Any data passed through by the caller via the IAlgebraPoolActions#swap call
+    function algebraSwapCallback(
+      int256 amount0Delta,
+      int256 amount1Delta,
+      bytes calldata data
+    ) external {
+        if (msg.sender != lastCalledPool) revert UnexpectedAlgebraSwap();
+        lastCalledPool = Constants.IMPOSSIBLE_POOL_ADDRESS;
+        (address tokenIn) = abi.decode(data, (address));
+        int256 amount = amount0Delta > 0 ? amount0Delta : amount1Delta;
+        if (amount <= 0) revert UnexpectedAlgebraSwap();
         IERC20(tokenIn).safeTransfer(msg.sender, uint256(amount));
     }
 
