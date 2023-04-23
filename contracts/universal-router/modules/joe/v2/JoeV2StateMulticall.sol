@@ -14,6 +14,8 @@ contract JoeV2StateMulticall {
 
     struct StateResult {
         ILBPair pair;
+        address tokenX;
+        address tokenY;
         uint24 activeId;
         uint16 binStep;
         uint256 reserve0;
@@ -51,6 +53,8 @@ contract JoeV2StateMulticall {
                 uint24 activeId = pair.getActiveId();
                 StateResult memory state;
                 state.pair = pair;
+                state.tokenX = address(pair.getTokenX());
+                state.tokenY = address(pair.getTokenY());
                 state.activeId = activeId;
                 state.binStep = binStep;
                 (state.reserve0, state.reserve1) = pair.getReserves();
