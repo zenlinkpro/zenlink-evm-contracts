@@ -180,8 +180,8 @@ describe('Bootstrap', () => {
     await bootstrap.addProvision(address0, address1, '5000', '5000')
     const balance0AfterSecondAdded = await token0.balanceOf(wallet.address)
     const balance1AfterSecondAdded = await token1.balanceOf(wallet.address)
-    expect(balance0AfterFirstAdded.sub(balance0AfterSecondAdded)).to.equal(BigNumber.from('1000'))
-    expect(balance1AfterFirstAdded.sub(balance1AfterSecondAdded)).to.equal(BigNumber.from('2000'))
+    expect(balance0AfterFirstAdded.sub(balance0AfterSecondAdded)).to.equal(BigNumber.from('2000'))
+    expect(balance1AfterFirstAdded.sub(balance1AfterSecondAdded)).to.equal(BigNumber.from('1000'))
 
     await expect(
       bootstrap.addProvision(
