@@ -1,0 +1,106 @@
+{
+  "address": "0x4095d49863190Ab7f80EF5c86b0fC988dEF75C84",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "_zlk",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "BASIS",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "getZLKDiscount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "discount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "basis",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x88ddf3a4918b24026dc30e209d980675b5c9b323e621497fa44d77dc029f5ade",
+  "receipt": {
+    "to": null,
+    "from": "0x4dA60510480aC2c6768893bC18aBBBb7c141f58D",
+    "contractAddress": "0x4095d49863190Ab7f80EF5c86b0fC988dEF75C84",
+    "transactionIndex": 32,
+    "gasUsed": "210876",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x5eb73d262e2d211c8f2933d1adc644e4b84864dc1800fc247817630b6d5316e3",
+    "transactionHash": "0x88ddf3a4918b24026dc30e209d980675b5c9b323e621497fa44d77dc029f5ade",
+    "logs": [],
+    "blockNumber": 3430386,
+    "cumulativeGasUsed": "12778153",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0x998082c488e548820f970df5173bd2061ce90635"
+  ],
+  "numDeployments": 1,
+  "solcInputHash": "0134c9885fcb1324753bc98b14542873",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.7+commit.e28d00a7\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"contract IERC20\",\"name\":\"_zlk\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"BASIS\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"getZLKDiscount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"discount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"basis\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/universal-router/modules/ZLKDiscountReader.sol\":\"ZLKDiscountReader\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/token/ERC20/IERC20.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/IERC20.sol)\\n\\npragma solidity ^0.8.0;\\n\\n/**\\n * @dev Interface of the ERC20 standard as defined in the EIP.\\n */\\ninterface IERC20 {\\n    /**\\n     * @dev Emitted when `value` tokens are moved from one account (`from`) to\\n     * another (`to`).\\n     *\\n     * Note that `value` may be zero.\\n     */\\n    event Transfer(address indexed from, address indexed to, uint256 value);\\n\\n    /**\\n     * @dev Emitted when the allowance of a `spender` for an `owner` is set by\\n     * a call to {approve}. `value` is the new allowance.\\n     */\\n    event Approval(address indexed owner, address indexed spender, uint256 value);\\n\\n    /**\\n     * @dev Returns the amount of tokens in existence.\\n     */\\n    function totalSupply() external view returns (uint256);\\n\\n    /**\\n     * @dev Returns the amount of tokens owned by `account`.\\n     */\\n    function balanceOf(address account) external view returns (uint256);\\n\\n    /**\\n     * @dev Moves `amount` tokens from the caller's account to `to`.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a {Transfer} event.\\n     */\\n    function transfer(address to, uint256 amount) external returns (bool);\\n\\n    /**\\n     * @dev Returns the remaining number of tokens that `spender` will be\\n     * allowed to spend on behalf of `owner` through {transferFrom}. This is\\n     * zero by default.\\n     *\\n     * This value changes when {approve} or {transferFrom} are called.\\n     */\\n    function allowance(address owner, address spender) external view returns (uint256);\\n\\n    /**\\n     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * IMPORTANT: Beware that changing an allowance with this method brings the risk\\n     * that someone may use both the old and the new allowance by unfortunate\\n     * transaction ordering. One possible solution to mitigate this race\\n     * condition is to first reduce the spender's allowance to 0 and set the\\n     * desired value afterwards:\\n     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729\\n     *\\n     * Emits an {Approval} event.\\n     */\\n    function approve(address spender, uint256 amount) external returns (bool);\\n\\n    /**\\n     * @dev Moves `amount` tokens from `from` to `to` using the\\n     * allowance mechanism. `amount` is then deducted from the caller's\\n     * allowance.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a {Transfer} event.\\n     */\\n    function transferFrom(\\n        address from,\\n        address to,\\n        uint256 amount\\n    ) external returns (bool);\\n}\\n\",\"keccak256\":\"0x9750c6b834f7b43000631af5cc30001c5f547b3ceb3635488f140f60e897ea6b\",\"license\":\"MIT\"},\"contracts/libraries/AdminUpgradeable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity >=0.8.0;\\n\\nabstract contract AdminUpgradeable {\\n    address public admin;\\n    address public adminCandidate;\\n\\n    function _initializeAdmin(address _admin) internal {\\n        require(admin == address(0), \\\"admin already set\\\");\\n\\n        admin = _admin;\\n    }\\n\\n    function candidateConfirm() external {\\n        require(msg.sender == adminCandidate, \\\"not Candidate\\\");\\n        emit AdminChanged(admin, adminCandidate);\\n\\n        admin = adminCandidate;\\n        adminCandidate = address(0);\\n    }\\n\\n    function setAdminCandidate(address _candidate) external onlyAdmin {\\n        adminCandidate = _candidate;\\n        emit Candidate(_candidate);\\n    }\\n\\n    modifier onlyAdmin {\\n        require(msg.sender == admin, \\\"not admin\\\");\\n        _;\\n    }\\n\\n    event Candidate(address indexed newAdmin);\\n    event AdminChanged(address indexed oldAdmin, address indexed newAdmin);\\n}\",\"keccak256\":\"0x1f6a33fd54009078e00c3b586e2b9bb359ff99d9c5cb87e3e32ec109480f99ae\",\"license\":\"MIT\"},\"contracts/universal-router/modules/ZLKDiscountReader.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity >=0.8.0;\\n\\nimport {IERC20} from \\\"@openzeppelin/contracts/token/ERC20/IERC20.sol\\\";\\nimport {AdminUpgradeable} from \\\"../../libraries/AdminUpgradeable.sol\\\";\\n\\ncontract ZLKDiscountReader {\\n    uint256 public constant BASIS = 10000;\\n    IERC20 zlk;\\n\\n    constructor(IERC20 _zlk) {\\n        zlk = _zlk;\\n    }\\n\\n    function getZLKDiscount(address user) external view returns (uint256 discount, uint256 basis) {\\n        uint256 balance = zlk.balanceOf(user);\\n\\n        if (balance == 0) {\\n            return (0, BASIS);\\n        } else if (balance < 5e21) {\\n            return (300, BASIS);\\n        } else if (balance < 3e22) {\\n            return (500, BASIS);\\n        } else if (balance < 6e22) {\\n            return (1000, BASIS);\\n        } else if (balance < 1e23) {\\n            return (1200, BASIS);\\n        } else if (balance < 15e22) {\\n            return (1500, BASIS);\\n        } else if (balance < 3e23) {\\n            return (1800, BASIS);\\n        } else {\\n            return (2000, BASIS);\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x8014818c2aeec76356b813f2c03434a5a5a0e0a99dd11f3cf045fad4cc5f4dda\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b506040516102fc3803806102fc83398101604081905261002f91610054565b600080546001600160a01b0319166001600160a01b0392909216919091179055610084565b60006020828403121561006657600080fd5b81516001600160a01b038116811461007d57600080fd5b9392505050565b610269806100936000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c8063528cfa981461003b57806370cc4dfc14610057575b600080fd5b61004461271081565b6040519081526020015b60405180910390f35b61006a6100653660046101ea565b61007f565b6040805192835260208301919091520161004e565b600080546040516370a0823160e01b81526001600160a01b038481166004830152839283929116906370a082319060240160206040518083038186803b1580156100c857600080fd5b505afa1580156100dc573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610100919061021a565b90508061011557506000936127109350915050565b69010f0cf064dd59200000811015610136575061012c936127109350915050565b69065a4da25d3016c0000081101561015757506101f4936127109350915050565b690cb49b44ba602d80000081101561017857506103e8936127109350915050565b69152d02c7e14af680000081101561019957506104b0936127109350915050565b691fc3842bd1f071c000008110156101ba57506105dc936127109350915050565b693f870857a3e0e38000008110156101db5750610708936127109350915050565b506107d0936127109350915050565b6000602082840312156101fc57600080fd5b81356001600160a01b038116811461021357600080fd5b9392505050565b60006020828403121561022c57600080fd5b505191905056fea2646970667358221220e80ccdd70c13bdaf6902ba14e6bfde45d54143fb766d7bb85089ecb252d57ff464736f6c63430008070033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100365760003560e01c8063528cfa981461003b57806370cc4dfc14610057575b600080fd5b61004461271081565b6040519081526020015b60405180910390f35b61006a6100653660046101ea565b61007f565b6040805192835260208301919091520161004e565b600080546040516370a0823160e01b81526001600160a01b038481166004830152839283929116906370a082319060240160206040518083038186803b1580156100c857600080fd5b505afa1580156100dc573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610100919061021a565b90508061011557506000936127109350915050565b69010f0cf064dd59200000811015610136575061012c936127109350915050565b69065a4da25d3016c0000081101561015757506101f4936127109350915050565b690cb49b44ba602d80000081101561017857506103e8936127109350915050565b69152d02c7e14af680000081101561019957506104b0936127109350915050565b691fc3842bd1f071c000008110156101ba57506105dc936127109350915050565b693f870857a3e0e38000008110156101db5750610708936127109350915050565b506107d0936127109350915050565b6000602082840312156101fc57600080fd5b81356001600160a01b038116811461021357600080fd5b9392505050565b60006020828403121561022c57600080fd5b505191905056fea2646970667358221220e80ccdd70c13bdaf6902ba14e6bfde45d54143fb766d7bb85089ecb252d57ff464736f6c63430008070033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 1478,
+        "contract": "contracts/universal-router/modules/ZLKDiscountReader.sol:ZLKDiscountReader",
+        "label": "zlk",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_contract(IERC20)117"
+      }
+    ],
+    "types": {
+      "t_contract(IERC20)117": {
+        "encoding": "inplace",
+        "label": "contract IERC20",
+        "numberOfBytes": "20"
+      }
+    }
+  }
+}

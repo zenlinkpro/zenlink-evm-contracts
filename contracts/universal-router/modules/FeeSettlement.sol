@@ -10,6 +10,7 @@ import {IReferralStorage} from "../../referrals/interfaces/IReferralStorage.sol"
 import {AdminUpgradeable} from "../../libraries/AdminUpgradeable.sol";
 import {IFeeSettlement} from "../interfaces/IFeeSettlement.sol";
 import {Constants} from "../../libraries/Constants.sol";
+import {IZLKDiscountReader} from "../interfaces/IZLKDiscountReader.sol";
 
 contract FeeSettlement is IFeeSettlement, ReentrancyGuard, AdminUpgradeable {
     using SafeERC20 for IERC20;
@@ -26,6 +27,8 @@ contract FeeSettlement is IFeeSettlement, ReentrancyGuard, AdminUpgradeable {
     uint256 public feeRebate; // e.g. 5000 for 50%/50%, 2500 for 75% fee/25% rebate
     address public feeTo;
 
+    IZLKDiscountReader public zlkDiscountReader;
+
     error InvalidFeeShare();
     error InvalidFeeDiscount();
     error InvalidFeeRebate();
@@ -39,6 +42,7 @@ contract FeeSettlement is IFeeSettlement, ReentrancyGuard, AdminUpgradeable {
         uint256 rebateAmount
     );
     event SetReferralStorage(IReferralStorage referralStorage);
+    event SetZLKDiscountReader(IZLKDiscountReader zlkDiscountReader);
     event SetFeeShare(uint256 feeShare);
     event SetFeeDiscount(uint256 feeDiscount);
     event SetFeeRebate(uint256 feeRebate);
@@ -86,6 +90,10 @@ contract FeeSettlement is IFeeSettlement, ReentrancyGuard, AdminUpgradeable {
         if (amount < amountOutMin) revert InsufficientOutAmount();
         (, address referrer) = referralStorage.getReferralInfo(from);
         uint256 basisfee = (amount * feeShare) / BASIS_POINTS;
+        if (address(zlkDiscountReader) != address(0)) {
+            (uint256 zlkdiscount, uint256 basis) = zlkDiscountReader.getZLKDiscount(from);
+            basisfee = (basisfee * (basis - zlkdiscount)) / basis;
+        }
         uint256 fee = referrer == address(0) 
             ? basisfee
             : (basisfee * (BASIS_POINTS - feeDiscount)) / BASIS_POINTS;
@@ -124,6 +132,13 @@ contract FeeSettlement is IFeeSettlement, ReentrancyGuard, AdminUpgradeable {
     function setReferralStorage(IReferralStorage _referralStorage) external onlyAdmin {
         referralStorage = _referralStorage;
         emit SetReferralStorage(_referralStorage);
+    }
+
+    // @notice Set zlkDiscountReader by admin
+    /// @param _zlkDiscountReader ZLKDiscountReader address
+    function setZLKDiscountReader(IZLKDiscountReader _zlkDiscountReader) external onlyAdmin {
+        zlkDiscountReader = _zlkDiscountReader;
+        emit SetZLKDiscountReader(_zlkDiscountReader);
     }
 
     /// @notice Set feeShare by admin
