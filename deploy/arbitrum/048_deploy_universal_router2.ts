@@ -12,15 +12,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     log(`reusing "UniversalRouter2" at ${universalRouter2.address}`)
   } else {
     const stableSwapDispatcher = await getOrNull('StableSwapDispatcher')
+    const curveStableDispatcher = await getOrNull('CurveStableDispatcher')
     const feeSettlement = await getOrNull('FeeSettlement')
-    if (!stableSwapDispatcher || !feeSettlement) {
-      log('Missing deployed "StableSwapDispatcher" or "FeeSettlement"')
+    if (!stableSwapDispatcher || !curveStableDispatcher || !feeSettlement) {
+      log('Missing deployed "StableSwapDispatcher" or "FeeSettlement" or "CurveStableDispatcher"')
       return
     }
     await deploy('UniversalRouter2', {
       from: deployer,
       args: [
         stableSwapDispatcher.address,
+        curveStableDispatcher.address,
         feeSettlement.address
       ],
       log: true,
