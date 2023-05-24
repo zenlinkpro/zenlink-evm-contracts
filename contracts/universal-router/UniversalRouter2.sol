@@ -17,6 +17,7 @@ import {IAlgebraPool} from "./interfaces/algebra/IAlgebraPool.sol";
 import {IVault} from "./interfaces/gmx/IVault.sol";
 import {ILBPair} from "./interfaces/joe/v2/ILBPair.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
+import {ICurveStableDispatcher} from "./interfaces/curve/ICurveStableDispatcher.sol";
 
 contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable, Pausable {
     using SafeERC20 for IERC20;
@@ -24,6 +25,7 @@ contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable, Pausable {
     using InputStream for uint256;
 
     IStableSwapDispatcher public stableSwapDispatcher;
+    ICurveStableDispatcher public curveStableDispatcher;
     IFeeSettlement public feeSettlement;
     address private lastCalledPool;
 
@@ -36,14 +38,17 @@ contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable, Pausable {
     error UnexpectedUniV3Swap();
     error UnexpectedAlgebraSwap();
 
+    event SetCurveStableDispatcher(ICurveStableDispatcher curveStableDispatcher);
     event SetStableSwapDispatcher(IStableSwapDispatcher stableSwapDispatcher);
     event SetFeeSettlement(IFeeSettlement feeSettlement);
     
     constructor(
         IStableSwapDispatcher _stableSwapDispatcher,
+        ICurveStableDispatcher _curveStableDispatcher,
         IFeeSettlement _feeSettlement
     ) {
         stableSwapDispatcher = _stableSwapDispatcher;
+        curveStableDispatcher = _curveStableDispatcher;
         feeSettlement = _feeSettlement;
         lastCalledPool = Constants.IMPOSSIBLE_POOL_ADDRESS;
         _initializeAdmin(msg.sender);
@@ -57,6 +62,13 @@ contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable, Pausable {
     function setStableSwapDispatcher(IStableSwapDispatcher _stableSwapDispatcher) external onlyAdmin {
         stableSwapDispatcher = _stableSwapDispatcher;
         emit SetStableSwapDispatcher(_stableSwapDispatcher);
+    }
+
+    /// @notice Set CurveStableDispatcher by admin
+    /// @param _curveStableDispatcher CurveStableDispatcher address
+    function setCurveStableDispatcher(ICurveStableDispatcher _curveStableDispatcher) external onlyAdmin {
+        curveStableDispatcher = _curveStableDispatcher;
+        emit SetCurveStableDispatcher(_curveStableDispatcher);
     }
 
     /// @notice Set FeeSettlement by admin
@@ -218,6 +230,7 @@ contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable, Pausable {
         else if (poolType == 4) _swapGmx(stream, from, tokenIn, amountIn);
         else if (poolType == 5) _swapJoeV2(stream, from, tokenIn, amountIn);
         else if (poolType == 6) _swapAlgebra(stream, from, tokenIn, amountIn);
+        else if (poolType == 7) _swapCurveStable(stream, from, tokenIn, amountIn);
         else revert UnknownPoolType(poolType);
     }
 
@@ -427,6 +440,45 @@ contract UniversalRouter2 is ReentrancyGuard, AdminUpgradeable, Pausable {
                 (address, bool, uint8, uint8, address)
             );
             stableSwapDispatcher.swap(pool, isNativePool, tokenInIndex, tokenOutIndex, tokenIn, tokenOut, to);
+        }
+    }
+
+    /// @notice Performs a Curve stable pool swap
+    /// @param stream [isMetaSwap, To, [Pool, Option(isNativePool), TokenInIndex, TokenOutIndex, TokenOut]]
+    /// @param from Where to take liquidity for swap
+    /// @param tokenIn Input token
+    /// @param amountIn Amount of tokenIn to take for swap
+    function _swapCurveStable(
+        uint256 stream, 
+        address from, 
+        address tokenIn, 
+        uint256 amountIn
+    ) private {
+        uint8 isMetaSwap = stream.readUint8();
+        address to = stream.readAddress();
+        bytes memory swapData = stream.readBytes();
+        if (amountIn != 0) {
+            if (from == address(this)) {
+                IERC20(tokenIn).safeTransfer(address(curveStableDispatcher), amountIn);
+            } else {
+                IERC20(tokenIn).safeTransferFrom(from, address(curveStableDispatcher), amountIn);
+            }
+        } else {
+            amountIn = IERC20(tokenIn).balanceOf(address(curveStableDispatcher));  // tokens already were transferred
+        }
+        
+        if (isMetaSwap == 1) {
+            (address pool, int128 tokenInIndex, int128 tokenOutIndex, address tokenOut) = abi.decode(
+                swapData, 
+                (address, int128, int128, address)
+            );
+            curveStableDispatcher.exchange_underlying(pool, tokenInIndex, tokenOutIndex, tokenIn, tokenOut, to);
+        } else {
+            (address pool, bool isNativePool, int128 tokenInIndex, int128 tokenOutIndex, address tokenOut) = abi.decode(
+                swapData, 
+                (address, bool, int128, int128, address)
+            );
+            curveStableDispatcher.exchange(pool, isNativePool, tokenInIndex, tokenOutIndex, tokenIn, tokenOut, to);
         }
     }
 
