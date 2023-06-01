@@ -3,6 +3,7 @@ import "@nomicfoundation/hardhat-chai-matchers";
 import "hardhat-deploy"
 import "hardhat-spdx-license-identifier"
 import "hardhat-abi-exporter"
+import "@nomiclabs/hardhat-etherscan"
 
 import dotenv from "dotenv"
 import { Deployment } from 'hardhat-deploy/types';
@@ -31,6 +32,9 @@ const config: HardhatUserConfig = {
     outDir: "types",
     target: "ethers-v5",
   },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY
+  },
   networks: {
     hardhat: {
       allowUnlimitedContractSize: false,
@@ -40,6 +44,16 @@ const config: HardhatUserConfig = {
       chainId: 592,
       deploy: ['./deploy/astar/']
     },
+    arbitrum: {
+      url: 'https://arb1.arbitrum.io/rpc',
+      chainId: 42161,
+      deploy: ['./deploy/arbitrum/'],
+      verify: {
+        etherscan: {
+          apiUrl: 'https://api.arbiscan.io/api',
+        }
+      }
+    },
     moonbase: {
       url: 'https://rpc.testnet.moonbeam.network',
       chainId: 1287,
@@ -47,7 +61,6 @@ const config: HardhatUserConfig = {
       verify: {
         etherscan: {
           apiUrl: 'https://api-moonbase.moonscan.io',
-          apiKey: 'NO_KEY',
         }
       }
     }
@@ -67,11 +80,13 @@ const config: HardhatUserConfig = {
       default: 0,
       592: 0,
       1287: 0,
+      42161: 0
     },
     libraryDeployer: {
       default: 1,
       592: 1,
-      1287: 1
+      1287: 1,
+      42161: 1
     }
   }
 };
@@ -85,6 +100,10 @@ if (process.env.ACCOUNT_PRIVATE_KEYS) {
     },
     astar: {
       ...config.networks?.astar,
+      accounts: JSON.parse(process.env.ACCOUNT_PRIVATE_KEYS)
+    },
+    arbitrum: {
+      ...config.networks?.arbitrum,
       accounts: JSON.parse(process.env.ACCOUNT_PRIVATE_KEYS)
     }
   }

@@ -90,13 +90,6 @@ contract UniswapV3StateMulticall is IUniswapV3StateMulticall {
             currentBitmapIndex - leftBitmapAmount,
             currentBitmapIndex + rightBitmapAmount
         );
-        state.ticks = _calcTicksFromBitMap(
-            factory,
-            tokenIn,
-            tokenOut,
-            fee,
-            state.tickBitmap
-        );
     }
 
     function getAdditionalBitmapWithTicks(
